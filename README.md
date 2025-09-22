@@ -3,7 +3,7 @@
 
 ## 1️⃣ 초기 설정 (최초 1회)
 ```bash
-git clone <레포지토리_URL>    # 레포 클론
+git clone https://github.com/JuniorNaver/OrderFlow.git    # 레포 클론
 git checkout main             # main 이동
 git checkout -b develop       # develop 브랜치 생성
 git push origin develop       # 원격에 올리기
