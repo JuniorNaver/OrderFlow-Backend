@@ -8,7 +8,7 @@ cd OrderFlow                 # 클론한 폴더로 이동
 git checkout -b develop      # develop 브랜치 생성 (main 기준)
 git push -u origin develop   # 원격에 올리기
 ```
-## 2️⃣ 작업 시작 (매 작업 시작 때마다 / 새 기능 브랜치 생성)
+## 2️⃣ 작업 시작 전 (매 작업 시작 때마다 / 새 기능 브랜치 생성)
 ```bash
 git checkout develop           # develop 이동
 git pull origin develop        # 최신 코드 가져오기
@@ -27,7 +27,7 @@ feature/SD → 판매
 
 feature/BI → BI 분석
 
-## 3️⃣ 작업 중 (커밋 & 푸시)
+## 3️⃣ 작업 후 (커밋 & 푸시)
 ```bash
 코드 복사
 git status                     # 변경 사항 확인
@@ -35,9 +35,10 @@ git add .                       # 변경 파일 스테이징
 git commit -m "Add BI page"     # 커밋
 git push origin feature/BI      # 원격 저장소에 푸시
 ```
-GitHub에서 PR 생성 → 리뷰 요청 → develop 병합
 
-## 4️⃣ 작업 끝난 후 (브랜치 정리)
+## GitHub에서 PR 생성 → 리뷰 요청 → develop 병합
+
+## 4️⃣ PR 끝난 후 (브랜치 정리)
 ```bash
 코드 복사
 git checkout develop                     # develop 이동
