@@ -1,14 +1,14 @@
 # OrderFlow
 # 📌 Git Flow 팀용 요약 카드
 
-## 1️⃣ 초기 설정 (최초 1회)
+## 1️⃣ 초기 설정 (최초 1회만!)
 ```bash
 git clone https://github.com/JuniorNaver/OrderFlow.git    # 레포 클론
 cd OrderFlow                 # 클론한 폴더로 이동
 git checkout -b develop      # develop 브랜치 생성 (main 기준)
 git push -u origin develop   # 원격에 올리기
 ```
-## 2️⃣ 작업 시작 (새 기능 브랜치 생성)
+## 2️⃣ 작업 시작 (매 작업 시작 때마다 / 새 기능 브랜치 생성)
 ```bash
 git checkout develop           # develop 이동
 git pull origin develop        # 최신 코드 가져오기
