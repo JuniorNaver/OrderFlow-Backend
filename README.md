@@ -15,6 +15,7 @@ git pull origin develop        # 최신 코드 가져오기
 git checkout -b feature/BI     # 새 기능 브랜치 생성 (예: BI)
 ```
 기능별 브랜치 이름
+
 feature/PR → 발주요청
 
 feature/PO → 발주
@@ -29,9 +30,9 @@ feature/BI → BI 분석
 
 ## 3️⃣ 작업 후 (커밋 & 푸시)
 ```bash
-코드 복사
-git status                     # 변경 사항 확인
+git status                      # 변경 사항 확인
 git add .                       # 변경 파일 스테이징
+git status                      # 변경 사항 확인
 git commit -m "Add BI page"     # 커밋
 git push origin feature/BI      # 원격 저장소에 푸시
 ```
