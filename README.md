@@ -1,13 +1,13 @@
 # OrderFlow
 # 📌 Git Flow 팀용 요약 카드
 
-## 초기 설정 (최초 1회만!)
-```bash
-git clone https://github.com/JuniorNaver/OrderFlow.git    # 레포 클론
-cd OrderFlow                 # 클론한 폴더로 이동
-git checkout -b develop      # develop 브랜치 생성 (main 기준)
-git push -u origin develop   # 원격에 올리기
-```
+## 🔑 핵심 규칙
+main은 절대 직접 수정 금지
+
+모든 개발은 feature/* 브랜치에서 → PR → develop
+
+feature 브랜치 작업 끝나면 삭제
+
 ## 1️⃣ 작업 시작 전 (매 작업 시작 때마다 / 새 기능 브랜치 생성)
 ```bash
 git checkout develop           # develop 이동
@@ -63,11 +63,10 @@ develop ──────────────┐
 
 새 기능/개선 → develop에서 새 feature 브랜치 생성
 
-## 🔑 핵심 규칙
-main은 절대 직접 수정 금지
-
-모든 개발은 feature/* 브랜치에서 → PR → develop
-
-feature 브랜치 작업 끝나면 삭제
-
-필요 시 같은 이름의 feature 브랜치를 새로 생성 가능
+## 초기 설정 (최초 1회만!)
+```bash
+git clone https://github.com/JuniorNaver/OrderFlow.git    # 레포 클론
+cd OrderFlow                 # 클론한 폴더로 이동
+git checkout -b develop      # develop 브랜치 생성 (main 기준)
+git push -u origin develop   # 원격에 올리기
+```
