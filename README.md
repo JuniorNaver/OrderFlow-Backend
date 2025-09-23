@@ -41,7 +41,6 @@ git push origin feature/BI      # 원격 저장소에 푸시
 
 ## 4️⃣ PR 끝난 후 (브랜치 정리)
 ```bash
-코드 복사
 git checkout develop                     # develop 이동
 git pull origin develop                  # 최신 코드 가져오기
 git branch -d feature/BI                 # 로컬 feature 브랜치 삭제
@@ -50,14 +49,14 @@ git push origin --delete feature/BI      # 원격 feature 브랜치 삭제
 다음 작업 때는 같은 이름이어도 develop에서 새 브랜치 생성
 
 ## 5️⃣ 브랜치 생명주기 그림
-css
-코드 복사
+```css
 develop ──────────────┐
    │                  │
    │   feature/BI     │
    └─ merge → develop │
                        \
                         main (배포)
+```
 기능 개발 중 → feature 브랜치 유지
 
 기능 완료 → develop 병합 → 브랜치 삭제
