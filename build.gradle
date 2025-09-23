@@ -25,16 +25,67 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // ===========================
+    // Spring Boot 기본 의존성
+    // ===========================
+
+    // Spring Data JPA (ORM, DB 접근 및 엔티티 매핑)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Thymeleaf (서버 사이드 렌더링 템플릿 엔진)
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    // Spring Web (REST API 및 MVC 웹 개발)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 개발 편의 기능 (자동 리빌드 등)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Oracle JDBC 드라이버 (Oracle DB 연동)
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+
+    // ===========================
+    // Lombok 관련 의존성
+    // ===========================
+
+    // Lombok (Getter/Setter, Builder 등 보일러플레이트 코드 제거)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // 테스트 코드에서도 Lombok 사용 가능하게 설정
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+
+    // ===========================
+    // 테스트 관련 의존성
+    // ===========================
+
+    // Spring Security 테스트 지원
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // Spring Boot 기본 테스트 (JUnit, Mockito 등 포함)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // JUnit 플랫폼 런처 (테스트 실행 환경)
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+
+    // ===========================
+    // JWT 관련 의존성
+    // ===========================
+
+    // JWT API (인터페이스)
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+
+    // JWT 구현체 (실제 동작 로직)
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+
+    // JWT에서 JSON 처리를 위한 Jackson 연동
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 }
+
 
 tasks.named('test') {
 	useJUnitPlatform()
