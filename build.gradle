@@ -35,14 +35,34 @@ dependencies {
     // Thymeleaf (서버 사이드 렌더링 템플릿 엔진)
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    // Thymeleaf 레이아웃 확장 (공통 레이아웃 관리)
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.2.0'
+
+    // Thymeleaf + Spring Security 연동
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
     // Spring Web (REST API 및 MVC 웹 개발)
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Security (인증/인가 처리)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // 개발 편의 기능 (자동 리빌드 등)
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // Oracle JDBC 드라이버 (Oracle DB 연동)
     runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+
+    // ===========================
+    // DTO/Entity 매핑 및 JSON 관련
+    // ===========================
+
+    // ModelMapper (DTO ↔ Entity 변환 유틸)
+    implementation 'org.modelmapper:modelmapper:3.2.1'
+
+    // Gson (JSON 직렬화/역직렬화 라이브러리)
+    implementation 'com.google.code.gson:gson:2.10.1'
 
 
     // ===========================
@@ -84,6 +104,7 @@ dependencies {
 
     // JWT에서 JSON 처리를 위한 Jackson 연동
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
 }
 
 
