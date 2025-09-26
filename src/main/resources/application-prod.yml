@@ -1,0 +1,25 @@
+spring:
+  ## datasource (운영용) - 비밀번호/계정은 환경변수 사용
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  ## JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate       # 운영 환경에서는 테이블 구조 검증만
+    show-sql: false             # 운영 환경에서는 SQL 로그 출력 안 함
+    open-in-view: false          # 운영 환경 Lazy 로딩 방지
+
+    properties:
+      hibernate:
+        format_sql: false
+        highlight_sql: false
+        use_sql_comments: false
+
+## logging 설정 (운영 환경에서는 INFO 수준)
+logging:
+  level:
+    org.hibernate: info

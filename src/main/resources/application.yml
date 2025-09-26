@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: orderflow
+
+  ## 기본 포트 설정
+  server:
+    port: 8080
+
+  ## 활성 프로파일 (개발/운영)
+  profiles:
+    active: dev  # 개발: dev / 운영: prod
