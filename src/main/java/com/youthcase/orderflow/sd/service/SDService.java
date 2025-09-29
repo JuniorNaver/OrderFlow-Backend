@@ -1,25 +1,17 @@
 package com.youthcase.orderflow.sd.service;
 
-import com.youthcase.orderflow.sd.domain.SD;
-import com.youthcase.orderflow.sd.repository.SDRepository;
-import org.springframework.stereotype.Service;
+import com.youthcase.orderflow.sd.domain.SalesItem;
 
 import java.util.List;
 
-@Service
-public class SDService {
+public interface SDService{
+    List<SalesItem> salesItemList(SalesItem salesItem);
+    void salesItemInsert(SalesItem salesItem);
 
-    private final SDRepository sdRepository;
+    SalesItem getSalesItem(Long itemId);                  // 단일 조회
+    SalesItem updateSalesItem(SalesItem salesItem);       // 수정
+    void deleteSalesItem(Long itemId);                    // 삭제
+    List<SalesItem> getItemsByOrderId(Long orderId);      // 주문별 조회
+    void addItemByBarcode(Long orderId, String gtin, int quantity); // 바코드 기반 추가
 
-    public SDService(SDRepository sdRepository) {
-        this.sdRepository = sdRepository;
-    }
-
-    public List<SD> findAll() {
-        return sdRepository.findAll();
-    }
-
-    public SD save(SD sd) {
-        return sdRepository.save(sd);
-    }
 }
