@@ -32,6 +32,9 @@ dependencies {
     // Spring Data JPA (ORM, DB 접근 및 엔티티 매핑)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    // Spring Boot Starter Validation 추가
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
     // Thymeleaf (서버 사이드 렌더링 템플릿 엔진)
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 

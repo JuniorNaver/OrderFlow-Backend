@@ -1,8 +1,11 @@
 package com.youthcase.orderflow.stk.domain;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
+//@Data
 @Entity
 @Table(
         name = "MM_STOCK",
