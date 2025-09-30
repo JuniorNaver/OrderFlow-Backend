@@ -1,8 +1,10 @@
-package com.youthcase.orderflow.sd.domain;
+package com.youthcase.orderflow.sd.sdSales.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -22,7 +24,7 @@ public class SalesItem {
     private int quantity;
 
     @Column(precision = 10, scale = 2, nullable = false)
-    private int sdPrice;
+    private BigDecimal sdPrice;
 
     // N:1 매핑 (아이템 → 헤더 FK)
     @ManyToOne(fetch = FetchType.LAZY)

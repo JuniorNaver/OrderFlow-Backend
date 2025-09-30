@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.sd.domain;
+package com.youthcase.orderflow.sd.sdSales.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,13 +9,13 @@ import lombok.Setter;
 @Entity
 public class MmStock {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "stock_seq")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long stockId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "gtin", nullable = false)
     private ProductMaster product;
 
-    private Long storeId;
-    private int stockQty;
+    @Column(nullable = false)
+    private int quantity;
 }

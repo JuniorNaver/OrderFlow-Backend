@@ -1,9 +1,12 @@
-package com.youthcase.orderflow.sd.repository;
+package com.youthcase.orderflow.sd.sdSales.repository;
 
-import com.youthcase.orderflow.sd.domain.SalesItem;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
+    List<SalesItem> findBySalesHeaderOrderId(Long orderId);
 }
