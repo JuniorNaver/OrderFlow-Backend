@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.sd.domain;
+package com.youthcase.orderflow.sd.sdSales.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -28,8 +28,7 @@ public class SalesHeader {
     @Column(insertable = false, updatable = false)
     private LocalDateTime salesDate;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private String salesStatus;
 
     // 1:N 매핑 (헤더 ↔ 아이템)
