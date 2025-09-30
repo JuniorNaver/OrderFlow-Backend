@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.payment.strategy;
 
-import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,8 @@ public class CardPaymentService implements PaymentStrategy {
     }
 
     @Override
-    public void cancel(PaymentHeader header) {
-        System.out.println("PG사 카드 결제 취소: " + header.getTransactionNo());
+    public void cancel(PaymentItem item) {
+
+        System.out.println("카드 취소: 승인번호=" + item.getTransactionNo());
     }
 }

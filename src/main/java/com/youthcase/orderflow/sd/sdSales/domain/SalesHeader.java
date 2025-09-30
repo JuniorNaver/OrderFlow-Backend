@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @Getter
 @Entity
-@Table(name = "sales_header")
+@Table(name = "SALES_HEADER")
 @SequenceGenerator(
         name = "sales_header_seq",
         sequenceName = "SALES_HEADER_SEQ",
@@ -25,10 +25,10 @@ public class SalesHeader {
     private Long orderId;
 
     @ColumnDefault("sysdate")
-    @Column(insertable = false, updatable = false)
+    @Column(name= "SALES_DATE", insertable = false, updatable = false)
     private LocalDateTime salesDate;
 
-    @Column(nullable = false, length = 20)
+    @Column(name= "SALES_STATUS", nullable = false, length = 20)
     private String salesStatus;
 
     // 1:N 매핑 (헤더 ↔ 아이템)

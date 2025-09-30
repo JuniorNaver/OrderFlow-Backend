@@ -4,6 +4,7 @@ import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
+import com.youthcase.orderflow.sd.sdPayment.payment.PaymentProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,22 +15,26 @@ import java.time.LocalDateTime;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentHeaderRepository headerRepository;
+    private final PaymentProcessor processor;
 
     @Override
     public PaymentHeader createPayment(PaymentHeader header) {
 
-        PaymentRequest request = PaymentRequest.builder()
-                .orderId(header.getOrderId())
-                .amount(header.getTotalAmount())
-                .method(header.getPaymentStatus()) //card/easy/cash
-                .build();
+        header.getPaymentItems().forEach(item -> {
+            PaymentRequest request = PaymentRequest.builder()
+                    .orderId(header.getOrderId())
+                    .amount(item.getAmount())
+                    .paymentMethod(item.getPaymentMethod()) //card/easy/cash
+                    .build();
 
-        PaymentResult result = processor.processPayment(request);
-        if(!result.isSuccess()) {
-            throw new RuntimeException("결제 실패: " + result.getMessage());
-        }
+            PaymentResult result = processor.processPayment(request);
+            if(!result.isSuccess()) {
+                throw new RuntimeException("결제 실패: " + result.getMessage());
+            }
 
-        header.setTransactionNo(result.getTransactionNo());
+            item.setTransactionNo(result.getTransactionNo());
+        });
+
         header.setPaymentStatus("APPROVED");
         return headerRepository.save(header);
     }
@@ -43,6 +48,12 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void cancelPayment(Long id) {
         PaymentHeader header = getPayment(id);
+
+        header.getPaymentItems().forEach(item -> {
+            processor.cancelPayment(item.getPaymentMethod().toLowerCase(),item);
+            item.setTransactionNo(null);
+        });
+
         header.setPaymentStatus("CANCELED");
         header.setCanceledTime(LocalDateTime.now());
         headerRepository.save(header);
