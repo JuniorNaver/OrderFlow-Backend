@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.domain;
 
+import com.youthcase.orderflow.pr.domain.Product;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -37,7 +38,7 @@ public class POItem {
     @Column(name = "ORDER_QTY", nullable = false)
     private Long orderQty;
 
-    // 아직 출고되지 않은 수량
+    // 출고되지 않은 수량
     @Column(name = "PENDING_QTY")
     private Long pendingQty;
 

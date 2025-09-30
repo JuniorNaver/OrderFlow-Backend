@@ -1,7 +1,5 @@
 package com.youthcase.orderflow.po.controller;
 
-import com.youthcase.orderflow.po.domain.PO;
-import com.youthcase.orderflow.po.service.POService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,19 +8,19 @@ import java.util.List;
 @RequestMapping("/api/po")
 public class POController {
 
-    private final POService poService;
+    private final POHeaderService poHeaderService;
 
-    public POController(POService poService) {
-        this.poService = poService;
+    public POController(POHeaderService poHeaderService) {
+        this.poHeaderService = poHeaderService;
     }
 
     @GetMapping
     public List<PO> getAll() {
-        return poService.findAll();
+        return poHeaderService.findAll();
     }
 
     @PostMapping
     public PO create(@RequestBody PO po) {
-        return poService.save(po);
+        return poHeaderService.save(po);
     }
 }

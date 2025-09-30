@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.domain;
 
+import com.youthcase.orderflow.auth.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
