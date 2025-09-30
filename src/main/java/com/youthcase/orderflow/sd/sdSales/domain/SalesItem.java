@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Entity
-@Table(name = "sales_item")
+@Table(name = "SALES_ITEM")
 public class SalesItem {
 
     @Id
@@ -28,7 +28,7 @@ public class SalesItem {
 
     // N:1 매핑 (아이템 → 헤더 FK)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "ORDER_ID", nullable = false)
     private SalesHeader salesHeader;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,7 +36,7 @@ public class SalesItem {
     private MmStock mmstock;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gtin", nullable = false)
+    @JoinColumn(name = "GTIN", nullable = false)
     private ProductMaster product;
 
 }

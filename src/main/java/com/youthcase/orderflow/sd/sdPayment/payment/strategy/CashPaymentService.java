@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.payment.strategy;
 
-import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ public class CashPaymentService implements PaymentStrategy {
     }
 
     @Override
-    public void cancel(PaymentHeader header) {
+    public void cancel(PaymentItem item) {
         System.out.println("현금 결제 취소 처리 완료");
     }
 }
