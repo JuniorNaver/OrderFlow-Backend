@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.po.service;
 
 import com.youthcase.orderflow.po.domain.POItem;
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.repository.POItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,46 +16,50 @@ public class POItemServiceImpl implements POItemService {
 
     private final POItemRepository poItemRepository;
 
-    /**
-     * 장바구니 전체 상품 조회
-     */
+    private static final String statusPr = "PR";   // 장바구니 상태
+    private static final String statusD = "D"; // 삭제 상태
+    private static final String statusGI = "GI"; // 출고 처리 상태
+
+    // 장바구니 전체 상품 조회 (status = PR)
     @Override
     public List<POItem> getAllItems() {
-        return poItemRepository.findAll();
+        return poItemRepository.findAllByStatus(POStatus.PR);
     }
 
-    /**
-     * 상품 수량 변경
-     */
+    // 상품 수량 변경
     @Override
-    public POItem updateItemQuantity(String gtin, int orderQty) {
-        POItem item = poItemRepository.findByProductGtin(gtin)
+    public POItem updateItemQuantity(Long gtin, int quantity) {
+        POItem item = poItemRepository.findByProductGtinAndStatus(gtin, statusPr)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다. GTIN: " + gtin));
 
-        // 최소 수량 체크
-        if (orderQty < 1) {
+        if (quantity < 1) {
             throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
         }
 
-        item.setOrderQty((long) orderQty);
+        item.setOrderQty((long) quantity);
         return poItemRepository.save(item);
     }
 
-    /**
-     * 선택 상품 삭제
-     */
+    // 선택 상품 삭제 (status = D 로 변경)
     @Override
-    public void deleteItem(List<String> gtins) {
-        for (String gtin : gtins) {
-            poItemRepository.deleteByProductGtin(gtin);
+    public void deleteItem(List<Long> gtins) {
+        for (Long gtin : gtins) {
+            POItem item = poItemRepository.findByProductGtinAndStatus(gtin, statusPr)   //pr 일때
+                    .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다. GTIN: " + gtin));
+            item.setStatus(POStatus.D);
+            poItemRepository.save(item);
         }
     }
 
-    /**
-     * 전체 상품 삭제
-     */
+    // 전체 상품 삭제 (장바구니 status = PR → D 로 일괄 변경)
     @Override
     public void clearCart() {
-        poItemRepository.deleteAll();
+        List<POItem> cartItems = poItemRepository.findAllByStatus(POStatus.PR);
+        for (POItem item : cartItems) {
+            item.setStatus(POStatus.D);
+        }
+        poItemRepository.saveAll(cartItems);
     }
+
+
 }
