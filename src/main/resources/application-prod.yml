@@ -22,4 +22,7 @@ spring:
 ## logging 설정 (운영 환경에서는 INFO 수준)
 logging:
   level:
-    org.hibernate: info
+    org:
+      springframework:
+        security:
+          web: trace
