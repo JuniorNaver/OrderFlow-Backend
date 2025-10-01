@@ -49,11 +49,14 @@ public class POItem {
     // 발주내역 ID (FK → PO_HEADER)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PO_ID", nullable = false)
-    private POHeader poHeader;
+    private POHeader poId;
 
     // 상품 고유 코드 (FK → PRODUCT 같은 테이블이라고 가정)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
     private Product product;
+
+    @Enumerated(EnumType.STRING)  // 또는 EnumType.ORDINAL
+    private POStatus status;
 
 }
