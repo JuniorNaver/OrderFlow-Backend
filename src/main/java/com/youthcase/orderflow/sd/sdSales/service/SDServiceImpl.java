@@ -1,9 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.service;
 
-import com.youthcase.orderflow.sd.sdSales.domain.MmStock;
-import com.youthcase.orderflow.sd.sdSales.domain.ProductMaster;
-import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
-import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
+import com.youthcase.orderflow.sd.sdSales.domain.*;
 import com.youthcase.orderflow.sd.sdSales.repository.MmStockRepository;
 import com.youthcase.orderflow.sd.sdSales.repository.ProductRepository;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
@@ -29,13 +26,13 @@ public class SDServiceImpl implements SDService {
     public SalesHeader createOrder() {
         SalesHeader header = new SalesHeader();
         header.setSalesDate(LocalDateTime.now());
-        header.setSalesStatus("IN_PROGRESS"); //주문 진행중 상태~~~
+        header.setSalesStatus(SalesStatus.COMPLETED); //주문 진행중 상태~~~
         return salesHeaderRepository.save(header);
     }
     //salesHeader 바코드로 아이템 추가
     @Override
     @Transactional
-    public void addItemByBarcode(Long orderId, String gtin, int quantity) {
+    public void addItemByBarcode(Long orderId, String gtin, int quantity, BigDecimal sdPrice) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
@@ -52,7 +49,7 @@ public class SDServiceImpl implements SDService {
         item.setSalesHeader(header);
         item.setProduct(product);
         item.setQuantity(quantity);
-        item.setSdPrice(product.getBasePrice().multiply(BigDecimal.valueOf(quantity)));
+        item.setSdPrice(sdPrice);
 
         header.getItems().add(item);
         mmStock.setQuantity(mmStock.getQuantity() - quantity);
@@ -73,14 +70,15 @@ public class SDServiceImpl implements SDService {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
-        header.setSalesStatus("COMPLETED");
+        header.setSalesStatus(SalesStatus.CANCELLED);
         salesHeaderRepository.save(header);
     }
 
     //salesItem 재고 수정처리
     @Override
     @Transactional
-    public void updateItemQuantity(Long orderId, String gtin, int newQuantity) {
+    public void updateItemQuantity(Long orderId, String gtin, int diff) {
+
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
@@ -93,7 +91,11 @@ public class SDServiceImpl implements SDService {
                 .orElseThrow(() -> new RuntimeException("재고 없음"));
 
         int currentQty = item.getQuantity();
-        int diff = newQuantity - currentQty;
+        int newQty = currentQty + diff;
+
+        if (newQty < 0) {
+            throw new RuntimeException("판매수량은 0보다 작을 수 없음");
+        }
 
         if (diff > 0) {
             if (mmStock.getQuantity() < diff) {
@@ -104,8 +106,11 @@ public class SDServiceImpl implements SDService {
             mmStock.setQuantity(mmStock.getQuantity() + Math.abs(diff));
         }
 
-        item.setQuantity(newQuantity);
-        item.setSdPrice(item.getProduct().getBasePrice().multiply(BigDecimal.valueOf(newQuantity)));
+        item.setQuantity(newQty);
+
+        item.setSdPrice(item.getProduct().getBasePrice());
+        header.setTotalAmount(item.getProduct().getBasePrice()
+                .multiply(BigDecimal.valueOf(newQty)));
 
         salesHeaderRepository.save(header);
         mmStockRepository.save(mmStock);
@@ -117,14 +122,15 @@ public class SDServiceImpl implements SDService {
     public void holdOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
-        header.setSalesStatus("ON_HOLD");
+        header.setSalesStatus(SalesStatus.PENDING);
         salesHeaderRepository.save(header);
     }
 
     //보류 목록 불러오기
     @Override
     public List<SalesHeader> getHoldOrders() {
-        return salesHeaderRepository.findBySalesStatus("ON_HOLD");
+
+        return salesHeaderRepository.findBySalesStatus(SalesStatus.PENDING);
     }
 
     //보류된 주문 다시 열기
@@ -133,7 +139,7 @@ public class SDServiceImpl implements SDService {
     public void resumeOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("보류 주문 없음"));
-        header.setSalesStatus("In_PROGRESS");
+        header.setSalesStatus(SalesStatus.COMPLETED);
         salesHeaderRepository.save(header);
     }
 
@@ -143,7 +149,7 @@ public class SDServiceImpl implements SDService {
     public void cancelOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("보류 주문 없음"));
-        if (!"ON_HOLD".equals(header.getSalesStatus())) {
+        if (!SalesStatus.PENDING.equals(header.getSalesStatus())) {
             throw new RuntimeException("보류 상태가 아닌 주문은 취소 불가");
         }
         salesHeaderRepository.delete(header);

@@ -1,10 +1,14 @@
 package com.youthcase.orderflow.sd.sdPayment.domain;
 
+import com.youthcase.orderflow.sd.sdRefund.domain.RefundItem;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,4 +38,13 @@ public class PaymentItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PAYMENT_ID", nullable = false)
     private PaymentHeader paymentHeader;
+
+    // ✅ FK: 판매 아이템 (이 결제가 어떤 상품을 위한 것인지)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "SALES_ITEM_ID", nullable = false)
+    private SalesItem salesItem;
+
+    // ✅ RefundItem 연관관계 (결제 아이템 하나에서 여러 환불 발생 가능)
+    @OneToMany(mappedBy = "paymentItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RefundItem> refundItems = new ArrayList<>();
 }

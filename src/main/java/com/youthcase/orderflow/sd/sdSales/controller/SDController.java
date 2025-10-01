@@ -6,6 +6,7 @@ import com.youthcase.orderflow.sd.sdSales.service.SDService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -25,8 +26,9 @@ public class SDController {
     @PostMapping("/{orderId}/add")
     public void addItem(@PathVariable long orderId,
                         @RequestParam String gtin,
-                        @RequestParam int quantity) {
-        sdService.addItemByBarcode(orderId, gtin, quantity);
+                        @RequestParam int quantity,
+                        @RequestParam BigDecimal sdPrice) {
+        sdService.addItemByBarcode(orderId, gtin, quantity,sdPrice);
     }
 
     //3. 주문별 아이템 목록 조회
