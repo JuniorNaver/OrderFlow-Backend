@@ -1,6 +1,5 @@
 package com.youthcase.orderflow.sd.sdPayment.payment;
 
-import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;

@@ -1,14 +1,17 @@
 package com.youthcase.orderflow.sd.sdSales.domain;
 
+import groovy.lang.GString;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "SALES_ITEM")
 public class SalesItem {
 
@@ -20,10 +23,13 @@ public class SalesItem {
             allocationSize = 1)
     private Long no;
 
-    @Column(nullable = false)
+    @Column(name="PRODUCT_NAME", nullable = false)
+    private String productName;
+
+    @Column(name="QUANTITY", nullable = false)
     private int quantity;
 
-    @Column(precision = 10, scale = 2, nullable = false)
+    @Column(name="SD_PRICE", precision= 12, scale=2 , nullable = false)
     private BigDecimal sdPrice;
 
     // N:1 매핑 (아이템 → 헤더 FK)

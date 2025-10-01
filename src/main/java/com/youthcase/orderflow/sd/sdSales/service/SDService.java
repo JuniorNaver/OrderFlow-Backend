@@ -3,6 +3,7 @@ package com.youthcase.orderflow.sd.sdSales.service;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface SDService{
@@ -11,7 +12,7 @@ public interface SDService{
     SalesHeader createOrder();
 
     // 바코드로 아이템 추가
-    void addItemByBarcode(Long orderId, String gtin, int quantity);
+    void addItemByBarcode(Long orderId, String gtin, int quantity, BigDecimal sdPrice);
 
     // 주문에 속한 아이템 목록 조회
     List<SalesItem> getItemsByOrderId(Long orderId);
@@ -21,7 +22,7 @@ public interface SDService{
     void completeOrder(Long orderId);
 
     // 재고 수정
-    void updateItemQuantity(Long orderId, String gtin, int newQuantiry);
+    void updateItemQuantity(Long orderId, String gtin, int diff);
 
     //보류 기능
     // 보류처리
