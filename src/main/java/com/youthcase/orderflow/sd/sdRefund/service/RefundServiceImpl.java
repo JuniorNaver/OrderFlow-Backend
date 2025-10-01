@@ -10,7 +10,6 @@ import com.youthcase.orderflow.sd.sdRefund.refund.dto.RefundItemDTO;
 import com.youthcase.orderflow.sd.sdRefund.refund.dto.RefundRequestDTO;
 import com.youthcase.orderflow.sd.sdRefund.refund.dto.RefundResponseDTO;
 import com.youthcase.orderflow.sd.sdRefund.repository.RefundHeaderRepository;
-import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesItemRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +44,7 @@ public class RefundServiceImpl implements RefundService {
 
         List<RefundItem> refundItems = requestDTO.getItems().stream()
                 .map(dto -> {
-                    PaymentItem paymentItem = paymentItemRepository.findById(dto.getPaymentItemId())
+                    PaymentItem paymentItem = paymentItemRepository.findByPaymentItemId(dto.getPaymentItemId())
                             .orElseThrow(() -> new IllegalArgumentException("판매 아이템을 찾을 수 없습니다."));
                     return RefundItem.builder()
                             .paymentItem(paymentItem)
