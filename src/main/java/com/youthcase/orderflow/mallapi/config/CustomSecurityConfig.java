@@ -1,14 +1,20 @@
 package com.youthcase.orderflow.mallapi.config;
 
 
+import com.youthcase.orderflow.mallapi.security.filter.JWTCheckFilter;
+import com.youthcase.orderflow.mallapi.security.handler.APILoginFailHandler;
+import com.youthcase.orderflow.mallapi.security.handler.APILoginSuccessHandler;
+import com.youthcase.orderflow.mallapi.security.handler.CustomAccessDeniedHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -17,6 +23,7 @@ import java.util.Arrays;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class CustomSecurityConfig {
 
     @Bean
@@ -34,9 +41,25 @@ public class CustomSecurityConfig {
         /* CSRF (Cross-Site Request Forgery) 보호 기능을 비활성화*/
         http.csrf(config->config.disable());
 
+        /* API 서버로 로그인 할 수 있도록 설정 */
+        http.formLogin(config->{
+            config.loginPage("/api/member/login");
+            config.successHandler(new APILoginSuccessHandler());
+            config.failureHandler(new APILoginFailHandler());
+        });
+
+        /* JWT 체크 추가 */
+        http.addFilterBefore(new JWTCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        /* 접근제한 시 CustomAccessDeniedHandler를 활용하도록 설정 */
+        http.exceptionHandling(config -> {
+            config.accessDeniedHandler(new CustomAccessDeniedHandler());
+        });
+
         return http.build();
     }
 
+    @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList("*")); //모든 출처 허용
