@@ -28,14 +28,14 @@ public class POHeader {
 
     // 상태(PR: 발주 요청, PO: 발주 완료, D: 삭제/취소)
     @Column(name = "STATUS", length = 10, nullable = false)
-    private POStatus poStatus;
+    private Status status;
 
     // 매입총액
     @Column(name = "TOTAL_AMOUNT", nullable = false)
     private Long totalAmount;
 
     // 요청/승인 일자
-    @Column(name = "ACTION_DATE")
+    @Column(name = "ACTION_DATE", nullable = false)
     private LocalDate actionDate;
 
     // 비고
