@@ -1,25 +1,29 @@
 package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.domain.Role;
-import com.youthcase.orderflow.auth.repository.RoleRepository;
-import org.springframework.stereotype.Service;
+import com.youthcase.orderflow.auth.domain.enums.RoleType;
+import java.util.Optional;
 
-import java.util.List;
+public interface RoleService {
 
-@Service
-public class RoleService {
+    /**
+     * RoleType으로 Role 엔티티를 조회합니다.
+     * @param roleType 조회할 역할 Enum
+     * @return Role 엔티티 (Optional)
+     */
+    Optional<Role> findByRoleType(RoleType roleType);
 
-    private final RoleRepository roleRepository;
+    /**
+     * 특정 역할(Role)에 특정 권한(Authority)을 부여합니다. (매핑 추가)
+     * @param roleId 권한을 부여할 역할 ID
+     * @param authorityId 부여할 권한 ID
+     */
+    void addAuthorityToRole(String roleId, Long authorityId);
 
-    public RoleService(RoleRepository roleRepository) {
-        this.roleRepository = roleRepository;
-    }
-
-    public List<Role> findAll() {
-        return roleRepository.findAll();
-    }
-
-    public Role save(Role role) {
-        return roleRepository.save(role);
-    }
+    /**
+     * 특정 역할(Role)에서 특정 권한(Authority)을 회수합니다. (매핑 삭제)
+     * @param roleId 권한을 회수할 역할 ID
+     * @param authorityId 회수할 권한 ID
+     */
+    void removeAuthorityFromRole(String roleId, Long authorityId);
 }
