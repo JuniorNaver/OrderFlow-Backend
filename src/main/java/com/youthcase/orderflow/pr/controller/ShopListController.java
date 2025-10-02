@@ -1,7 +1,10 @@
 package com.youthcase.orderflow.pr.controller;
 
+import com.youthcase.orderflow.pr.DTO.ShopListRequestDto;
+import com.youthcase.orderflow.pr.domain.AvailableStatus;
 import com.youthcase.orderflow.pr.domain.ShopList;
 import com.youthcase.orderflow.pr.service.ShopListService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +28,15 @@ public class ShopListController {
     }
 
     @PostMapping
-    public ShopList createShopList(@RequestBody ShopList shopList) {
-        return shopListService.saveShopList(shopList);
+    public ShopList createShopList(@RequestBody @Valid ShopListRequestDto dto) {
+        ShopList shopList = new ShopList();
+        shopList.setProductImage(dto.productImage());
+        shopList.setProductDescription(dto.productDescription());
+        shopList.setAvailable(AvailableStatus.AVAILABLE); // 예시
+        shopList.setOrderDate(dto.orderDate());           // DTO에서 발주일 가져오기
+        shopList.setProduct();
+
+        return shopListService.createShopListWithDueDate(shopList);
     }
 
     @PutMapping("/{id}")
