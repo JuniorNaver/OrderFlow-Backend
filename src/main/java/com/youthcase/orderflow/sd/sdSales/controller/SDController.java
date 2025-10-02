@@ -2,6 +2,9 @@ package com.youthcase.orderflow.sd.sdSales.controller;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
+import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
+import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
+import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
 import com.youthcase.orderflow.sd.sdSales.service.SDService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,18 +25,16 @@ public class SDController {
         return sdService.createOrder();
     }
 
-    //2. 바코드로 아이템 추가
-    @PostMapping("/{orderId}/add")
-    public void addItem(@PathVariable long orderId,
-                        @RequestParam String gtin,
-                        @RequestParam int quantity,
-                        @RequestParam BigDecimal sdPrice) {
-        sdService.addItemByBarcode(orderId, gtin, quantity,sdPrice);
+
+    // 주문 확정
+    @PostMapping("/confirm")
+    public void confirmOrder(@RequestBody ConfirmOrderRequest request) {
+        sdService.confirmOrder(request);
     }
 
     //3. 주문별 아이템 목록 조회
     @GetMapping("/{orderId}/items")
-    public List<SalesItem> getItems(@PathVariable Long orderId) {
+    public List<SalesItemDTO> getItems(@PathVariable Long orderId) {
         return sdService.getItemsByOrderId(orderId);
     }
 
@@ -51,7 +52,7 @@ public class SDController {
 
     //보류 목록 조회
     @GetMapping("/hold")
-    public List<SalesHeader> getHoldOrders() {
+    public List<SalesHeaderDTO> getHoldOrders() {
         return sdService.getHoldOrders();
     }
 
