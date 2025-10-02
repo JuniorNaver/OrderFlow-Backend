@@ -12,18 +12,18 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"poHeader", "product"})
+@ToString(exclude = {"poId", "product"})
 public class POItem {
 
     // 발주 아이템 고유 ID (PK)
     @Id
+    @Column(name = "ITEM_NO", nullable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "po_item_seq_gen")
     @SequenceGenerator(
             name = "po_item_seq_gen",
             sequenceName = "PO_ITEM_SEQ",  // 오라클 시퀀스 이름
             allocationSize = 1
     )
-    @Column(name = "ITEM_NO", nullable = false)
     private Long itemNo;
 
     // 예상 도착 일자
@@ -38,13 +38,17 @@ public class POItem {
     @Column(name = "ORDER_QTY", nullable = false)
     private Long orderQty;
 
-    // 출고되지 않은 수량
+    // 미출 수량
     @Column(name = "PENDING_QTY")
     private Long pendingQty;
 
-    // 실제 출고된 수량
+    // 출고 수량
     @Column(name = "SHIPPED_QTY")
     private Long shippedQty;
+
+    // 합계
+    @Column(name = "TOTAL")
+    private Long total;
 
     // 발주내역 ID (FK → PO_HEADER)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -54,9 +58,9 @@ public class POItem {
     // 상품 고유 코드 (FK → PRODUCT 같은 테이블이라고 가정)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
-    private Product product;
+    private Product gtin;
 
     @Enumerated(EnumType.STRING)  // 또는 EnumType.ORDINAL
-    private POStatus status;
+    private Status status;
 
 }
