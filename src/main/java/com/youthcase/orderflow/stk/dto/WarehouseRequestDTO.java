@@ -28,12 +28,12 @@ public class WarehouseRequestDTO {
 
     // DTO -> Entity 변환 메서드
     public Warehouse toEntity() {
-        Warehouse warehouse = new Warehouse();
-        warehouse.setWarehouseId(this.warehouseId);
-        warehouse.setStorageCondition(this.storageCondition);
-        warehouse.setMaxCapacity(this.maxCapacity);
-        warehouse.setCurrentCapacity(0.0); // 초기 적재 용량은 0으로 설정
-        warehouse.setSpotId(this.spotId);
-        return warehouse;
+        return Warehouse.builder()
+                .warehouseId(this.warehouseId)
+                .storageCondition(this.storageCondition)
+                .maxCapacity(this.maxCapacity)
+                .currentCapacity(0.0) // 초기 적재 용량은 0으로 설정
+                .spotId(this.spotId)
+                .build();
     }
 }

@@ -1,14 +1,12 @@
 package com.youthcase.orderflow.auth.controller;
 
 import com.youthcase.orderflow.auth.dto.LoginRequestDTO;
+import com.youthcase.orderflow.auth.dto.ResetPasswordRequestDTO;
 import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
 import com.youthcase.orderflow.auth.service.AuthService; // 인증 및 토큰 발급 로직을 처리할 서비스
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth") // 인증 관련 경로를 관리
@@ -52,4 +50,32 @@ public class AuthController {
         return ResponseEntity.ok(tokenResponse);
     }
     */
+
+    /**
+     * [GET] 비밀번호 초기화 토큰의 유효성을 검증합니다.
+     * GET /api/auth/password/validate-token?token={tokenValue}
+     */
+    @GetMapping("/password/validate-token")
+    public ResponseEntity<String> validatePasswordResetToken(@RequestParam String token) {
+
+        // 토큰 유효성 검사 (실패 시 GlobalExceptionHandler에서 400 처리)
+        String userId = authService.validatePasswordResetToken(token);
+
+        // 유효성 검사 성공 시, 사용자 ID를 반환하거나 성공 상태만 반환합니다.
+        // 여기서는 성공 상태만 반환합니다.
+        return ResponseEntity.ok("토큰이 유효합니다.");
+    }
+
+    /**
+     * [POST] 유효한 토큰과 함께 새 비밀번호를 받아 비밀번호를 재설정합니다.
+     * POST /api/auth/password/reset
+     */
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+
+        // 만약 getToken()에서 오류가 난다면...
+        authService.resetPassword(request.getToken(), request.getNewPassword());
+
+        return ResponseEntity.noContent().build();
+    }
 }
