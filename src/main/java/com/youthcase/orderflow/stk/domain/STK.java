@@ -1,11 +1,17 @@
 package com.youthcase.orderflow.stk.domain;
 
+import com.youthcase.orderflow.pr.domain.Lot;
+import com.youthcase.orderflow.pr.domain.Product;
 import jakarta.persistence.*;
-import lombok.Data;
-
+import lombok.AccessLevel; // 추가
+import lombok.Builder;     // 추가
+import lombok.Getter;      // @Data 대신 사용
+import lombok.NoArgsConstructor; // 추가
 import java.time.LocalDateTime;
 
-//@Data
+// @Data 대신 @Getter, @NoArgsConstructor, @Builder 사용을 권장합니다.
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 1. 보호된 기본 생성자
 @Entity
 @Table(
         name = "MM_STOCK",
@@ -50,76 +56,21 @@ public class STK {
     @JoinColumn(name = "LOT_ID", nullable = false)
     private Lot lot;   // LOT 테이블 (제조일자/유통기한 포함)
 
-    // ===== Getter/Setter =====
-    public Long getStkId() {
-        return stkId;
-    }
-
-    public void setStkId(Long stkId) {
-        this.stkId = stkId;
-    }
-
-    public Boolean getHasExpirationDate() {
-        return hasExpirationDate;
-    }
-
-    public void setHasExpirationDate(Boolean hasExpirationDate) {
+    @Builder
+    public STK(Boolean hasExpirationDate, Integer quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GoodsReceipt goodsReceipt, Product product, Lot lot) {
         this.hasExpirationDate = hasExpirationDate;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
-    }
-
-    public LocalDateTime getLastUpdatedAt() {
-        return lastUpdatedAt;
-    }
-
-    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Warehouse getWarehouse() {
-        return warehouse;
-    }
-
-    public void setWarehouse(Warehouse warehouse) {
         this.warehouse = warehouse;
-    }
-
-    public GoodsReceipt getGoodsReceipt() {
-        return goodsReceipt;
-    }
-
-    public void setGoodsReceipt(GoodsReceipt goodsReceipt) {
         this.goodsReceipt = goodsReceipt;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public Lot getLot() {
-        return lot;
-    }
-
-    public void setLot(Lot lot) {
         this.lot = lot;
+    }
+
+    // 재고 수량 변경 메서드 등 비즈니스 메서드를 추가할 수 있습니다.
+    public void updateQuantity(Integer newQuantity) {
+        this.quantity = newQuantity;
+        this.lastUpdatedAt = LocalDateTime.now();
     }
 }
