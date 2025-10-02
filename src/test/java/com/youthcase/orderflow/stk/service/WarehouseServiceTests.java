@@ -30,8 +30,8 @@ class WarehouseServiceTests {
         Warehouse warehouse = new Warehouse();
         warehouse.setWarehouseId(id);
         warehouse.setStorageCondition(condition);
-        warehouse.setMaxCapacity(500);
-        warehouse.setCurrentCapacity(0);
+        warehouse.setMaxCapacity(500.0);
+        warehouse.setCurrentCapacity((double) 0);
         warehouse.setSpotId(1L);
         return warehouse;
     }
@@ -88,7 +88,7 @@ class WarehouseServiceTests {
         // Given: 수정 데이터 (WarehouseUpdateDTO 사용)
         WarehouseUpdateDTO updateDto = new WarehouseUpdateDTO();
         updateDto.setStorageCondition("냉동"); // 보관 상태 변경
-        updateDto.setMaxCapacity(999);      // 최대 용량 변경
+        updateDto.setMaxCapacity(999.0);      // 최대 용량 변경
         updateDto.setSpotId(2L);            // 지점 ID 변경
 
         // When: 창고 정보 수정
