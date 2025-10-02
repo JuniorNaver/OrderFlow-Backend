@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.auth.service;
 
-import com.youthcase.orderflow.user.domain.User;
+import com.youthcase.orderflow.auth.domain.User;
 import java.util.Optional;
 
 public interface UserService {

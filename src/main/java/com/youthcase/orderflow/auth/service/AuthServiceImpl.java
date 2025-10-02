@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
+import com.youthcase.orderflow.auth.provider.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

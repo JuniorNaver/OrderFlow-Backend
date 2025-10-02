@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.auth.filter;
 
+import com.youthcase.orderflow.auth.provider.JwtProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
