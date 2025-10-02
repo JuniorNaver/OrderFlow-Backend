@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.sd.sdSales.domain;
 
-import groovy.lang.GString;
+import com.youthcase.orderflow.pr.domain.Product;
+import com.youthcase.orderflow.stk.domain.STK;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,7 +28,7 @@ public class SalesItem {
     private String productName;
 
     @Column(name="QUANTITY", nullable = false)
-    private int quantity;
+    private int salesQuantity; //아이템 한개의 양
 
     @Column(name="SD_PRICE", precision= 12, scale=2 , nullable = false)
     private BigDecimal sdPrice;
@@ -39,10 +40,10 @@ public class SalesItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "STK_ID", nullable = false)
-    private MmStock mmstock;
+    private STK stk;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
-    private ProductMaster product;
+    private Product product;
 
 }

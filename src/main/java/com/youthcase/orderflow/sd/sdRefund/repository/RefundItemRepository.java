@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface RefundItemRepository extends JpaRepository<RefundItem, Long> {
-    List<RefundITem> findByRefundItemId(Long refundItemId);
+    List<RefundItem> findByRefundItemId(Long refundItemId);
 }

@@ -39,7 +39,7 @@ public class SalesHeader {
 
     // 1:N 매핑 (헤더 ↔ 아이템)
     @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SalesItem> items = new ArrayList<>();
+    private List<SalesItem> salesItems = new ArrayList<>();
 
 
 }
