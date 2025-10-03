@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.pr.controller;
 
 import com.youthcase.orderflow.pr.DTO.ShopListRequestDto;
+import com.youthcase.orderflow.pr.DTO.ShopListResponseDto;
 import com.youthcase.orderflow.pr.domain.AvailableStatus;
 import com.youthcase.orderflow.pr.domain.ShopList;
 import com.youthcase.orderflow.pr.service.ShopListService;
@@ -17,32 +18,24 @@ public class ShopListController {
 
     private final ShopListService shopListService;
 
+    @PostMapping
+    public ShopListResponseDto createShopList(@RequestBody @Valid ShopListRequestDto dto) {
+        return shopListService.createShopList(dto);
+    }
+
     @GetMapping
-    public List<ShopList> getAllShopLists() {
+    public List<ShopListResponseDto> getAllShopLists() {
         return shopListService.getAllShopLists();
     }
 
     @GetMapping("/{id}")
-    public ShopList getShopList(@PathVariable Long id) {
-        return shopListService.getShopListById(id).orElse(null);
-    }
-
-    @PostMapping
-    public ShopList createShopList(@RequestBody @Valid ShopListRequestDto dto) {
-        ShopList shopList = new ShopList();
-        shopList.setProductImage(dto.productImage());
-        shopList.setProductDescription(dto.productDescription());
-        shopList.setAvailable(AvailableStatus.AVAILABLE); // 예시
-        shopList.setOrderDate(dto.orderDate());           // DTO에서 발주일 가져오기
-        shopList.setProduct();
-
-        return shopListService.createShopListWithDueDate(shopList);
+    public ShopListResponseDto getShopList(@PathVariable Long id) {
+        return shopListService.getShopListById(id);
     }
 
     @PutMapping("/{id}")
-    public ShopList updateShopList(@PathVariable Long id, @RequestBody ShopList shopList) {
-        shopList.setPrItemId(id);
-        return shopListService.saveShopList(shopList);
+    public ShopListResponseDto updateShopList(@PathVariable Long id, @RequestBody @Valid ShopListRequestDto dto) {
+        return shopListService.updateShopList(id, dto);
     }
 
     @DeleteMapping("/{id}")
