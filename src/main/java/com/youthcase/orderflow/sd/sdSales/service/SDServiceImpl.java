@@ -41,11 +41,14 @@ public class SDServiceImpl implements SDService {
         SalesHeader header = salesHeaderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
-        Product product = productRepository.findByGtin(gtin)
-                .orElseThrow(() -> new RuntimeException("상품 없음"));
-
         for (ConfirmOrderRequest.ItemDTO dto : request.getItems()) {
-            List<STK> stockList = stkRepository.findAvailableStockByProductOrderByExpiry(Long.valueOf(dto.getGtin()));
+            // 상품 조회
+            Product product = productRepository.findByGtin(Long.valueOf(dto.getGtin()))
+                    .orElseThrow(() -> new RuntimeException("상품 없음"));
+
+            // ✅ JPA 네이밍 방식으로 FIFO/FEFO 재고 조회
+            List<STK> stockList = stkRepository
+                    .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpirationDateAsc(Long.valueOf(dto.getGtin()), 0);
 
             int remaining = dto.getQuantity();
 
@@ -58,11 +61,11 @@ public class SDServiceImpl implements SDService {
                 // 재고 차감
                 stk.setQuantity(available - deduction);
 
-                // 판매 아이템 저장
+                // 판매 아이템 등록
                 SalesItem item = new SalesItem();
                 item.setSalesHeader(header);
-                item.setProduct(product);
-                item.setSalesQuantity(deduction);
+                item.setProduct(product);      // Product 엔티티 참조
+                item.setSalesQuantity(deduction);   // 판매 수량
                 item.setSdPrice(dto.getPrice());
 
                 header.getSalesItems().add(item);
@@ -78,6 +81,7 @@ public class SDServiceImpl implements SDService {
         header.setSalesStatus(SalesStatus.COMPLETED);
         salesHeaderRepository.save(header);
     }
+
 
     //salesHeader 주문에 속한 아이템 목록 조회, 보류도
     @Override
