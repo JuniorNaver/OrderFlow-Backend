@@ -1,6 +1,11 @@
 package com.youthcase.orderflow.pr.service;
 
+import com.youthcase.orderflow.pr.DTO.ShopListRequestDto;
+import com.youthcase.orderflow.pr.DTO.ShopListResponseDto;
+import com.youthcase.orderflow.pr.domain.AvailableStatus;
+import com.youthcase.orderflow.pr.domain.Product;
 import com.youthcase.orderflow.pr.domain.ShopList;
+import com.youthcase.orderflow.pr.repository.ProductRepository;
 import com.youthcase.orderflow.pr.repository.ShopListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,44 +13,101 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ShopListService {
 
     private final ShopListRepository shopListRepository;
-    public ShopList createShopListWithDueDate(ShopList shopList) {
-        // 1. 발주일 가져오기 (DTO나 엔티티에서 orderDate 필드 필요)
-        LocalDate orderDate = shopList.getOrderDate();
+    private final ProductRepository productRepository;
 
-        // 2. 상품의 StorageMethod에서 소요일 가져오기
-        int leadTime = shopList.getProduct().getStorageMethod().getLeadTimeDays();
+    // Create
+    public ShopListResponseDto createShopList(ShopListRequestDto dto) {
+        Product product = productRepository.findById(dto.productId())
+                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
 
-        // 3. 예상 도착일 계산
-        LocalDate dueDate = orderDate.plusDays(leadTime);
+        int leadTime = product.getStorageMethod().getLeadTimeDays();
+        LocalDate dueDate = dto.orderDate().plusDays(leadTime);
+        String deliveryMessage = dueDate.format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")) + "에 발주될 예정입니다.";
 
-        // 4. 문자열 생성
-        String message = dueDate.format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")) + "에 발주될 예정입니다.";
-        shopList.setLeadTimeDays(message);
+        ShopList shopList = new ShopList();
+        shopList.setProduct(product);
+        shopList.setProductImage(dto.productImage());
+        shopList.setProductDescription(dto.productDescription());
+        shopList.setOrderDate(dto.orderDate());
+        shopList.setDeliveryMessage(deliveryMessage);
+        // 재고에 따른 발주 가능 여부 설정
+        if (product.getStockQuantity() > 0) {
+            shopList.setAvailable(AvailableStatus.AVAILABLE);
+        } else {
+            shopList.setAvailable(AvailableStatus.UNAVAILABLE);
+        }
 
-        // 5. 저장
-        return shopListRepository.save(shopList);
+        ShopList saved = shopListRepository.save(shopList);
+
+        return mapToResponseDto(saved);
     }
 
-    public List<ShopList> getAllShopLists() {
-        return shopListRepository.findAll();
+    // Read All
+    public List<ShopListResponseDto> getAllShopLists() {
+        return shopListRepository.findAll()
+                .stream()
+                .map(this::mapToResponseDto)
+                .collect(Collectors.toList());
     }
 
-    public Optional<ShopList> getShopListById(Long id) {
-        return shopListRepository.findById(id);
+    // Read One
+    public ShopListResponseDto getShopListById(Long id) {
+        ShopList shopList = shopListRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ShopList를 찾을 수 없습니다."));
+        return mapToResponseDto(shopList);
     }
 
-    public ShopList saveShopList(ShopList shopList) {
-        return shopListRepository.save(shopList);
+    // Update
+    public ShopListResponseDto updateShopList(Long id, ShopListRequestDto dto) {
+        ShopList shopList = shopListRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ShopList를 찾을 수 없습니다."));
+
+        Product product = productRepository.findById(dto.productId())
+                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
+
+        int leadTime = product.getStorageMethod().getLeadTimeDays();
+        LocalDate dueDate = dto.orderDate().plusDays(leadTime);
+        String deliveryMessage = dueDate.format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")) + "에 발주될 예정입니다.";
+
+        shopList.setProduct(product);
+        shopList.setProductImage(dto.productImage());
+        shopList.setProductDescription(dto.productDescription());
+        shopList.setOrderDate(dto.orderDate());
+        shopList.setDeliveryMessage(deliveryMessage);
+        // 재고에 따른 발주 가능 여부 설정
+        if (product.getStockQuantity() > 0) {
+            shopList.setAvailable(AvailableStatus.AVAILABLE);
+        } else {
+            shopList.setAvailable(AvailableStatus.UNAVAILABLE);
+        }
+
+        ShopList updated = shopListRepository.save(shopList);
+
+        return mapToResponseDto(updated);
     }
 
+    // Delete
     public void deleteShopList(Long id) {
         shopListRepository.deleteById(id);
+    }
+
+    // DTO 매핑 헬퍼
+    private ShopListResponseDto mapToResponseDto(ShopList shopList) {
+        return new ShopListResponseDto(
+                shopList.getPrItemId(),
+                shopList.getProductImage(),
+                shopList.getProductDescription(),
+                shopList.getOrderDate(),
+                shopList.getDeliveryMessage(),
+                shopList.getProduct().getUnit(),
+                shopList.getAvailable()
+        );
     }
 }

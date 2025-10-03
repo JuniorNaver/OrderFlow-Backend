@@ -24,8 +24,8 @@ public class ShopList {
     @Column(name = "AVAILABLE", nullable = false, length = 20)
     private AvailableStatus available;   // 발주 가능 여부 (ENUM)
 
-    @Column(name = "LEAD_TIME_DAYS", length = 250)
-    private String leadTimeDays;   // 발주 후 예상일수
+    @Column(name = "DELIVERY_MESSAGE", length = 250)
+    private String deliveryMessage;   // 발주 후 예상일수
 
     @Column(name = "PRODUCT_DESCRIPTION", length = 2000)
     private String productDescription;   // 제품 상세 설명

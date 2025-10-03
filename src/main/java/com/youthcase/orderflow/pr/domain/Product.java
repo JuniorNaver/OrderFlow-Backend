@@ -28,4 +28,8 @@ public class Product {
     @Column(name = "STORAGE_METHOD", nullable = false, length = 20)
     private StorageMethod storageMethod; // 보관방법
 
+    @Column(name = "STOCK_QUANTITY", nullable = false)
+    private Integer stockQuantity; // 재고 수량
+
+
 }

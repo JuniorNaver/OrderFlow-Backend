@@ -7,10 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record ShopListRequestDto(
+        @NotNull String productId,
         @NotBlank String productImage,
-        @NotNull StorageMethod storageMethod,
-        @NotNull Unit unit,
         @NotBlank String productDescription,
         @NotNull LocalDate orderDate  // 발주일 필드 추가
-) {
-}
+) {}
