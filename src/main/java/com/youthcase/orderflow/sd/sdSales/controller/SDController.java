@@ -1,7 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.controller;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
-import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
@@ -9,7 +8,7 @@ import com.youthcase.orderflow.sd.sdSales.service.SDService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
+
 import java.util.List;
 
 @RestController
@@ -58,8 +57,8 @@ public class SDController {
 
     //보류 주문 다시 열기
     @PostMapping("/{orderId}/resume")
-    public void resumeOrder(@PathVariable Long orderId) {
-        sdService.resumeOrder(orderId);
+    public SalesHeaderDTO resumeOrder(@PathVariable Long orderId) {
+        return sdService.resumeOrder(orderId);
     }
 
     //보류 취소
@@ -68,18 +67,4 @@ public class SDController {
         sdService.cancelOrder(orderId);
     }
 
-
-//    public SDController(SDService sdService) {
-//        this.sdService = sdService;
-//    }
-//
-//    @GetMapping
-//    public List<SalesItem> getAll() {
-//        return sdService.findAll();
-//    }
-//
-//    @PostMapping
-//    public SDSales create(@RequestBody SDSales sdSales) {
-//        return sdService.save(sdSales);
-//    }
 }
