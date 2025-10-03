@@ -43,7 +43,7 @@ public class SDServiceImpl implements SDService {
 
         for (ConfirmOrderRequest.ItemDTO dto : request.getItems()) {
             // 상품 조회
-            Product product = productRepository.findByGtin(Long.valueOf(dto.getGtin()))
+            Product product = productRepository.findByGtin(String.valueOf(dto.getGtin()))
                     .orElseThrow(() -> new RuntimeException("상품 없음"));
 
             // ✅ JPA 네이밍 방식으로 FIFO/FEFO 재고 조회
@@ -107,9 +107,15 @@ public class SDServiceImpl implements SDService {
     public void holdOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
+
+        //상태 검증: 진행중 상태에서만 보류 가능
+        if (!SalesStatus.PENDING.equals(header.getSalesStatus())) {
+            throw new RuntimeException("진행 중인 주문만 보류할 수 있습니다.");
+    }
+
         header.setSalesStatus(SalesStatus.HOLD);
         salesHeaderRepository.save(header);
-    }
+}
 
     //보류 목록 불러오기
     @Override
@@ -124,6 +130,10 @@ public class SDServiceImpl implements SDService {
     public SalesHeaderDTO resumeOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("보류 주문 없음"));
+
+        if(!SalesStatus.HOLD.equals(header.getSalesStatus())) {
+            throw new RuntimeException("보류 상태가 아닌 주문은 다시 열 수 없습니다.");
+        }
 
         header.setSalesStatus(SalesStatus.PENDING);
 
@@ -154,6 +164,15 @@ public class SDServiceImpl implements SDService {
         }
 
         header.setSalesStatus(SalesStatus.CANCELLED);
+
+        // 만약 보류 주문 취소 시 재고를 복구해야 한다면 여기서 재고 복구 처리
+        // for (SalesItem item : header.getItems()) {
+        //     STK stk = stkRepository.findByProductAndLot(...);
+        //     stk.setQuantity(stk.getQuantity() + item.getSalesQuantity());
+        //     stkRepository.save(stk);
+        // }
+
+        salesHeaderRepository.save(header);
 
     }
 }
