@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Table(name = "CATEGORY")
 @Getter
@@ -26,8 +28,6 @@ public class Category {
     @Column(name = "SMALL_CATEGORY", length = 60)
     private String smallCategory; // 소분류
 
-    // PRODUCT 테이블과 FK 관계
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GTIN")
-    private Product product; // 상품 FK
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    private List<Product> products; // 카테고리에 속한 상품들
 }
