@@ -69,7 +69,7 @@ develop ──────────────┐
 ## 🛠 초기 설정 (최초 1회만)
 ```bash
 git clone https://github.com/JuniorNaver/OrderFlow-Backend.git    # 레포 클론
-cd OrderFlow-Backend                 # 클론한 폴더로 이동
-git checkout -b develop      # develop 브랜치 생성 (main 기준)
-git push -u origin develop   # 원격에 올리기
+cd OrderFlow-Backend              # 클론한 폴더로 이동
+git checkout develop         # develop 브랜치 체크아웃 (main 기준)
+git push -u origin develop   # 원격 레포와 연동
 ```
