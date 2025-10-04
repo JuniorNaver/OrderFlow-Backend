@@ -1,10 +1,14 @@
 package com.youthcase.orderflow.sd.sdPayment.service;
 
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentStatus;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
 import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
 import com.youthcase.orderflow.sd.sdPayment.payment.PaymentProcessor;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
+import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,29 +19,31 @@ import java.time.LocalDateTime;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentHeaderRepository headerRepository;
+    private final SalesHeaderRepository salesHeaderRepository;
     private final PaymentProcessor processor;
 
     @Override
-    public PaymentHeader createPayment(PaymentHeader header) {
+    @Transactional
+    public PaymentResult createPayment(PaymentRequest request) {
 
-        header.getPaymentItems().forEach(item -> {
-            PaymentRequest request = PaymentRequest.builder()
-                    .orderId(header.getOrderId())
-                    .amount(item.getAmount())
-                    .paymentMethod(item.getPaymentMethod()) //card/easy/cash
-                    .build();
+            SalesHeader salesHeader = salesHeaderRepository.findById(request.getOrderId())
+                    .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없음"));
+            // PaymentHeader와 PaymentItem 생성 로직 작성
+            PaymentHeader header = new PaymentHeader();
+            header.setSalesHeader(salesHeader);
+            header.setTotalAmount(request.getAmount());
+            header.setPaymentStatus(PaymentStatus.APPROVED);
 
             PaymentResult result = processor.processPayment(request);
-            if(!result.isSuccess()) {
+            if (!result.isSuccess()) {
                 throw new RuntimeException("결제 실패: " + result.getMessage());
             }
 
-            item.setTransactionNo(result.getTransactionNo());
-        });
+            // DB 저장
+            headerRepository.save(header);
+            return result;
+        }
 
-        header.setPaymentStatus("APPROVED");
-        return headerRepository.save(header);
-    }
 
     @Override
     public PaymentHeader getPayment(Long id) {
@@ -46,15 +52,17 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional
     public void cancelPayment(Long id) {
         PaymentHeader header = getPayment(id);
 
         header.getPaymentItems().forEach(item -> {
-            processor.cancelPayment(item.getPaymentMethod().toLowerCase(),item);
+            processor.cancelPayment(item.getPaymentMethod().getKey(), item);
+            // ✅ 실무에서는 transactionNo null 대신 상태 플래그만 변경하는 게 좋음
             item.setTransactionNo(null);
         });
 
-        header.setPaymentStatus("CANCELED");
+        header.setPaymentStatus(PaymentStatus.CANCELED); // ✅ Enum 사용
         header.setCanceledTime(LocalDateTime.now());
         headerRepository.save(header);
     }

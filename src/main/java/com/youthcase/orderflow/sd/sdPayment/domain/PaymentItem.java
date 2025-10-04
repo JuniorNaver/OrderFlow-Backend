@@ -25,14 +25,15 @@ public class PaymentItem {
     @Column(name = "PAYMENT_ITEM_ID", nullable = false)
     private Long paymentItemId; // 결제 아이템 고유번호
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "PAYMENT_METHOD", length = 20, nullable = false)
-    private String paymentMethod; // 결제 수단 (CARD, CASH, EASY_PAYMENTS...)
+    private PaymentMethod paymentMethod; // 결제 수단 (CARD, CASH, EASY_PAYMENTS...)
 
     @Column(name = "AMOUNT", precision = 12, scale = 2)
     private BigDecimal amount; // 결제 금액
 
     @Column(name = "TRANSACTION_NO", length = 50)
-    private String transactionNo; // 승인번호
+    private String transactionNo; // 카드사, 간편결제 승인번호(부분 결제용)
 
     // FK 매핑
     @ManyToOne(fetch = FetchType.LAZY)

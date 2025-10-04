@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.payment.dto;
 
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentMethod;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -12,5 +13,5 @@ import java.math.BigDecimal;
 public class PaymentRequest {
     private Long orderId; //주문번호
     private BigDecimal amount; //결제금액
-    private String paymentMethod; //결제방식
+    private PaymentMethod paymentMethod; //결제방식
 }
