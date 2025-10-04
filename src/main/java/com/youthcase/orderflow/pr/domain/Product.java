@@ -31,5 +31,8 @@ public class Product {
     @Column(name = "STOCK_QUANTITY", nullable = false)
     private Integer stockQuantity; // 재고 수량
 
+    @ManyToOne
+    @JoinColumn(name = "KAN_CODE", nullable = false)
+    private Category category;
 
 }
