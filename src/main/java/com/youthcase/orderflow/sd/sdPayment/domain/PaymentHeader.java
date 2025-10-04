@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.domain;
 
+import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,17 +32,20 @@ public class PaymentHeader {
     @Column(name = "CANCELED_TIME")
     private LocalDateTime canceledTime; // 결제 취소 시각
 
+
     @Column(name = "TRANSACTION_NO", length = 50)
     private String transactionNo; // PG사 은행 거래번호
 
     @Column(name= "TOTAL_AMOUNT", precision = 12, scale = 2)
-    private BigDecimal totalAmount; // 총 결제금액 (VARCHAR2(200))
+    private BigDecimal totalAmount; // 총 결제금액 (NUMBER(12,2))
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "PAYMENT_STATUS", length = 20, nullable = false)
-    private String paymentStatus; // 결제 상태 (예: REQUESTED, APPROVED, CANCELED)
+    private PaymentStatus paymentStatus; // 결제 상태
 
-    @Column(name = "ORDER_ID", nullable = false)
-    private Long orderId; // 판매 고유번호(FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name  = "ORDER_ID", nullable = false)
+    private SalesHeader salesHeader;
 
     // 연관관계 설정 (1:N)
     @OneToMany(mappedBy = "paymentHeader",

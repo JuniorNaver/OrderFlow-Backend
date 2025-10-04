@@ -26,5 +26,6 @@ public interface SalesHeaderRepository extends JpaRepository<SalesHeader, Long> 
             "FROM SalesHeader sh " +
             "WHERE sh.salesStatus = 'HOLD'")
     List<SalesHeaderDTO> findHoldOrders();
+
 }
 
