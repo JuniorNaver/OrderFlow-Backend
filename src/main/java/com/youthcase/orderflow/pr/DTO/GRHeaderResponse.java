@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.pr.DTO;
+package com.youthcase.orderflow.pr.dto;
 
 import lombok.Getter;
 import lombok.Setter;

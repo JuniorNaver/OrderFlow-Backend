@@ -1,21 +1,28 @@
 package com.youthcase.orderflow.pr.repository;
 
 import com.youthcase.orderflow.pr.domain.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
 
-    // GTIN으로 단건 조회 (Optional<Product> 대신 List<Product> 가능)
-    Optional<Product> findByGtin(String gtin);
+    // 전체 조회(페이지) + 카테고리 같이 로딩
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findAll(Pageable pageable);   // JpaRepository 기본 findAll(Pageable)을 오버라이드
 
-    // GTIN이 존재하는지 여부 확인
-    boolean existsByGtin(String gtin);
+    // 이름 부분검색
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findByProductNameContainingIgnoreCase(String name, Pageable pageable);
 
-    // GTIN 일부 포함해서 검색
-    List<Product> findByGtinContaining(String partialGtin);
+    // GTIN 부분검색
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findByGtinContaining(String partialGtin, Pageable pageable);
+
+    // 카테고리 코드로 조회
+    @EntityGraph(attributePaths = "category")
+    Page<Product> findByCategory_KanCode(String KanCode, Pageable pageable);
 }

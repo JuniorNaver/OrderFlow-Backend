@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.pr.controller;
 
-import com.youthcase.orderflow.pr.DTO.GRHeaderRequest;
+import com.youthcase.orderflow.pr.dto.GRHeaderRequest;
 import com.youthcase.orderflow.pr.domain.GRHeader;
 import com.youthcase.orderflow.pr.service.GRHeaderService;
 import jakarta.validation.Valid;

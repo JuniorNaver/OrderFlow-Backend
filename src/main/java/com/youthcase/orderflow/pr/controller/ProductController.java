@@ -1,16 +1,20 @@
 package com.youthcase.orderflow.pr.controller;
 
-import com.youthcase.orderflow.pr.DTO.ProductRequestDto;
-import com.youthcase.orderflow.pr.DTO.ProductUpdateDto;
+import com.youthcase.orderflow.pr.dto.ProductRequestDto;
+import com.youthcase.orderflow.pr.dto.ProductResponseDto;
+import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
 import com.youthcase.orderflow.pr.domain.Product;
 import com.youthcase.orderflow.pr.service.ProductService;
-import com.youthcase.orderflow.pr.Mapper.ProductMapper;
+import com.youthcase.orderflow.pr.mapper.ProductMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/products")
@@ -19,46 +23,60 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // 전체 상품 조회
+    /** 목록/검색
+     * GET /api/products?name=콜라&gtin=8801&category=BEV&page=0&size=20&sort=productName,asc
+     * 200 OK + Page<ProductResponseDto>
+     */
     @GetMapping
-    public List<Product> getAllProducts() {
-        return productService.getAllProducts();
+    public Page<ProductResponseDto> list(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String gtin,
+            @RequestParam(required = false, name = "category") String categoryCode,
+            @PageableDefault(size = 20, sort = "productName") Pageable pageable) {
+
+        // 서비스에서 분기: name > gtin > category > all (네가 원하면 우선순위 조정)
+        return productService.listAdvanced(name, gtin, categoryCode, pageable);
     }
 
-    // 단건 조회
+    /** 단건 조회
+     * GET /api/products/{gtin}
+     * 200 OK or 404
+     */
     @GetMapping("/{gtin}")
-    public ResponseEntity<Product> getProduct(@PathVariable String gtin) {
-        return productService.getProductById(gtin)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ProductResponseDto get(@PathVariable String gtin) {
+        return productService.get(gtin);
     }
 
-    // 상품 등록
+    /** 생성
+     * POST /api/products
+     * 201 Created + Location 헤더
+     * 400(검증 실패), 409(중복 GTIN)
+     */
     @PostMapping
-    public Product createProduct(@RequestBody @Valid ProductRequestDto dto) {
-        Product product = ProductMapper.toEntity(dto, dto.gtin());
-        return productService.saveProduct(product);
+    public ResponseEntity<ProductResponseDto> create(@Valid @RequestBody ProductRequestDto dto) {
+        var resp = productService.create(dto);
+        return ResponseEntity
+                .created(URI.create("/api/products/" + resp.gtin()))
+                .body(resp);
     }
 
-    // 상품 수정
+    /** 수정
+     * PUT /api/products/{gtin}
+     * 200 OK or 404
+     */
     @PutMapping("/{gtin}")
-    public ResponseEntity<Product> updateProduct(
-            @PathVariable String gtin,
-            @RequestBody @Valid ProductUpdateDto dto) {
-
-        return productService.getProductById(gtin)
-                .map(existing -> {
-                    ProductMapper.updateEntity(existing, dto); // 기존 엔티티 값 갱신
-                    Product updated = productService.updateProduct(gtin, existing);
-                    return ResponseEntity.ok(updated);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ProductResponseDto update(@PathVariable String gtin,
+                                     @Valid @RequestBody ProductUpdateDto dto) {
+        return productService.update(gtin, dto);
     }
 
-    // 상품 삭제
+    /** 삭제
+     * DELETE /api/products/{gtin}
+     * 204 No Content (멱등)
+     */
     @DeleteMapping("/{gtin}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable String gtin) {
-        productService.deleteProduct(gtin);
+    public ResponseEntity<Void> delete(@PathVariable String gtin) {
+        productService.delete(gtin);
         return ResponseEntity.noContent().build();
     }
 }
