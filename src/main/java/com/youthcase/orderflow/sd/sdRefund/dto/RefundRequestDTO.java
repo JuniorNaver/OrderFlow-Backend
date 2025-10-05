@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.sd.sdRefund.refund.dto;
+package com.youthcase.orderflow.sd.sdRefund.dto;
 
 import lombok.*;
 
