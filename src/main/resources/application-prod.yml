@@ -12,7 +12,6 @@ spring:
       ddl-auto: validate       # 운영 환경에서는 테이블 구조 검증만
     show-sql: false             # 운영 환경에서는 SQL 로그 출력 안 함
     open-in-view: false          # 운영 환경 Lazy 로딩 방지
-
     properties:
       hibernate:
         format_sql: false
@@ -22,7 +21,5 @@ spring:
 ## logging 설정 (운영 환경에서는 INFO 수준)
 logging:
   level:
-    org:
-      springframework:
-        security:
-          web: trace
+    root: info
+    org.springframework: info

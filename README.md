@@ -70,6 +70,91 @@ develop ──────────────┐
 ```bash
 git clone https://github.com/JuniorNaver/OrderFlow-Backend.git    # 레포 클론
 cd OrderFlow-Backend              # 클론한 폴더로 이동
-git checkout develop         # develop 브랜치 체크아웃 (main 기준)
-git push -u origin develop   # 원격 레포와 연동
+git checkout develop              # develop 브랜치 체크아웃
+git push -u origin develop        # 원격 레포와 연동
 ```
+
+## ⚙️ 초기 환경 세팅 (Oracle Cloud 연동 / 모든 팀원 공통)
+
+> ⚠️ 이 단계는 GitHub에 없는 **보안 파일(wallet, .env)** 을 세팅하기 위한 절차입니다.
+
+### 1️⃣ 노션에서 필수 파일 다운로드
+
+📎 **[OrderFlow 환경 설정 자료실 (Notion)](https://www.notion.so/...)**
+
+- `wallet.zip` (Oracle Cloud 인증 폴더)
+- `.env` (운영 DB 접속 정보)
+
+---
+
+### 2️⃣ wallet 설정
+
+1. `wallet.zip` 파일을 다운로드 후 압축 해제  
+2. 프로젝트 내부에 아래 구조로 배치
+```bash
+src/main/resources/wallet/
+```
+안에 다음 파일들이 있어야 합니다 👇
+```yaml
+cwallet.sso
+ewallet.p12
+keystore.jks
+sqlnet.ora
+tnsnames.ora
+truststore.jks
+ojdbc.properties
+```
+
+---
+
+### 3️⃣ .env 설정
+
+1. `.env` 파일을 프로젝트 **루트 폴더**(= `build.gradle`이 있는 위치)에 둡니다.
+2. 내용 예시:
+```yaml
+DB_URL=jdbc:oracle:thin:@orderflow_high?TNS_ADMIN=./src/main/resources/wallet
+DB_USERNAME=orderflowadmin
+DB_PASSWORD=OrderFlow1234
+```
+
+> ⚠️ `.env`는 **절대 깃허브에 업로드하지 마세요.**
+> (`.gitignore`에 이미 등록되어 있습니다.)
+
+---
+
+### 4️⃣ 실행 확인
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=prod'
+```
+Spring Boot가 .env의 환경변수를 읽고 Oracle Cloud DB(orderflow_high)에 연결됩니다.
+
+### ✅ 폴더 구조 예시
+```bash
+OrderFlow-Backend/
+ ├── build.gradle
+ ├── .env                      # 환경변수 파일 (Git에 올리지 않음)
+ ├── .gitignore
+ └── src/
+     └── main/
+         └── resources/
+             ├── application.yml
+             ├── application-dev.yml
+             ├── application-prod.yml
+             └── wallet/         # Oracle 인증 폴더 (Git에 올리지 않음)
+```
+### 🧱 기본 규칙
+| 항목 | 설명 |
+|------|------|
+| `.env` | DB 접속 정보 포함 → 업로드 금지 |
+| `wallet/` | Oracle 인증서 포함 → 업로드 금지 |
+| `application-prod.yml` | 환경변수 참조만 (`${DB_URL}` 등) 사용 |
+| `application-dev.yml` | 로컬 DB(javauser/java1234) 테스트용 가능 |
+
+### 💡 오류 발생 시
+| 증상 | 원인 | 해결 방법 |
+|------|------|-----------|
+| `ORA-29024: Certificate validation failure` | wallet 경로 잘못됨 | `.env`의 `TNS_ADMIN` 경로 확인 |
+| `Invalid username/password` | DB 계정 틀림 | `.env` 값 재확인 |
+| `Listener refused connection` | TNS 이름 불일치 | wallet 내부 `tnsnames.ora` 확인 |
+| `Could not resolve placeholder` | .env 미설정 | `.env`를 루트 폴더에 추가 |
