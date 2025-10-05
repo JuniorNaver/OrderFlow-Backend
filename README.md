@@ -80,7 +80,7 @@ git push -u origin develop        # 원격 레포와 연동
 
 ### 1️⃣ 노션에서 필수 파일 다운로드
 
-📎 **[OrderFlow 환경 설정 자료실 (Notion)](https://www.notion.so/...)**
+📎 **[OrderFlow 환경 설정 자료실 (Notion)]**
 
 - `wallet.zip` (Oracle Cloud 인증 폴더)
 - `.env` (운영 DB 접속 정보)
