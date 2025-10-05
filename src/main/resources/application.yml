@@ -9,3 +9,14 @@ spring:
   ## 활성 프로파일 (개발/운영)
   profiles:
     active: dev  # 개발: dev / 운영: prod
+
+
+
+    po:
+      # PO(발주) 마이크로서비스의 베이스 URL (스킴/호스트/포트)
+      base-url: http://po-service
+      # 장바구니에 상품을 담을 때 호출하는 API 경로 (POST)
+      import-path-items: /po/items
+      # 담긴 장바구니를 발주로 확정(체크아웃)할 때 호출하는 API 경로 (POST)
+      import-path-checkout: /po/checkout
+

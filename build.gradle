@@ -108,6 +108,12 @@ dependencies {
     // JWT에서 JSON 처리를 위한 Jackson 연동
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+    // build.gradle
+    // 리액티브 웹 스택(WebFlux) 사용: 논블로킹 I/O + Netty 기반 서버
+    // - @RestController + Mono/Flux 반환
+    // - WebClient 로 비동기 HTTP 호출
+    // - PR 과 PO를 연겷시켜주는 장치
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 

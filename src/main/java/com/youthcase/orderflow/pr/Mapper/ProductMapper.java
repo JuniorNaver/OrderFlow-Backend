@@ -1,26 +1,54 @@
-package com.youthcase.orderflow.pr.Mapper;
+package com.youthcase.orderflow.pr.mapper;
 
-import com.youthcase.orderflow.pr.DTO.ProductRequestDto;
-import com.youthcase.orderflow.pr.DTO.ProductUpdateDto;
+import com.youthcase.orderflow.pr.dto.ProductRequestDto;
+import com.youthcase.orderflow.pr.dto.ProductResponseDto;
+import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
+import com.youthcase.orderflow.pr.domain.Category;
 import com.youthcase.orderflow.pr.domain.Product;
 
-public class ProductMapper {
+import java.math.RoundingMode;
 
-    public static Product toEntity(ProductRequestDto dto, String gtin) {
+public class ProductMapper {
+    private ProductMapper() {}
+
+    public static ProductResponseDto toResp(Product p) {
+        // Category 널 세이프 (FK NOT NULL이더라도 방어적으로)
+        String categoryCode = null;
+        String categoryName = null;
+        Category c = p.getCategory();
+        if (c != null) {
+            // ↓ Category 엔티티의 실제 getter 이름에 맞춰 수정
+            categoryCode = c.getKanCode();
+            categoryName = c.getLargeCategory();
+        }
+        return new ProductResponseDto(
+                p.getGtin(),
+                p.getProductName(),
+                p.getUnit(),
+                p.getPrice(),
+                p.getStorageMethod(),
+                categoryCode,
+                categoryName
+        );
+    }
+
+    public static Product toEntity(ProductRequestDto dto, Category category) {
         Product product = new Product();
-        product.setGtin(gtin != null ? gtin : dto.gtin());
+        product.setGtin(dto.gtin());
         product.setProductName(dto.productName());
         product.setUnit(dto.unit());
-        product.setPrice(dto.price());
+        product.setPrice(dto.price().setScale(2, RoundingMode.HALF_UP));
         product.setStorageMethod(dto.storageMethod());
+        product.setCategory(category);
         return product;
     }
 
     // 기존 엔티티에 update DTO 반영
-    public static void updateEntity(Product product, ProductUpdateDto dto) {
+    public static void updateEntity(Product product, ProductUpdateDto dto, Category category) {
         product.setProductName(dto.productName());
         product.setUnit(dto.unit());
         product.setPrice(dto.price());
         product.setStorageMethod(dto.storageMethod());
+        product.setCategory(category);
     }
 }
