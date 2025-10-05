@@ -3,6 +3,6 @@ package com.youthcase.orderflow.po.domain;
 public enum Status {
     PR,   // 발주 요청
     PO,   // 발주 완료
-    D,    // 삭제/취소
+    S,    // 저장
     GI    // 출고 처리
 }

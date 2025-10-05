@@ -34,7 +34,7 @@ public class POServiceImpl implements POService {
         POHeader savedHeader = poHeaderRepository.save(poHeader);
 
         // 4. 관련된 아이템 조회
-        List<POItem> items = poItemRepository.findByPoHeader_PoId(savedHeader.getPoId());
+        List<POItem> items = poItemRepository.findByPoHeader_PoId(poId);
 
         // 5. 본사로 전송 (추후 실제 구현)
         sendToHQ(savedHeader, items);
@@ -43,10 +43,9 @@ public class POServiceImpl implements POService {
         return new PO(savedHeader, items);
     }
 
-    // 본사로 발주 정보 전송 (실제 구현은 RestTemplate, Kafka, MQ 등으로 연결 가능)
+    // 본사로 발주 정보 전송
     private void sendToHQ(POHeader poHeader, List<POItem> items) {
-        // TODO: 본사 시스템 연동 로직 작성
-        System.out.println("본사로 발주 전송: HeaderID=" + poHeader.getPoId() + ", Items=" + items.size());
+        System.out.println("본사로 발주 전송: HeaderID=" + poHeader.getPoId());
     }
 
 }
