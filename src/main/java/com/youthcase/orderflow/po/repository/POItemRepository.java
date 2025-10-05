@@ -9,18 +9,14 @@ import java.util.Optional;
 
 public interface POItemRepository extends JpaRepository<POItem, Long> {
 
-    //발주헤더 id로 아이템 조회
+    //발주 id로 상품 조회
+    List<POItem> findByPoHeader_PoId(Long poId);
+
+    //발주 id, 상태로 상품들 조회
     List<POItem> findByPoHeader_PoIdAndStatus(Long poId, Status status);
 
-    //상품코드를 통한 여러 상품 조회
-    List<POItem> findAllByGtinIn(List<Long> gtins);
+    //상품 no, 상태로 단일 상품 조회
+    Optional<POItem> findByItemNoAndStatus(Long itemNo, Status status);
 
-
-
-    //특정 상태에 해당하는 아이템 조회
-    List<POItem> findAllByStatus(Status status);
-
-    //상품코드와 상태로 아이템 조회.
-    Optional<POItem> findByGtinAndStatus(Long gtin, Status status);
 
 }
