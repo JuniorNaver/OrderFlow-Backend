@@ -39,4 +39,17 @@ public class Product {
 
     @Column(name = "ORDERABLE", nullable = false)
     private Boolean orderable = Boolean.TRUE; // 기본값: 발주 가능
+
+    // 1) 가격 스케일 강제 (Lombok이 이 필드의 setter는 생성 안 함)
+    public void setPrice(java.math.BigDecimal price) {
+        this.price = (price == null) ? null : price.setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
+    // 2) setter를 우회하는 경우 대비 (빌더/매퍼가 필드 직할로 넣을 때)
+    @PrePersist @PreUpdate
+    private void normalizePrice() {
+        if (price != null) {
+            price = price.setScale(2, java.math.RoundingMode.HALF_UP);
+        }
+    }
 }

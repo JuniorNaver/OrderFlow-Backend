@@ -27,6 +27,13 @@ public class CategoryService {
     }
 
     public void deleteCategory(String kanCode) {
-        categoryRepository.deleteById(kanCode);
+        try {
+            categoryRepository.deleteById(kanCode);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "연결된 상품이 있어 카테고리를 삭제할 수 없습니다: " + kanCode
+            );
+        }
     }
 }

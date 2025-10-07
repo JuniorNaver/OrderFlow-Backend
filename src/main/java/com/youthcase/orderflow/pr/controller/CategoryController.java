@@ -22,7 +22,8 @@ public class CategoryController {
     @GetMapping("/{kanCode}")
     public Category getCategory(@PathVariable String kanCode) {
         return categoryService.getCategoryById(kanCode)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Category not found: " + kanCode));
     }
 
     @PostMapping
