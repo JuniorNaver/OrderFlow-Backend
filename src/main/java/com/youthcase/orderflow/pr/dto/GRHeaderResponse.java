@@ -9,7 +9,6 @@ import java.util.Date;
 @Getter
 @Setter
 public class GRHeaderResponse {
-
     private String grId;
     private String status;
     private BigDecimal totalAmount;
