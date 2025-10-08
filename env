@@ -1,0 +1,4 @@
+# .env
+DB_URL=jdbc:oracle:thin:@orderflow_high?TNS_ADMIN=./src/main/resources/wallet
+DB_USERNAME=orderflowadmin
+DB_PASSWORD=OrderFlow1234
