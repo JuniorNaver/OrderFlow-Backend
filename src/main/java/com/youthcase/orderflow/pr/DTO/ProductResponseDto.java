@@ -14,3 +14,5 @@ public record ProductResponseDto(
         String categoryCode,
         String categoryName
 ) {}
+
+// dto폴더 변경이안돼
