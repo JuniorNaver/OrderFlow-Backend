@@ -18,18 +18,18 @@ package com.youthcase.orderflow.pr.controller;
 
 import com.youthcase.orderflow.pr.dto.PurchaseRequestCreateDto;
 import com.youthcase.orderflow.pr.dto.PurchaseRequestDto;
+import com.youthcase.orderflow.pr.service.NotFoundException;
 import com.youthcase.orderflow.pr.service.PurchaseRequestService;
 import com.youthcase.orderflow.bi.dto.RecommendDTO;
-import com.youthcase.orderflow.bi.service.recommend.BIRecommendBatchService;
 import com.youthcase.orderflow.bi.service.recommend.BIRecommendService;
+import com.youthcase.orderflow.pr.task.RecommendUpdateJob;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -38,8 +38,9 @@ import java.util.List;
 public class PurchaseRequestController {
 
     private final PurchaseRequestService service;
-    private final BIRecommendBatchService recommendBatchService; // 🔄 추천 발주 자동 갱신 서비스
     private final BIRecommendService recommendService;           // 📊 추천 발주 결과 조회 서비스
+    private final RecommendUpdateJob recommendUpdateJob;
+
 
     /**
      * ✅ 발주 요청 생성 API
@@ -55,47 +56,12 @@ public class PurchaseRequestController {
             @RequestBody PurchaseRequestCreateDto dto,
             Authentication auth
     ) {
-        // 1️⃣ 원래의 발주 생성 로직 (핵심 비즈니스 유지)
-        PurchaseRequestDto response = service.placeOrder(storeId, dto, auth);
-
-        // 2️⃣ 비동기 후처리: BI 추천 발주 결과 자동 갱신
-        triggerRecommendUpdateAsync(Long.parseLong(storeId));
-
-        // 3️⃣ 원래의 응답 그대로 반환
+        var response = service.placeOrder(storeId, dto, auth);
+        Long internalId = toLongOrThrow(storeId);
+        recommendUpdateJob.trigger(internalId); // ✅ 이거 하나로 끝
         return response;
     }
 
-    /**
-     * 🔁 BI 추천 발주 자동 갱신 (비동기)
-     * -----------------------------------
-     * - PR 발주 생성 시 자동으로 BI 추천 데이터를 최신화
-     * - 실제 PR 비즈니스 흐름에는 영향 없음
-     */
-    @Async
-    protected void triggerRecommendUpdateAsync(Long storeId) {
-        try {
-            String from = java.time.LocalDate.now().minusDays(7)
-                    .format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
-            String to = java.time.LocalDate.now()
-                    .format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
-
-            // 예시: 실제 데이터 연동 전에는 빈 Map 사용
-            recommendBatchService.generateRecommendationsV2(
-                    storeId,
-                    from,
-                    to,
-                    Collections.emptyMap(),
-                    Collections.emptyMap(),
-                    Collections.emptyMap()
-            );
-
-            System.out.println("[BIRecommend] 자동 추천 발주 갱신 완료 (storeId=" + storeId + ")");
-
-        } catch (Exception e) {
-            // 예외는 PR 흐름에 영향을 주지 않도록 무시 (로그만 남김)
-            System.err.println("[BIRecommend] 추천 발주 갱신 중 오류 발생: " + e.getMessage());
-        }
-    }
 
     /**
      * 📊 추천 발주 결과 조회 API
@@ -107,19 +73,34 @@ public class PurchaseRequestController {
     @GetMapping("/stores/{storeId}/recommend")
     @PreAuthorize("hasAuthority('PR_READ') or hasRole('ADMIN')")
     public ResponseEntity<List<RecommendDTO>> getRecommendedOrders(
-            @PathVariable Long storeId,
+            @PathVariable String storeId,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to
     ) {
         // 기본 조회 기간: 최근 7일
         String fromKey = (from != null) ? from :
                 java.time.LocalDate.now().minusDays(7)
-                        .format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+                        .format(DateTimeFormatter.BASIC_ISO_DATE);
         String toKey = (to != null) ? to :
                 java.time.LocalDate.now()
-                        .format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+                        .format(DateTimeFormatter.BASIC_ISO_DATE);
 
-        List<RecommendDTO> results = recommendService.getRecommendations(storeId, fromKey, toKey);
+        // 🔁 BI 쪽이 Long을 요구하므로 숫자 문자열일 경우에만 파싱
+        Long internalId = toLongOrThrow(storeId);
+        List<RecommendDTO> results = recommendService.getRecommendations(internalId, fromKey, toKey);
         return ResponseEntity.ok(results);
+
+            }
+    // ---- helper ----
+    private Long toLongOrThrow (String raw){
+        String s = (raw == null) ? "" : raw.trim();
+        if (!s.matches("^[0-9]+$")) {
+            throw new NotFoundException("점포 ID 형식 오류(숫자만 허용): " + raw);
+        }
+        try {
+            return Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            throw new NotFoundException("점포 ID 변환 실패: " + raw);
+        }
     }
 }

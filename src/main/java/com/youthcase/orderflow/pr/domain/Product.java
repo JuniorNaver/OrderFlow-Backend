@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true) // 동등성은 GTIN 기준
 public class Product {
     @Id
+    @EqualsAndHashCode.Include
     @Column(name = "GTIN", length = 14, nullable = false)
     private String gtin;
 
@@ -54,15 +55,21 @@ public class Product {
     // --- 치수(mm): 음수 방지 + NUMBER(6,0) 명시 ---
     @PositiveOrZero
     @Max(999_999)
-    @Column(name = "WIDTH_MM",  precision = 6, scale = 0)
+    @jakarta.validation.constraints.Digits(integer = 6, fraction = 0)
+    @Column(name = "WIDTH_MM", nullable = true,
+            columnDefinition = "NUMBER(6,0)")
     private Integer widthMm;   // 가로
 
     @PositiveOrZero @Max(999_999)
-    @Column(name = "DEPTH_MM",  precision = 6, scale = 0)
+    @jakarta.validation.constraints.Digits(integer = 6, fraction = 0)
+    @Column(name = "DEPTH_MM", nullable = true,
+            columnDefinition = "NUMBER(6,0)")
     private Integer depthMm;   // 세로(깊이)
 
     @PositiveOrZero @Max(999_999)
-    @Column(name = "HEIGHT_MM", precision = 6, scale = 0)
+    @jakarta.validation.constraints.Digits(integer = 6, fraction = 0)
+    @Column(name = "HEIGHT_MM", nullable = true,
+            columnDefinition = "NUMBER(6,0)")
     private Integer heightMm;  // 높이
 
     // 선택: 부피(cm^3) 계산 편의 메서드
