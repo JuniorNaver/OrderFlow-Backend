@@ -1,51 +1,41 @@
 package com.youthcase.orderflow.auth.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
+// import java.util.HashSet;
+// import java.util.Set;
+
+/**
+ * 시스템 내의 개별 권한 (Permission)을 정의하는 엔티티입니다.
+ */
 @Entity
-@Getter
+@Getter // ✅ getAuthority() 메서드를 생성합니다.
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "AUTHORITY") // 매핑할 테이블 이름
+@AllArgsConstructor
+@Table(name = "authority")
 public class Authority {
 
-    // 권한ID (AUTHORITY_ID) - PK
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // NUMBER 타입이므로 일반적으로 IDENTITY 사용
-    @Column(name = "AUTHORITY_ID", nullable = false)
-    private Long authorityId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "authority_id")
+    private Long id;
 
-    // 권한명 (AUTHORITY) - 권한을 식별하는 고유 이름 (예: "STK_WRITE", "ORDER_READ")
-    @Column(name = "AUTHORITY", length = 100, nullable = false, unique = true)
-    private String authority;
+    // 권한 이름 필드를 'authorityName'에서 'authority'로 변경하여 혼동을 줄입니다.
+    @Column(name = "authority", nullable = false, unique = true, length = 50)
+    private String authority; // 💡 필드 이름을 authority로 수정
 
-    // URL - 이 권한이 적용되는 리소스 경로 (예: "/api/stk/**", 또는 null)
-    @Column(name = "URL", length = 255) // URL은 NULL 허용으로 가정
+    // 권한 설명
+    @Column(name = "description", length = 255)
+    private String description;
+
+    // ✅ 필수 추가: 권한이 적용되는 URL 패턴
+    @Column(name = "url_pattern", nullable = true, length = 255)
     private String url;
 
-    // --- 생성자/빌더 ---
-
-    @Builder
-    public Authority(String authority, String url) {
-        this.authority = authority;
-        this.url = url;
-    }
-
-    // --- 비즈니스 로직 ---
-
-    /**
-     * 권한 정보를 업데이트하는 메소드 (관리자용)
-     */
-    public void updateAuthority(String authority, String url) {
-        this.authority = authority;
-        this.url = url;
-    }
+    // RoleAuthMapping과의 관계 (편의를 위해 주석 처리)
+    // @OneToMany(mappedBy = "authority", cascade = CascadeType.ALL, orphanRemoval = true)
+    // @Builder.Default
+    // private Set<RoleAuthMapping> roleAuthMappings = new HashSet<>();
 }

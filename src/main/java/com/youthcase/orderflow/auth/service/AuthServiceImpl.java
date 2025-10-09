@@ -1,48 +1,127 @@
-package com.youthcase.orderflow.auth.service.impl;
+package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.domain.PasswordResetToken;
+import com.youthcase.orderflow.auth.domain.RefreshToken;
+import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
+import com.youthcase.orderflow.auth.dto.UserRegisterRequestDTO;
+import com.youthcase.orderflow.auth.exception.DuplicateUserException;
 import com.youthcase.orderflow.auth.provider.JwtProvider;
-import com.youthcase.orderflow.auth.service.AuthService;
-import com.youthcase.orderflow.auth.domain.User; // User 엔티티 추가
-import com.youthcase.orderflow.auth.repository.UserRepository; // UserRepository 추가
-import com.youthcase.orderflow.global.email.EmailService; // 이메일 발송 서비스 (가정)
+import com.youthcase.orderflow.auth.repository.PasswordResetTokenRepository;
+import com.youthcase.orderflow.auth.repository.RefreshTokenRepository;
+import com.youthcase.orderflow.auth.repository.UserRepository;
+import com.youthcase.orderflow.auth.service.security.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
+    private final CustomUserDetailsService customUserDetailsService;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
-    private final UserRepository userRepository; // ⭐ 사용자 조회용 필드 추가
-    private final EmailService emailService;     // ⭐ 이메일 발송용 필드 추가 (해당 서비스가 존재한다고 가정)
 
     @Override
     @Transactional
     public TokenResponseDTO authenticateAndGenerateToken(String userId, String password) {
 
-        // 1. 인증 객체 생성 및 인증 시도 (기존 로그인 로직 유지)
+        // 1. 인증 객체 생성 및 인증 시도
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userId, password);
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-        // 2. 토큰 생성 후 반환
+        // 2. 토큰 발급 및 Refresh Token 저장 (Rotation 또는 최초 저장)
         TokenResponseDTO tokenResponse = jwtProvider.generateToken(authentication);
+
+        refreshTokenRepository.findByUserId(userId)
+                .ifPresentOrElse(
+                        // 이미 존재하면 토큰 값만 업데이트 (Rotation)
+                        entity -> entity.updateToken(tokenResponse.getRefreshToken()),
+                        // 존재하지 않으면 새로 저장
+                        () -> refreshTokenRepository.save(RefreshToken.builder()
+                                .userId(userId)
+                                .token(tokenResponse.getRefreshToken())
+                                .build())
+                );
 
         return tokenResponse;
     }
 
-    // ======================================================================
-    // ⭐ 비밀번호 초기화 요청 로직 추가
-    // ======================================================================
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+
+        // 1. 토큰 유효성 검사 및 사용자 ID 획득
+        String userId = validatePasswordResetToken(token);
+
+        // 2. 비밀번호 초기화에 사용된 토큰 사용 처리 (중복 사용 방지)
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
+
+        resetToken.useToken();
+        passwordResetTokenRepository.save(resetToken); // 사용 플래그 업데이트
+
+        // 3. 사용자 엔티티 조회 및 비밀번호 업데이트
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
+
+        // 새 비밀번호 암호화 및 업데이트
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        // 🚨 수정: user.setPassword(encodedPassword) 대신 updatePassword() 사용
+        user.updatePassword(encodedPassword);
+
+        // @Transactional이므로 save는 생략 가능하지만, 명시적으로 호출할 수도 있습니다.
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public TokenResponseDTO reissueToken(String refreshToken) {
+
+        // 1. Refresh Token의 유효성 검사 (JwtProvider에서 만료 여부, 형식 등을 검사)
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않거나 만료된 Refresh Token입니다. 재로그인이 필요합니다.");
+        }
+
+        // 2. DB에서 Refresh Token 정보 조회 및 사용자 ID 획득
+        RefreshToken refreshTokenEntity = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new IllegalArgumentException("DB에서 유효한 Refresh Token 정보를 찾을 수 없습니다."));
+
+        String userId = refreshTokenEntity.getUserId();
+
+        // 3. 사용자 ID로 UserDetails 로드 및 권한 정보 획득
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(userId);
+        Authentication newAuthentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null, // 비밀번호는 이미 검증되었으므로 null
+                userDetails.getAuthorities()
+        );
+
+        // 4. 새로운 Access Token 및 Refresh Token 생성
+        TokenResponseDTO newTokens = jwtProvider.generateToken(newAuthentication);
+
+        // 5. Refresh Token Rotation (DB의 Refresh Token을 새로 발급된 값으로 업데이트)
+        refreshTokenEntity.updateToken(newTokens.getRefreshToken());
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        return newTokens;
+    }
 
     /**
      * 비밀번호 초기화 요청을 처리하고, 초기화 토큰을 생성하여 사용자 이메일로 발송합니다.
@@ -52,32 +131,31 @@ public class AuthServiceImpl implements AuthService {
     public void requestPasswordReset(String userId) {
 
         // 1. 사용자 ID로 사용자 조회
-        // GlobalExceptionHandler에서 처리되도록 IllegalArgumentException을 사용합니다.
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 ID를 찾을 수 없습니다."));
 
         // 2. 초기화 토큰 생성 (UUID 사용)
         String resetToken = generateUniqueResetToken();
 
-        // ⭐ 중요: 토큰을 DB에 저장하는 로직이 여기에 추가되어야 합니다.
-        // 이 토큰은 만료 시간과 함께 저장되어야 하며, 재설정 시 사용됩니다.
-        // (예: passwordResetTokenRepository.save(...))
+        LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
+
+        // 토큰을 DB에 저장 (3개의 인수가 필요하다고 가정)
+        PasswordResetToken tokenEntity = new PasswordResetToken(user.getUserId(), resetToken, expiryDate);
+        passwordResetTokenRepository.save(tokenEntity);
 
         // 3. 이메일 본문 생성 및 발송
         String resetLink = "https://yourdomain.com/reset-password?token=" + resetToken;
         String emailContent = buildResetEmailContent(user.getUserId(), resetLink);
 
-        // 사용자의 이메일 주소로 초기화 링크 발송
-        // (User 엔티티에 getEmail() 메서드가 있다고 가정합니다.)
         emailService.sendEmail(user.getEmail(), "[OrderFlow] 비밀번호 초기화 요청", emailContent);
     }
 
-    // 초기화 토큰 생성 헬퍼 메서드
+    // 헬퍼 메서드: 초기화 토큰 생성
     private String generateUniqueResetToken() {
         return java.util.UUID.randomUUID().toString();
     }
 
-    // 이메일 본문 생성 헬퍼 메서드
+    // 헬퍼 메서드: 이메일 본문 생성
     private String buildResetEmailContent(String userId, String resetLink) {
         return "안녕하세요, " + userId + "님.\n\n" +
                 "비밀번호를 초기화하려면 다음 링크를 클릭하세요: " + resetLink + "\n\n" +
@@ -103,25 +181,23 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void resetPassword(String token, String newPassword) {
+    public void registerNewUser(UserRegisterRequestDTO request) {
 
-        // 1. 토큰 유효성 검사 및 사용자 ID 획득
-        String userId = validatePasswordResetToken(token);
+        // 1. (선택적) userId 중복 확인
+        if (userRepository.existsByUserId(request.getUserId())) {
+            throw new DuplicateUserException("이미 존재하는 사용자 ID입니다: " + request.getUserId());
+        }
 
-        // 2. 비밀번호 초기화에 사용된 토큰 사용 처리 (중복 사용 방지)
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다.")); // 이미 검증했지만 안전장치
-
-        resetToken.useToken();
-        passwordResetTokenRepository.save(resetToken); // 사용 플래그 업데이트
-
-        // 3. 사용자 엔티티 조회 및 비밀번호 업데이트
-        User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
-
-        // 새 비밀번호 암호화 및 업데이트
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encodedPassword); // User 엔티티에 setPassword() 메서드가 있어야 함
+        // 2. DTO 정보를 기반으로 User 엔티티 생성
+        User user = User.builder()
+                .userId(request.getUserId())
+                // 🚨 수정: .username(...) 대신 .name(...) 사용
+                .name(request.getUsername())
+                .email(request.getEmail())
+                .workspace(request.getWorkspace())
+                // 3. 비밀번호는 반드시 암호화하여 저장합니다!
+                .password(passwordEncoder.encode(request.getPassword()))
+                .build();
 
         userRepository.save(user);
     }

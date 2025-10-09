@@ -2,16 +2,16 @@ package com.youthcase.orderflow.stk.domain;
 
 import com.youthcase.orderflow.pr.domain.Lot;
 import com.youthcase.orderflow.pr.domain.Product;
+import com.youthcase.orderflow.gr.domain.GR; // ✅ 임포트 경로 및 클래스명 수정
 import jakarta.persistence.*;
-import lombok.AccessLevel; // 추가
-import lombok.Builder;     // 추가
-import lombok.Getter;      // @Data 대신 사용
-import lombok.NoArgsConstructor; // 추가
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-// @Data 대신 @Getter, @NoArgsConstructor, @Builder 사용을 권장합니다.
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 1. 보호된 기본 생성자
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
         name = "MM_STOCK",
@@ -25,39 +25,39 @@ public class STK {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "stock_seq")
     @SequenceGenerator(name = "stock_seq", sequenceName = "SEQ_MM_STOCK", allocationSize = 1)
     @Column(name = "STK_ID")
-    private Long stkId;   // 단일 PK (시퀀스 기반)
+    private Long stkId;
 
     @Column(name = "HAS_EXPIRATION_DATE", nullable = false)
-    private Boolean hasExpirationDate;   // 유통기한 여부
+    private Boolean hasExpirationDate;
 
     @Column(name = "QUANTITY", nullable = false)
-    private Integer quantity;   // 재고 수량
+    private Integer quantity;
 
     @Column(name = "LAST_UPDATED_AT")
-    private LocalDateTime lastUpdatedAt;   // 최종 업데이트 시간
+    private LocalDateTime lastUpdatedAt;
 
     @Column(name = "STATUS", length = 20)
-    private String status;   // 상태 (예: ACTIVE, INACTIVE)
+    private String status;
 
     // ============= FK 매핑 =============
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WAREHOUSE_ID", nullable = false)
-    private Warehouse warehouse;   // 창고
+    private Warehouse warehouse;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GR_ID")
-    private GoodsReceipt goodsReceipt;   // 입고 내역
+    private GR goodsReceipt; // ✅ 클래스명 GR로 변경
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
-    private Product product;   // 상품
+    private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "LOT_ID", nullable = false)
-    private Lot lot;   // LOT 테이블 (제조일자/유통기한 포함)
+    private Lot lot;
 
     @Builder
-    public STK(Boolean hasExpirationDate, Integer quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GoodsReceipt goodsReceipt, Product product, Lot lot) {
+    public STK(Boolean hasExpirationDate, Integer quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GR goodsReceipt, Product product, Lot lot) {
         this.hasExpirationDate = hasExpirationDate;
         this.quantity = quantity;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -68,9 +68,18 @@ public class STK {
         this.lot = lot;
     }
 
-    // 재고 수량 변경 메서드 등 비즈니스 메서드를 추가할 수 있습니다.
     public void updateQuantity(Integer newQuantity) {
         this.quantity = newQuantity;
         this.lastUpdatedAt = LocalDateTime.now();
+    }
+
+    public void updateInfo(Integer quantity, String status, LocalDateTime lastUpdatedAt) {
+        this.quantity = quantity;
+        this.status = status;
+        this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    public void markAsInactive() {
+        this.status = "INACTIVE";
     }
 }

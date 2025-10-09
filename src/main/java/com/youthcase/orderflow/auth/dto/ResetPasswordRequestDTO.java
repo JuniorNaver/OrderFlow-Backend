@@ -1,20 +1,19 @@
 package com.youthcase.orderflow.auth.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+/**
+ * 비밀번호 초기화 토큰과 새 비밀번호를 받아 비밀번호를 업데이트하기 위한 DTO
+ */
 @Getter
-@Setter
-@NoArgsConstructor
 public class ResetPasswordRequestDTO {
 
-    // 이메일을 통해 전달받은 초기화 토큰
+    @NotBlank(message = "토큰은 필수 입력값입니다.")
     private String token;
 
-    // 사용자가 새로 설정할 비밀번호
+    @NotBlank(message = "새 비밀번호는 필수 입력값입니다.")
+    @Size(min = 8, message = "비밀번호는 최소 8자 이상이어야 합니다.")
     private String newPassword;
-
-    // (선택적) 새 비밀번호 확인 (프론트엔드에서 일치 확인 권장)
-    // private String confirmPassword;
 }

@@ -3,15 +3,15 @@ package com.youthcase.orderflow.auth.service;
 import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.domain.Role;
 import com.youthcase.orderflow.auth.domain.RoleAuthMapping;
-import com.youthcase.orderflow.auth.domain.RoleAuthMappingId;
 import com.youthcase.orderflow.auth.domain.enums.RoleType;
-import com.youthcase.orderflow.auth.repository.AuthorityRepository; // 의존성 추가
-import com.youthcase.orderflow.auth.repository.RoleAuthMappingRepository; // 의존성 추가
+import com.youthcase.orderflow.auth.repository.AuthorityRepository;
+import com.youthcase.orderflow.auth.repository.RoleAuthMappingRepository;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
-import com.youthcase.orderflow.auth.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List; // findAllRoles() 때문에 추가
 import java.util.Optional;
 
 @Service
@@ -20,53 +20,61 @@ import java.util.Optional;
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
-    private final AuthorityRepository authorityRepository; // 새로 추가
-    private final RoleAuthMappingRepository roleAuthMappingRepository; // 새로 추가
+    private final AuthorityRepository authorityRepository;
+    private final RoleAuthMappingRepository roleAuthMappingRepository;
 
     @Override
     public Optional<Role> findByRoleType(RoleType roleType) {
-        return roleRepository.findByRole(roleType);
+        return roleRepository.findByRoleType(roleType);
+    }
+
+    /**
+     * ✅ 신규 구현: RoleService 인터페이스의 findAllRoles() 구현 (에러 해결)
+     */
+    @Override
+    public List<Role> findAllRoles() {
+        return roleRepository.findAll();
     }
 
     @Override
-    @Transactional // 쓰기 작업
+    @Transactional
     public void addAuthorityToRole(String roleId, Long authorityId) {
 
-        // 1. 역할(Role)과 권한(Authority) 엔티티가 존재하는지 확인
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new IllegalArgumentException("역할을 찾을 수 없습니다. ID: " + roleId));
+        Role role = roleRepository.findByRoleId(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("역할 ID를 찾을 수 없습니다: " + roleId));
 
         Authority authority = authorityRepository.findById(authorityId)
-                .orElseThrow(() -> new IllegalArgumentException("권한을 찾을 수 없습니다. ID: " + authorityId));
+                .orElseThrow(() -> new IllegalArgumentException("권한 ID를 찾을 수 없습니다: " + authorityId));
 
-        // 2. 이미 매핑이 존재하는지 확인 (중복 부여 방지)
-        boolean exists = roleAuthMappingRepository.existsById_RoleIdAndId_AuthorityId(roleId, authorityId);
-        if (exists) {
-            // 이미 매핑되어 있다면 예외 발생 또는 무시
-            throw new IllegalArgumentException("이미 해당 역할에 부여된 권한입니다.");
+        if (roleAuthMappingRepository.existsByRoleAndAuthority(role, authority)) {
+            // 🚨 수정: getAuthorityName() 대신 getAuthority() 호출
+            throw new IllegalArgumentException(
+                    String.format("이미 역할(%s)에 권한(%s)이 부여되어 있습니다.", roleId, authority.getAuthority()));
         }
 
-        // 3. 매핑 엔티티 생성 및 저장
-        RoleAuthMapping mapping = RoleAuthMapping.builder()
+        RoleAuthMapping roleAuthMapping = RoleAuthMapping.builder()
                 .role(role)
                 .authority(authority)
                 .build();
 
-        roleAuthMappingRepository.save(mapping);
+        roleAuthMappingRepository.save(roleAuthMapping);
     }
 
     @Override
-    @Transactional // 쓰기 작업
+    @Transactional
     public void removeAuthorityFromRole(String roleId, Long authorityId) {
 
-        // 1. 삭제할 매핑의 복합 키(ID) 생성
-        RoleAuthMappingId mappingId = new RoleAuthMappingId(roleId, authorityId);
+        Role role = roleRepository.findByRoleId(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("역할 ID를 찾을 수 없습니다: " + roleId));
 
-        // 2. 해당 매핑 엔티티가 존재하는지 확인
-        RoleAuthMapping mapping = roleAuthMappingRepository.findById(mappingId)
-                .orElseThrow(() -> new IllegalArgumentException("삭제할 역할-권한 매핑을 찾을 수 없습니다."));
+        Authority authority = authorityRepository.findById(authorityId)
+                .orElseThrow(() -> new IllegalArgumentException("권한 ID를 찾을 수 없습니다: " + authorityId));
 
-        // 3. 매핑 삭제
-        roleAuthMappingRepository.delete(mapping);
+        RoleAuthMapping roleAuthMapping = roleAuthMappingRepository.findByRoleAndAuthority(role, authority)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        // 🚨 수정: getAuthorityName() 대신 getAuthority() 호출
+                        String.format("역할(%s)과 권한(%s) 간의 매핑을 찾을 수 없습니다.", roleId, authority.getAuthority())));
+
+        roleAuthMappingRepository.delete(roleAuthMapping);
     }
 }

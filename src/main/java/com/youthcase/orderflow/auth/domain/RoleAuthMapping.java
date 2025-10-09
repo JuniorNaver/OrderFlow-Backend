@@ -22,16 +22,14 @@ public class RoleAuthMapping {
     private RoleAuthMappingId id;
 
     // 1. ROLE 엔티티와의 관계 (다대일)
-    // id 필드의 'roleId' 부분과 매핑합니다.
     @ManyToOne
-    @MapsId("roleId") // RoleAuthMappingId의 roleId 필드와 매핑
+    @MapsId("roleId")
     @JoinColumn(name = "ROLE_ID")
     private Role role;
 
     // 2. AUTHORITY 엔티티와의 관계 (다대일)
-    // id 필드의 'authorityId' 부분과 매핑합니다.
     @ManyToOne
-    @MapsId("authorityId") // RoleAuthMappingId의 authorityId 필드와 매핑
+    @MapsId("authorityId")
     @JoinColumn(name = "AUTHORITY_ID")
     private Authority authority;
 
@@ -39,8 +37,8 @@ public class RoleAuthMapping {
 
     @Builder
     public RoleAuthMapping(Role role, Authority authority) {
-        // 엔티티를 받아서 복합 키를 생성합니다.
-        this.id = new RoleAuthMappingId(role.getRoleId(), authority.getAuthorityId());
+        // 🚨 수정: authority.getAuthorityId() 대신 authority.getId() 호출
+        this.id = new RoleAuthMappingId(role.getRoleId(), authority.getId());
         this.role = role;
         this.authority = authority;
     }

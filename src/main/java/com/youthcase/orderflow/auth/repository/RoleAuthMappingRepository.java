@@ -1,37 +1,38 @@
 package com.youthcase.orderflow.auth.repository;
 
+import com.youthcase.orderflow.auth.domain.Authority;
+import com.youthcase.orderflow.auth.domain.Role;
 import com.youthcase.orderflow.auth.domain.RoleAuthMapping;
-import com.youthcase.orderflow.auth.domain.RoleAuthMappingId;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository; // @Repository를 위해 추가
 
 import java.util.List;
+import java.util.Optional;
 
-@Repository
-public interface RoleAuthMappingRepository extends JpaRepository<RoleAuthMapping, RoleAuthMappingId> {
-    // JpaRepository<[엔티티 타입: RoleAuthMapping], [PK 타입: RoleAuthMappingId]>
-
-    /**
-     * 특정 역할 ID(roleId)에 부여된 모든 권한 매핑 목록을 조회합니다.
-     * RoleService에서 해당 역할의 모든 권한을 찾을 때 사용됩니다.
-     * @param roleId 역할을 식별하는 ID (ROLE_ID)
-     * @return RoleAuthMapping 엔티티 리스트
-     */
-    List<RoleAuthMapping> findById_RoleId(String roleId);
+@Repository // ✅ 리포지토리 Bean 등록을 위해 추가
+public interface RoleAuthMappingRepository extends JpaRepository<RoleAuthMapping, Long> {
 
     /**
-     * 특정 권한 ID(authorityId)를 가진 모든 역할 매핑 목록을 조회합니다. (역방향 조회)
-     * @param authorityId 권한 ID (AUTHORITY_ID)
-     * @return RoleAuthMapping 엔티티 리스트
+     * 역할 ID(roleId)에 매핑된 권한 목록과 관련된 Authority 엔티티를 JOIN FETCH하여 조회합니다.
+     * 이를 통해 CustomUserDetailsService에서 발생하는 N+1 문제를 방지합니다.
+     *
+     * @param roleId 조회할 역할 ID
+     * @return RoleAuthMapping 목록 (Authority 엔티티를 EAGER 로딩)
      */
-    List<RoleAuthMapping> findById_AuthorityId(Long authorityId);
+    @Query("SELECT ram FROM RoleAuthMapping ram JOIN FETCH ram.authority a WHERE ram.role.roleId = :roleId") // 💡 쿼리문 수정: ram.id.roleId 대신 ram.role.roleId 사용
+    List<RoleAuthMapping> findWithAuthoritiesByRoleId(@Param("roleId") String roleId);
 
     /**
-     * 특정 역할 ID와 특정 권한 ID를 가진 매핑이 존재하는지 확인합니다.
-     * 권한 부여 전 중복 확인에 사용됩니다.
-     * @param roleId 역할 ID
-     * @param authorityId 권한 ID
-     * @return 존재 여부
+     * 특정 Role과 Authority 쌍으로 매핑 엔티티의 존재 여부를 확인합니다.
+     * (RoleServiceImpl의 addAuthorityToRole에서 사용)
      */
-    boolean existsById_RoleIdAndId_AuthorityId(String roleId, Long authorityId);
+    boolean existsByRoleAndAuthority(Role role, Authority authority);
+
+    /**
+     * 특정 Role과 Authority 쌍으로 매핑 엔티티를 조회합니다.
+     * (RoleServiceImpl의 removeAuthorityFromRole에서 사용)
+     */
+    Optional<RoleAuthMapping> findByRoleAndAuthority(Role role, Authority authority);
 }

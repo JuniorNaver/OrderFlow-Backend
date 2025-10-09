@@ -1,6 +1,8 @@
 package com.youthcase.orderflow.stk.service;
 
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,4 +32,8 @@ public interface STKService {
      * 재고 삭제
      */
     void deleteStock(Long stkId);
+
+    @Transactional
+        // 쓰기 트랜잭션으로 명시
+    void deductStockForSalesOrder(StockDeductionRequestDTO request);
 }
