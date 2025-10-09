@@ -36,6 +36,7 @@ public class GlobalExceptionHandler {
      * 2. [비즈니스 로직 예외] 이미 존재하는 권한/역할을 생성하려 하거나, 존재하지 않는 리소스 접근 시
      * - AuthorityServiceImpl 등에서 throw new IllegalArgumentException(...) 발생 시 처리
      */
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex) {
 

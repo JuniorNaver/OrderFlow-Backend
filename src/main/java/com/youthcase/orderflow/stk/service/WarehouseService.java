@@ -25,7 +25,7 @@ public interface WarehouseService {
     /**
      * 기존 창고 정보 수정 (Update)
      */
-    Warehouse updateWarehouse(String warehouseId, WarehouseUpdateDTO updateDto); ;
+    Warehouse updateWarehouse(String warehouseId, WarehouseUpdateDTO updateDto);
 
     /**
      * 창고 정보 삭제 (Delete)

@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
+import com.youthcase.orderflow.auth.dto.UserRegisterRequestDTO;
 
 public interface AuthService {
 
@@ -12,8 +13,8 @@ public interface AuthService {
      */
     TokenResponseDTO authenticateAndGenerateToken(String userId, String password);
 
-    // 추후 토큰 재발급 로직 등을 여기에 추가할 수 있습니다.
-    // TokenResponseDTO reissueToken(String refreshToken);
+
+    TokenResponseDTO reissueToken(String refreshToken);
 
     /**
      * 비밀번호 초기화 요청을 처리하고, 초기화 토큰을 생성하여 사용자에게 이메일로 발송합니다.
@@ -31,5 +32,7 @@ public interface AuthService {
      */
     void resetPassword(String token, String newPassword);
 
-    // 추후 비밀번호 재설정 메서드 추가 (void resetPassword(String token, String newPassword);)
+    void registerNewUser(UserRegisterRequestDTO request);
+
+
 }

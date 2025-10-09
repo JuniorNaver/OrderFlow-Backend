@@ -114,6 +114,22 @@ dependencies {
     // - WebClient 로 비동기 HTTP 호출
     // - PR 과 PO를 연겷시켜주는 장치
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // ⭐ 1. Spring Security 핵심
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // ⭐ 2. JWT (Java JSON Web Token) 라이브러리
+    // io.jsonwebtoken:jjwt-api'는 JWT 토큰 생성 및 파싱에 사용됩니다.
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    // ⭐ 3. Spring Mail Starter (EmailService 실제 구현을 위해 필수)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // ⭐ 4. Jakarta Validation API 및 Hibernate Validator (DTO 유효성 검사를 위해 필수)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 }
 
 

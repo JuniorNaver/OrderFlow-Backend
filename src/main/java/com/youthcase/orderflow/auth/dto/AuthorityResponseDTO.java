@@ -19,8 +19,10 @@ public class AuthorityResponseDTO {
      */
     public static AuthorityResponseDTO from(Authority authority) {
         return AuthorityResponseDTO.builder()
-                .authorityId(authority.getAuthorityId())
+                // 💡 authority.getId()로 수정 (엔티티 PK 필드명에 맞춤)
+                .authorityId(authority.getId())
                 .authority(authority.getAuthority())
+                // 💡 authority.getUrl() 호출이 가능하도록 Authority 엔티티에 url 필드가 있다고 가정
                 .url(authority.getUrl())
                 .build();
     }

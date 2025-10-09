@@ -20,13 +20,15 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+/**
+ * JWT 토큰의 생성, 인증 정보 추출, 유효성 검사 등을 담당하는 핵심 컴포넌트입니다.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtProvider {
 
-    private final CustomUserDetailsService customUserDetailsService; // 인증 정보 로드를 위해 주입
+    private final CustomUserDetailsService customUserDetailsService;
 
-    // application.yml/properties에서 주입받을 JWT 설정 값
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "Bearer";
 
@@ -41,7 +43,7 @@ public class JwtProvider {
             @Value("${jwt.refresh-token-expire-time}") long refreshTime,
             CustomUserDetailsService customUserDetailsService) {
 
-        // Secret Key를 Base64 Decode하여 Key 객체로 변환
+        // Secret Key를 Base64 Decode하여 Key 객체로 변환하고 HmacShaKeyFor로 서명 키 생성
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.ACCESS_TOKEN_EXPIRE_TIME = accessTime;
@@ -52,6 +54,7 @@ public class JwtProvider {
 
     /**
      * 1. Authentication 객체를 기반으로 Access Token과 Refresh Token을 생성합니다.
+     * (최초 로그인 및 토큰 재발급 시 모두 사용됩니다.)
      */
     public TokenResponseDTO generateToken(Authentication authentication) {
 
@@ -70,7 +73,7 @@ public class JwtProvider {
                 .signWith(key, SignatureAlgorithm.HS512)       // 서명 (Signature)
                 .compact();
 
-        // Refresh Token 생성
+        // Refresh Token 생성 (클레임 없이 만료 시간만 설정)
         String refreshToken = Jwts.builder()
                 .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME)) // 만료 시간
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -95,13 +98,15 @@ public class JwtProvider {
         if (claims.get(AUTHORITIES_KEY) == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
+
+        // 권한 문자열을 SimpleGrantedAuthority 객체 리스트로 변환
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        // 3. UserDetails 객체를 로드 (DB 재조회 없이 토큰 정보만 사용 가능)
-        // 여기서는 DB를 한 번 더 거치지 않고, 토큰의 subject(userId)만으로 UserDetails를 만들 수 있습니다.
+        // 3. UserDetails 객체를 로드 (DB 재조회 필요, 또는 토큰 정보만으로 생성)
+        // 여기서는 토큰의 subject(userId)를 사용하여 DB에서 최신 UserDetails를 로드합니다.
         UserDetails principal = customUserDetailsService.loadUserByUsername(claims.getSubject());
 
         // 4. 인증 객체 (Authentication) 반환
@@ -116,26 +121,38 @@ public class JwtProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            // 유효하지 않은 JWT 서명
+            // 유효하지 않은 JWT 서명 (디버깅을 위해 콘솔 출력)
+            System.err.println("Invalid JWT signature: " + e.getMessage());
         } catch (ExpiredJwtException e) {
             // 만료된 JWT 토큰
+            System.err.println("Expired JWT token: " + e.getMessage());
         } catch (UnsupportedJwtException e) {
             // 지원되지 않는 JWT 토큰
+            System.err.println("Unsupported JWT token: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             // JWT 클레임 문자열이 비어 있음
+            System.err.println("JWT claims string is empty: " + e.getMessage());
         }
         return false;
     }
 
     /**
-     * 토큰 파싱을 위한 내부 메서드
+     * 토큰 파싱을 위한 내부 메서드: 만료된 토큰이라도 클레임은 반환합니다.
      */
     private Claims parseClaims(String accessToken) {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) {
-            // 만료된 토큰의 경우에도 클레임은 필요하므로 만료 예외에서 클레임을 반환합니다.
+            // 만료된 토큰의 경우에도 클레임(사용자 ID 등)을 추출하기 위해 반환
             return e.getClaims();
         }
+    }
+
+    /**
+     * 토큰에서 사용자 ID(Subject)를 추출합니다.
+     */
+    public String getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.getSubject();
     }
 }

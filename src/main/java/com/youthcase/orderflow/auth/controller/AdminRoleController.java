@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 // 관리자 전용 API이므로 /api/admin/roles 경로를 사용합니다.
 @RestController
 @RequestMapping("/api/admin/roles")
@@ -30,10 +32,7 @@ public class AdminRoleController {
             @PathVariable String roleId,
             @PathVariable Long authorityId) {
 
-        // RoleService의 역할-권한 매핑 로직 호출 (Service 계층에서 트랜잭션 처리)
         roleService.addAuthorityToRole(roleId, authorityId);
-
-        // 201 Created 응답
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -51,22 +50,17 @@ public class AdminRoleController {
             @PathVariable String roleId,
             @PathVariable Long authorityId) {
 
-        // RoleService의 역할-권한 매핑 삭제 로직 호출
         roleService.removeAuthorityFromRole(roleId, authorityId);
-
-        // 204 No Content 응답
         return ResponseEntity.noContent().build();
     }
 
-    // --- (선택적) 조회 API ---
-
     /**
-     * [GET] 시스템에 정의된 모든 역할 목록 조회 (관리자용)
+     * [GET] 시스템에 정의된 모든 역할 목록 조회 (관리자용) (⭐ 활성화)
      * GET /api/admin/roles
-     * (이 기능은 RoleRepository.findAll() 또는 별도의 DTO를 통해 구현할 수 있습니다.)
+     * DTO 변환 없이 Role 엔티티 리스트를 반환합니다.
      */
-    // @GetMapping
-    // public ResponseEntity<?> getAllRoles() {
-    //     return ResponseEntity.ok(roleService.findAllRoles());
-    // }
+    @GetMapping
+    public ResponseEntity<List<?>> getAllRoles() { // 반환 타입을 List<?>로 설정하여 유연성 확보
+        return ResponseEntity.ok(roleService.findAllRoles());
+    }
 }
