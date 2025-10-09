@@ -17,47 +17,52 @@ public class Warehouse {
 
     @Id
     @Column(name = "WAREHOUSE_ID", length = 50, nullable = false)
-    private String warehouseId; //pk
+    private String warehouseId;
 
     @Column(name = "STORAGE_CONDITION", length = 10, nullable = false)
     private String storageCondition;
 
+    // 용량 단위 필드 추가 (CBM, Cubic Meter)
+    // 부피를 측정하는 표준 단위임을 명시합니다.
+    @Column(name = "CAPACITY_UOM", length = 10, nullable = false)
+    private final String capacityUom = "CBM";
+
     @Column(name = "MAX_CAPACITY", nullable = false)
-    private Double maxCapacity; // 최대 적재 용량
+    private Double maxCapacity; // 최대 적재 부피 (CBM 단위)
 
     @Column(name = "CURRENT_CAPACITY", nullable = false)
-    private Double currentCapacity; // 현재 적재 용량
+    private Double currentCapacity; // 현재 적재 부피 (CBM 단위)
 
     @Column(name = "SPOT_ID", nullable = false)
-    private Long spotId; // 지점 ID (FK)
+    private Long spotId;
 
-    @Builder // ⬅️ Builder를 사용하여 명시적인 생성자 추가 (DTO에서 사용할 생성자)
+    @Builder
     public Warehouse(String warehouseId, String storageCondition, Double maxCapacity, Double currentCapacity, Long spotId) {
         this.warehouseId = warehouseId;
         this.storageCondition = storageCondition;
+        // this.capacityUom은 final 필드로 선언하여 빌더에서 제외하고 "CBM"으로 고정합니다.
         this.maxCapacity = maxCapacity;
         this.currentCapacity = currentCapacity;
         this.spotId = spotId;
     }
 
     /**
-     * 현재 적재 용량을 증가시킵니다.
+     * 현재 적재 용량(CBM)을 증가시킵니다.
      */
-    public void increaseCapacity(double amount) {
-        if (this.currentCapacity + amount > this.maxCapacity) {
+    public void increaseCapacity(double amountCbm) {
+        if (this.currentCapacity + amountCbm > this.maxCapacity) {
             throw new IllegalArgumentException("최대 용량을 초과하여 재고를 입고할 수 없습니다.");
         }
-        this.currentCapacity += amount;
+        this.currentCapacity += amountCbm;
     }
 
     /**
-     * 현재 적재 용량을 감소시킵니다.
+     * 현재 적재 용량(CBM)을 감소시킵니다.
      */
-    public void decreaseCapacity(double amount) {
-        if (this.currentCapacity - amount < 0) {
-            // 이 예외는 실제로는 발생하지 않아야 하지만, 안전장치로 추가
+    public void decreaseCapacity(double amountCbm) {
+        if (this.currentCapacity - amountCbm < 0) {
             throw new IllegalArgumentException("현재 적재된 용량보다 많이 출고할 수 없습니다.");
         }
-        this.currentCapacity -= amount;
+        this.currentCapacity -= amountCbm;
     }
 }

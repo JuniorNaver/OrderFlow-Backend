@@ -17,7 +17,7 @@ public class UserServiceImpl implements UserService { // 🚨 UserService 인터
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 🚨 registerNewUser 메서드는 AuthService로 이동되었으므로 제거합니다.
+    //  registerNewUser 메서드는 AuthService로 이동되었으므로 제거합니다.
 
     /**
      * 사용자 ID로 사용자를 조회합니다.
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService { // 🚨 UserService 인터
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
 
         // User 도메인 객체의 비즈니스 로직(업데이트 메서드) 호출
-        // 💡 User 엔티티에 updateDetails(username, workspace, email) 메서드가 구현되어 있어야 합니다.
+        // User 엔티티에 updateDetails(username, workspace, email) 메서드가 구현되어 있어야 합니다.
         user.updateDetails(username, workspace, email);
 
         // @Transactional로 인해 변경 사항이 DB에 자동 반영됩니다.
@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService { // 🚨 UserService 인터
         String newHashedPassword = passwordEncoder.encode(newRawPassword);
 
         // User 도메인 객체의 비즈니스 로직 호출
-        // 💡 User 엔티티에 updatePassword(newHashedPassword) 메서드가 구현되어 있어야 합니다.
+        // User 엔티티에 updatePassword(newHashedPassword) 메서드가 구현되어 있어야 합니다.
         user.updatePassword(newHashedPassword);
 
         // (자동 저장)

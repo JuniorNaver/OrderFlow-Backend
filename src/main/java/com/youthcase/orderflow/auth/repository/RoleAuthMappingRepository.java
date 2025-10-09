@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository; // @Repository를 위해 추�
 import java.util.List;
 import java.util.Optional;
 
-@Repository // ✅ 리포지토리 Bean 등록을 위해 추가
+@Repository // 리포지토리 Bean 등록을 위해 추가
 public interface RoleAuthMappingRepository extends JpaRepository<RoleAuthMapping, Long> {
 
     /**

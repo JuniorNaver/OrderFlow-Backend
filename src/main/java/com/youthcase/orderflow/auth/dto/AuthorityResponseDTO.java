@@ -17,6 +17,7 @@ public class AuthorityResponseDTO {
      * @param authority 변환할 Authority 엔티티
      * @return AuthorityResponseDTO 객체
      */
+
     public static AuthorityResponseDTO from(Authority authority) {
         return AuthorityResponseDTO.builder()
                 // 💡 authority.getId()로 수정 (엔티티 PK 필드명에 맞춤)
