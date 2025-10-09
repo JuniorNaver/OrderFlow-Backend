@@ -1,12 +1,10 @@
 package com.youthcase.orderflow.po.service;
 
-import com.youthcase.orderflow.po.domain.POHeader;
-import com.youthcase.orderflow.po.repository.POHeaderRepository;
-import jakarta.transaction.Transactional;
-
+import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import java.util.List;
 
 public interface POHeaderService {
-    List<POHeader> findAll();
-}
 
+    // 모든 발주 헤더 조회
+    List<POHeaderResponseDTO> findAll();
+}
