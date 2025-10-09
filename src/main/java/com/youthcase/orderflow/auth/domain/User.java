@@ -55,7 +55,7 @@ public class User {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // --- ✅ UserService.updateUserDetails() 지원 메서드 ---
+    // UserService.updateUserDetails() 지원 메서드
     public void updateDetails(String name, String workspace, String email) {
         // 비즈니스 규칙에 따라 null 체크 또는 유효성 검사를 추가할 수 있습니다.
         if (name != null) this.name = name;
@@ -63,9 +63,8 @@ public class User {
         if (email != null) this.email = email;
     }
 
-    // --- ✅ UserService.changePassword() 지원 메서드 ---
+    // UserService.changePassword() 지원 메서드
     public void updatePassword(String newHashedPassword) {
         this.password = newHashedPassword;
     }
 }
-// -- END --
