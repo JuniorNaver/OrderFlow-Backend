@@ -49,7 +49,7 @@ public class EmailServiceImpl implements EmailService {
             // 저수준 메서드를 호출하여 발송 로직 재사용
             sendMimeMessage(message);
 
-            System.out.println("✅ 이메일 발송 완료. To: " + to);
+            System.out.println("이메일 발송 완료. To: " + to);
 
         } catch (MessagingException e) {
             System.err.println("이메일 구성 중 오류 발생: " + e.getMessage());

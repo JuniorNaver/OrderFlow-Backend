@@ -29,7 +29,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     /**
-     * ✅ 신규 구현: RoleService 인터페이스의 findAllRoles() 구현 (에러 해결)
+     *  신규 구현: RoleService 인터페이스의 findAllRoles() 구현 (에러 해결)
      */
     @Override
     public List<Role> findAllRoles() {
@@ -47,7 +47,7 @@ public class RoleServiceImpl implements RoleService {
                 .orElseThrow(() -> new IllegalArgumentException("권한 ID를 찾을 수 없습니다: " + authorityId));
 
         if (roleAuthMappingRepository.existsByRoleAndAuthority(role, authority)) {
-            // 🚨 수정: getAuthorityName() 대신 getAuthority() 호출
+            // 수정: getAuthorityName() 대신 getAuthority() 호출
             throw new IllegalArgumentException(
                     String.format("이미 역할(%s)에 권한(%s)이 부여되어 있습니다.", roleId, authority.getAuthority()));
         }
@@ -72,7 +72,7 @@ public class RoleServiceImpl implements RoleService {
 
         RoleAuthMapping roleAuthMapping = roleAuthMappingRepository.findByRoleAndAuthority(role, authority)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        // 🚨 수정: getAuthorityName() 대신 getAuthority() 호출
+                        //  수정: getAuthorityName() 대신 getAuthority() 호출
                         String.format("역할(%s)과 권한(%s) 간의 매핑을 찾을 수 없습니다.", roleId, authority.getAuthority())));
 
         roleAuthMappingRepository.delete(roleAuthMapping);

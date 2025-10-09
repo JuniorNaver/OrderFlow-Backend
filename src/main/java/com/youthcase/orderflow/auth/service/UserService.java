@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface UserService {
 
-    // 🚨 제거: registerUser(UserRegisterRequestDTO) 메서드를 제거하여 UerServiceImpl의 구현 누락 에러 해결
+    //  제거: registerUser(UserRegisterRequestDTO) 메서드를 제거하여 UerServiceImpl의 구현 누락 에러 해결
 
     /**
      * 사용자 ID로 User 엔티티를 조회합니다.
@@ -16,7 +16,7 @@ public interface UserService {
     Optional<User> findByUserId(String userId);
 
     /**
-     * 사용자의 이름, 근무지, 이메일 정보를 업데이트합니다. (💡 신규 추가)
+     * 사용자의 이름, 근무지, 이메일 정보를 업데이트합니다. ( 신규 추가)
      */
     User updateUserDetails(String userId, String username, String workspace, String email);
 

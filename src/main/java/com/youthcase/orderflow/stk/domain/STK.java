@@ -2,7 +2,7 @@ package com.youthcase.orderflow.stk.domain;
 
 import com.youthcase.orderflow.pr.domain.Lot;
 import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.gr.domain.GR; // ✅ 임포트 경로 및 클래스명 수정
+import com.youthcase.orderflow.gr.domain.GR;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -46,7 +46,7 @@ public class STK {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GR_ID")
-    private GR goodsReceipt; // ✅ 클래스명 GR로 변경
+    private GR goodsReceipt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
@@ -82,4 +82,36 @@ public class STK {
     public void markAsInactive() {
         this.status = "INACTIVE";
     }
+
+    // 3. 폐기 수량 감소 메서드 추가
+    public void deductForDisposal(Integer amountToDeduct) {
+        if (amountToDeduct == null || amountToDeduct <= 0) {
+            throw new IllegalArgumentException("폐기 수량은 0보다 커야 합니다.");
+        }
+        if (this.quantity < amountToDeduct) {
+            // 폐기할 수량이 현재 재고 수량보다 많으면 오류 발생 (전량 폐기 로직 필요 시 수정 가능)
+            throw new IllegalArgumentException("폐기할 재고 수량이 현재 재고보다 많습니다.");
+        }
+
+        this.quantity -= amountToDeduct;
+        this.lastUpdatedAt = LocalDateTime.now();
+
+        // 수량이 0이 되면 상태를 DISPOSED로 변경합니다.
+        if (this.quantity == 0) {
+            this.status = "DISPOSED";
+        }
+    }
+
+    /**
+     * 재고 상태만 갱신합니다.
+     * @param newStatus 새로운 상태 (예: 'NEAR_EXPIRY', 'DISPOSED', 'INACTIVE')
+     */
+    public void updateStatus(String newStatus) {
+        if (newStatus == null || newStatus.isBlank()) {
+            throw new IllegalArgumentException("새로운 재고 상태는 필수입니다.");
+        }
+        this.status = newStatus;
+        this.lastUpdatedAt = java.time.LocalDateTime.now();
+    }
 }
+
