@@ -1,0 +1,22 @@
+package com.youthcase.orderflow.po.dto;
+
+import com.youthcase.orderflow.po.domain.Status;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class POItemResponseDTO {
+    private Long itemNo;
+    private String productName;
+    private String gtinCode;
+    private LocalDate expectedArrival;
+    private Long unitPrice;
+    private Long orderQty;
+    private Long total;
+    private Status status;
+}
