@@ -10,7 +10,7 @@ import lombok.*;
  * 시스템 내의 개별 권한 (Permission)을 정의하는 엔티티입니다.
  */
 @Entity
-@Getter // ✅ getAuthority() 메서드를 생성합니다.
+@Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

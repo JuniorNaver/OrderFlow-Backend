@@ -42,7 +42,8 @@ public class AuthController {
      * [POST] 토큰 재발급 API (RefreshToken 사용)
      * POST /api/auth/reissue
      */
-    /*
+
+    /**
     @PostMapping("/reissue")
     public ResponseEntity<TokenResponseDTO> reissueToken(@RequestBody TokenRequestDTO request) {
         TokenResponseDTO tokenResponse = authService.reissueToken(request.getRefreshToken());
