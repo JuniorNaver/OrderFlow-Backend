@@ -2,6 +2,7 @@ package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.domain.Role;
 import com.youthcase.orderflow.auth.domain.enums.RoleType;
+import java.util.List; // List import 추가
 import java.util.Optional;
 
 public interface RoleService {
@@ -12,6 +13,12 @@ public interface RoleService {
      * @return Role 엔티티 (Optional)
      */
     Optional<Role> findByRoleType(RoleType roleType);
+
+    /**
+     * 시스템에 정의된 모든 역할을 조회합니다. (AdminRoleController에서 사용 예정)
+     * @return 모든 Role 엔티티 리스트
+     */
+    List<Role> findAllRoles();
 
     /**
      * 특정 역할(Role)에 특정 권한(Authority)을 부여합니다. (매핑 추가)

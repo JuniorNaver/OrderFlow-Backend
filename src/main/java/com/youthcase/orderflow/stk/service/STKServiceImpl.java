@@ -1,10 +1,10 @@
-package com.youthcase.orderflow.stk.service; // impl 패키지 사용 가정
+package com.youthcase.orderflow.stk.service;
 
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.repository.STKRepository;
-import com.youthcase.orderflow.stk.service.STKService; // 인터페이스 참조
+import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO; // 🚨 필수: 차감 DTO 임포트
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional; // 🚨 필수: Spring의 Transactional 임포트
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -51,12 +51,14 @@ public class STKServiceImpl implements STKService { // 인터페이스 구현
     @Override
     @Transactional // 쓰기 작업
     public STK updateStock(Long stkId, STK updatedStock) {
-        STK existingStock = findStockById(stkId); // findStockById는 @Transactional(readOnly=true)이 적용됨
+        STK existingStock = findStockById(stkId);
 
-        // 비즈니스 로직에 따라 필요한 필드만 업데이트
-        existingStock.setQuantity(updatedStock.getQuantity());
-        existingStock.setStatus(updatedStock.getStatus());
-        existingStock.setLastUpdatedAt(updatedStock.getLastUpdatedAt());
+        // 🚨 수정: Setter 대신 STK 엔티티에 추가된 updateInfo 메서드 호출
+        existingStock.updateInfo(
+                updatedStock.getQuantity(),
+                updatedStock.getStatus(),
+                updatedStock.getLastUpdatedAt()
+        );
 
         return stkRepository.save(existingStock);
     }
@@ -68,5 +70,68 @@ public class STKServiceImpl implements STKService { // 인터페이스 구현
     @Transactional // 쓰기 작업
     public void deleteStock(Long stkId) {
         stkRepository.deleteById(stkId);
+    }
+
+    /**
+     * [출고 로직] 판매 주문에 따라 재고(STK)를 차감합니다. (FIFO 전략 적용)
+     */
+    @Transactional
+    @Override
+    public void deductStockForSalesOrder(StockDeductionRequestDTO request) {
+
+        String gtin = request.getGtin();
+        int quantityToDeduct = request.getQuantityToDeduct();
+
+        // 1. 차감 가능한 총 재고 수량 확인 (부족하면 즉시 실패)
+        Integer totalAvailableStock = stkRepository.findTotalQuantityByGtin(gtin);
+
+        if (totalAvailableStock == null || totalAvailableStock < quantityToDeduct) {
+            throw new IllegalArgumentException(
+                    "상품 " + gtin + "에 대한 요청 수량(" + quantityToDeduct + ")만큼의 가용 재고가 부족합니다. 현재 재고: " + (totalAvailableStock != null ? totalAvailableStock : 0)
+            );
+        }
+
+        // 2. FIFO 순서로 재고 레코드 조회
+        List<STK> stocksToDeduct = stkRepository.findAvailableStocksByGtinForFIFO(gtin);
+
+        int remainingDeductQuantity = quantityToDeduct;
+
+        // 3. 순차적으로 재고 차감 및 출고 내역 기록
+        for (STK stock : stocksToDeduct) {
+            if (remainingDeductQuantity <= 0) break; // 차감 완료 시 루프 종료
+
+            int currentStockQuantity = stock.getQuantity();
+            int deductedQuantity;
+
+            if (currentStockQuantity >= remainingDeductQuantity) {
+                // 현재 LOT 재고로 모두 차감 가능
+                deductedQuantity = remainingDeductQuantity;
+                remainingDeductQuantity = 0;
+            } else {
+                // 현재 LOT 재고를 모두 사용해야 함
+                deductedQuantity = currentStockQuantity;
+                remainingDeductQuantity -= currentStockQuantity;
+            }
+
+            // 4. 재고 엔티티 업데이트 (STK 엔티티의 updateQuantity 메서드 사용)
+            stock.updateQuantity(currentStockQuantity - deductedQuantity);
+            stkRepository.save(stock);
+
+            // 5. [중요] 출고 내역 (GoodsIssue) 기록
+            /* // GoodsIssueService가 있다면 아래와 같이 호출
+            goodsIssueService.recordDeduction(
+                request.getOrderId(), // 주문 정보
+                stock,                // 차감된 STK 레코드
+                deductedQuantity      // 차감 수량
+            );
+            */
+
+            // 재고 수량이 0이 되면 상태를 INACTIVE로 변경
+            if (stock.getQuantity() == 0) {
+                // 🚨 수정: 엔티티의 markAsInactive() 메서드 호출
+                stock.markAsInactive();
+                stkRepository.save(stock);
+            }
+        }
     }
 }

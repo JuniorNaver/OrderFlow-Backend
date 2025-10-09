@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.util.service.impl;
+package com.youthcase.orderflow.util.service;
 
 import com.youthcase.orderflow.util.domain.NotiHeader;
 import com.youthcase.orderflow.util.repository.NotiHeaderRepository;

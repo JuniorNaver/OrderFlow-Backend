@@ -1,20 +1,23 @@
 package com.youthcase.orderflow.auth.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// 참고: 실제 사용 시 @NotBlank, @Size 등 유효성 검사(@Valid) 어노테이션을 추가해야 합니다.
 @Getter
 @Setter
-@NoArgsConstructor // 기본 생성자
+@NoArgsConstructor
 public class AuthorityRequestDTO {
 
-    // 권한명 (예: STK_WRITE, ORDER_READ)
+
+    @NotBlank(message = "권한명(authority)은 필수입니다.")
     private String authority;
 
-    // 권한이 적용되는 URL 패턴 (예: /api/stock/**)
+
+    @NotBlank(message = "URL 패턴은 필수입니다.")
     private String url;
 
-    // 이 DTO는 생성 및 수정 요청의 Body에 사용됩니다.
+    // 💡 선택적: 특정 HTTP 메서드에만 적용되도록 하려면 추가합니다.
+    private String httpMethod;
 }

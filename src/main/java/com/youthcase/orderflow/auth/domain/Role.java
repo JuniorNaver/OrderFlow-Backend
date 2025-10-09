@@ -1,43 +1,41 @@
 package com.youthcase.orderflow.auth.domain;
 
 import com.youthcase.orderflow.auth.domain.enums.RoleType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
+/**
+ * 사용자에게 부여되는 역할(Group of Authorities)을 정의하는 엔티티입니다.
+ * 예: ADMIN, MANAGER, USER 등
+ */
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "ROLE") // 매핑할 테이블 이름
+@AllArgsConstructor
+@Table(name = "role")
 public class Role {
 
-    // 역할ID (ROLE_ID) - PK
-    // Enum의 roleId 값을 사용합니다.
+    // 역할 ID (문자열, 예: ROLE_ADMIN)
     @Id
-    @Column(name = "ROLE_ID", length = 50, nullable = false)
+    @Column(name = "role_id", length = 50)
     private String roleId;
 
-    // 역할명 (ROLE) - Enum 타입 사용
-    // DB에는 Enum의 이름(ADMIN, MANAGER, CLERK)이 문자열로 저장됩니다.
-    @Enumerated(EnumType.STRING) // Enum의 이름을 DB에 문자열로 저장하도록 설정
-    @Column(name = "ROLE", length = 50, nullable = false, unique = true)
-    private RoleType role; // Enum 타입 필드
+    // 역할 타입 (Enum을 사용하여 정의된 역할 목록 관리)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role_type", nullable = false, unique = true, length = 50)
+    private RoleType roleType;
 
-    // --- 생성자/빌더 ---
+    // 역할 설명
+    @Column(name = "description", length = 255)
+    private String description;
 
-    @Builder
-    public Role(RoleType role) {
-        this.role = role;
-        // PK는 Enum 값의 roleId로 설정
-        this.roleId = role.getRoleId();
-    }
-
-    // --- 비즈니스 로직 (필요시 추가) ---
+    // 이 역할이 가지고 있는 RoleAuthority 매핑 (양방향 매핑, 읽기 전용)
+    // 🚨 수정: RoleAuthority 대신 RoleAuthMapping 사용 (에러 해결)
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<RoleAuthMapping> roleAuthMappings = new HashSet<>(); // 필드명도 변경
 }

@@ -1,83 +1,63 @@
 package com.youthcase.orderflow.auth.controller;
 
 import com.youthcase.orderflow.auth.domain.User;
-import com.youthcase.orderflow.auth.dto.UserRegisterRequestDTO; // 요청 DTO 사용
-import com.youthcase.orderflow.auth.dto.UserResponseDTO;      // 응답 DTO 사용
-import com.youthcase.orderflow.auth.service.UserServiceImpl;
+import com.youthcase.orderflow.auth.dto.UserResponseDTO;
+import com.youthcase.orderflow.auth.dto.UserPasswordChangeRequestDTO; // 💡 DTO 임포트
+import com.youthcase.orderflow.auth.service.UserService;
+import com.youthcase.orderflow.global.config.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid; // 💡 Jakarta Validation으로 수정
 
-import java.util.Map;
+import java.util.Optional;
+// Map 임포트 제거
 
 @RestController
-@RequestMapping("/api/auth/users") // 기본 URL 경로 설정
+@RequestMapping("/api/auth/users") // 사용자 본인 정보 관리를 위한 기본 경로
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     /**
-     * [POST] 사용자 회원가입 (등록)
-     * POST /api/auth/users/register
+     * [GET] 로그인된 사용자 본인의 정보 조회
+     * GET /api/auth/users/me
      *
-     * @param request UserRegisterRequestDTO
-     * @return UserResponseDTO (201 Created)
-     */
-    @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> registerUser(@RequestBody UserRegisterRequestDTO request) {
-
-        // Service 계층에 등록 로직 위임
-        User newUser = userService.registerNewUser(
-                request.getUserId(),
-                request.getUsername(),
-                request.getPassword(),
-                request.getWorkspace(),
-                request.getEmail(),
-                request.getRoleId()
-        );
-
-        // 등록된 User 엔티티를 응답 DTO로 변환하여 반환
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(UserResponseDTO.from(newUser));
-    }
-
-    /**
-     * [GET] 사용자 ID로 정보 조회
-     * GET /api/auth/users/{userId}
-     *
-     * @param userId 조회할 사용자 ID
+     * @param securityUser 현재 로그인된 사용자 정보 (Spring Security Principal)
      * @return UserResponseDTO
      */
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserResponseDTO> getUserDetails(@PathVariable String userId) {
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMyDetails(@AuthenticationPrincipal SecurityUser securityUser) {
+
+        String userId = securityUser.getUsername();
 
         User user = userService.findByUserId(userId)
+                // Optional<User>를 반환한다고 가정
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
 
-        // 엔티티를 응답 DTO로 변환하여 반환
         return ResponseEntity.ok(UserResponseDTO.from(user));
     }
 
     /**
-     * [PUT] 사용자 비밀번호 변경
-     * PUT /api/auth/users/{userId}/password
+     * [PUT] 로그인된 사용자 본인의 비밀번호 변경
+     * PUT /api/auth/users/password
      *
-     * @param userId 비밀번호를 변경할 사용자 ID
-     * @param requestBody JSON 본문에서 새 비밀번호를 추출 (예: {"newPassword": "..."})
+     * @param securityUser 현재 로그인된 사용자 정보
+     * @param request DTO를 사용하여 새 비밀번호 추출
      * @return 204 No Content
      */
-    @PutMapping("/{userId}/password")
-    public ResponseEntity<Void> changePassword(
-            @PathVariable String userId,
-            @RequestBody Map<String, String> requestBody) {
+    @PutMapping("/password")
+    public ResponseEntity<Void> changeMyPassword(
+            @AuthenticationPrincipal SecurityUser securityUser,
+            @RequestBody @Valid UserPasswordChangeRequestDTO request) { // 💡 DTO 사용으로 변경
 
-        String newPassword = requestBody.get("newPassword");
-        if (newPassword == null || newPassword.isEmpty()) {
-            throw new IllegalArgumentException("새 비밀번호를 입력해야 합니다.");
-        }
+        String userId = securityUser.getUsername();
+        String newPassword = request.getNewPassword();
+
+        // DTO에 @NotBlank가 있으므로, 별도의 null/empty 검사는 불필요합니다.
+        // 유효성 검사 실패 시 GlobalExceptionHandler에서 400 Bad Request가 반환됩니다.
 
         // Service 계층에 비밀번호 변경 로직 위임
         userService.changePassword(userId, newPassword);

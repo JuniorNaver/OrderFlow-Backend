@@ -4,9 +4,11 @@ import com.youthcase.orderflow.auth.dto.AuthorityRequestDTO; // 요청 DTO가 �
 import com.youthcase.orderflow.auth.dto.AuthorityResponseDTO; // 응답 DTO가 필요합니다.
 import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.service.AuthorityService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,8 +27,8 @@ public class AdminAuthorityController {
      * POST /api/admin/authorities
      */
     @PostMapping
-    // @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AuthorityResponseDTO> createAuthority(@RequestBody AuthorityRequestDTO request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AuthorityResponseDTO> createAuthority(@Valid @RequestBody AuthorityRequestDTO request) {
 
         Authority newAuthority = authorityService.createAuthority(
                 request.getAuthority(),

@@ -1,10 +1,9 @@
 package com.youthcase.orderflow.auth.controller;
 
-import com.youthcase.orderflow.auth.dto.LoginRequestDTO;
-import com.youthcase.orderflow.auth.dto.ResetPasswordRequestDTO;
-import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
+import com.youthcase.orderflow.auth.dto.*;
 import com.youthcase.orderflow.auth.service.AuthService; // 인증 및 토큰 발급 로직을 처리할 서비스
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,5 +76,30 @@ public class AuthController {
         authService.resetPassword(request.getToken(), request.getNewPassword());
 
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * [POST] 사용자 회원가입
+     * POST /api/auth/register
+     *
+     * @param request UserRegisterRequestDTO
+     * @return ResponseEntity<Void> (201 Created)
+     */
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody UserRegisterRequestDTO request) {
+        authService.registerNewUser(request);
+        // 리소스 생성 성공 시 201 Created 응답
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    /**
+     * [POST] 토큰 재발급 API (RefreshToken 사용)
+     * POST /api/auth/reissue
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<TokenResponseDTO> reissueToken(@RequestBody TokenRequestDTO request) {
+        // request.getRefreshToken() 호출
+        TokenResponseDTO tokenResponse = authService.reissueToken(request.getRefreshToken());
+        return ResponseEntity.ok(tokenResponse);
     }
 }
