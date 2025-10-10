@@ -38,6 +38,10 @@ out/
 
 ### Oracle 원격 DB ###
 .env
+env
 src/main/resources/wallet/
 wallet/
 **/wallet/**
+src/main/resources/Wallet_ORDERFLOW/
+Wallet_ORDERFLOW/
+**/Wallet_ORDERFLOW/**
