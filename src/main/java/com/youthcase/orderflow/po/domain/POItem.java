@@ -61,6 +61,6 @@ public class POItem {
     private Product gtin;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private POStatus status;
 
 }

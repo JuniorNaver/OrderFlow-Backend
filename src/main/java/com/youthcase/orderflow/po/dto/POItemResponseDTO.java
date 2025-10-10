@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.po.dto;
 
-import com.youthcase.orderflow.po.domain.Status;
+import com.youthcase.orderflow.po.domain.POStatus;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -18,5 +18,5 @@ public class POItemResponseDTO {
     private Long unitPrice;
     private Long orderQty;
     private Long total;
-    private Status status;
+    private POStatus status;
 }

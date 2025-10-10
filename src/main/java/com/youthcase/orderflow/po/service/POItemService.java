@@ -2,14 +2,14 @@ package com.youthcase.orderflow.po.service;
 
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
-import com.youthcase.orderflow.po.domain.Status;
+import com.youthcase.orderflow.po.domain.POStatus;
 
 import java.util.List;
 
 public interface POItemService {
 
     // 장바구니 상품 조회 (poId, status 기준)
-    List<POItemResponseDTO> getAllItems(Long poId, Status status);
+    List<POItemResponseDTO> getAllItems(Long poId, POStatus status);
 
     // 상품 수량 변경
     POItemResponseDTO updateItemQuantity(Long itemNo, POItemRequestDTO requestDTO);

@@ -1,8 +1,6 @@
 package com.youthcase.orderflow.po.service;
 
 import com.youthcase.orderflow.po.domain.PO;
-import com.youthcase.orderflow.po.domain.POHeader;
-import com.youthcase.orderflow.po.domain.Status;
 
 public interface POService {
 
