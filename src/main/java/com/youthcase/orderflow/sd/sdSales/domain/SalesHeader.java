@@ -38,6 +38,7 @@ public class SalesHeader {
     private SalesStatus salesStatus;
 
     // 1:N 매핑 (헤더 ↔ 아이템)
+    @Builder.Default
     @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SalesItem> salesItems = new ArrayList<>();
 

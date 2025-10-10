@@ -17,4 +17,13 @@ public class PaymentResult {
     private PaymentMethod method;   //어떤 결제 수단으로 처리됐는지
     private Long orderId;           //어떤 주문의 결제였는지
     private BigDecimal paidAmount;  //실제 결제된 금액
+
+    public PaymentResult(boolean success, String message, String transactionNo) {
+        this.success = success;
+        this.message = message;
+        this.transactionNo = transactionNo;
+
+    }
 }
+
+
