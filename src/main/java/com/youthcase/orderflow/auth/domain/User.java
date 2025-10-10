@@ -17,7 +17,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "user")
+@Table(name = "APP_USER")
 @EntityListeners(AuditingEntityListener.class)
 public class User {
 
