@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.po.controller;
 
-import com.youthcase.orderflow.po.domain.Status;
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.service.POHeaderService;
@@ -26,7 +26,7 @@ public class POController {
 
     /** 장바구니 상품 조회: 헤더id와 상태 기준으로 아이템 목록 찾아오기 */
     @GetMapping("/items")
-    public List<POItemResponseDTO> getAllItems(Long poId, Status status) {
+    public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
         return poItemService.getAllItems(poId, status);
     }
 
