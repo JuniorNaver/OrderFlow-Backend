@@ -22,7 +22,6 @@ import java.util.List;
         allocationSize = 1
 )
 public class RefundHeader {
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "refund_header_seq")
     @Column(name = "REFUND_ID")
@@ -57,6 +56,8 @@ public class RefundHeader {
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY)
+    
+    @Builder.Default
     private List<RefundItem> refundItems = new ArrayList<>();
 
 }
