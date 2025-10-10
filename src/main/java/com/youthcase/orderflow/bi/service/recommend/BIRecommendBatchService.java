@@ -46,7 +46,7 @@ public class BIRecommendBatchService {
 
         // 2️⃣ 각 상품별 추천 발주량 계산
         for (BIForecastResult forecast : forecasts) {
-            BigDecimal forecastQty = BigDecimal.valueOf(forecast.getForecastQty());
+            BigDecimal forecastQty = forecast.getForecastQty();
             BigDecimal stockQty = currentStockData.getOrDefault(forecast.getProductId(), BigDecimal.ZERO);
 
             BigDecimal recommended = forecastQty.subtract(stockQty);
@@ -85,7 +85,7 @@ public class BIRecommendBatchService {
                 );
 
         for (BIForecastResult forecast : forecasts) {
-            BigDecimal forecastQty = BigDecimal.valueOf(forecast.getForecastQty());
+            BigDecimal forecastQty = forecast.getForecastQty();
             BigDecimal baseline = baselineData.getOrDefault(forecast.getProductId(), BigDecimal.ZERO);
             BigDecimal coef = factorCoefData.getOrDefault(forecast.getProductId(), BigDecimal.ONE);
             BigDecimal stock = currentStockData.getOrDefault(forecast.getProductId(), BigDecimal.ZERO);

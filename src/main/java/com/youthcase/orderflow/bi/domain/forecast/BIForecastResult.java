@@ -10,6 +10,8 @@ package com.youthcase.orderflow.bi.domain.forecast;
 import com.youthcase.orderflow.bi.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -42,11 +44,11 @@ public class BIForecastResult extends BaseTimeEntity {
 
     /** 예측 판매량 (모델이 산출한 값) */
     @Column(name = "FORECAST_QTY", precision = 10, scale = 2)
-    private Double forecastQty;
+    private BigDecimal forecastQty;
 
     /** 모델의 신뢰도(%) */
     @Column(name = "CONFIDENCE_RATE", precision = 5, scale = 2)
-    private Double confidenceRate;
+    private BigDecimal confidenceRate;
 
     /** 사용된 예측 모델 버전명 */
     @Column(name = "MODEL_VERSION", length = 20)
