@@ -2,7 +2,7 @@ package com.youthcase.orderflow.po.service;
 
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
-import com.youthcase.orderflow.po.domain.Status;
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
@@ -22,7 +22,7 @@ public class POItemServiceImpl implements POItemService {
     private final POItemRepository poItemRepository;
 
     @Override
-    public List<POItemResponseDTO> getAllItems(Long poId, Status status) {
+    public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
         return poItemRepository.findByPoHeader_PoIdAndStatus(poId, status)
                 .stream()
                 .map(this::toResponseDTO)
@@ -35,7 +35,7 @@ public class POItemServiceImpl implements POItemService {
         Long quantity = requestDTO.getOrderQty();
 
         // 2️⃣ 기존 아이템 조회 (Status.PR 상태 기준)
-        POItem item = poItemRepository.findByItemNoAndStatus(itemNo, Status.PR)
+        POItem item = poItemRepository.findByItemNoAndStatus(itemNo, POStatus.PR)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이템을 찾을 수 없습니다."));
 
         // 3️⃣ 유효성 검사
@@ -76,7 +76,7 @@ public class POItemServiceImpl implements POItemService {
     public void saveItem(Long poId, List<POItemRequestDTO> requestDTOList) {
         POHeader poHeader = poHeaderRepository.findById(poId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 발주서가 존재하지 않습니다."));
-        poHeader.setStatus(Status.S);
+        poHeader.setStatus(POStatus.S);
         poHeaderRepository.save(poHeader);
     }
 
