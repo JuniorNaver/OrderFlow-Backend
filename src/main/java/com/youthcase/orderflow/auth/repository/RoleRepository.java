@@ -9,21 +9,17 @@ import java.util.Optional;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, String> {
-    // JpaRepository<[엔티티 타입: Role], [PK 타입: String]>
 
     /**
      * RoleType Enum 값을 사용하여 Role 엔티티를 조회합니다.
-     * @param role RoleType (예: RoleType.ADMIN)
+     * @param roleType RoleType (예: RoleType.ADMIN)
      * @return Role 엔티티 (Optional)
      */
-    Optional<Role> findByRole(RoleType role);
-
     Optional<Role> findByRoleType(RoleType roleType);
 
     /**
-     * String 타입의 RoleId로 Role 엔티티를 조회합니다. (RoleServiceImpl에서 사용)
+     * String 타입의 RoleId로 Role 엔티티를 조회합니다.
      */
     Optional<Role> findByRoleId(String roleId);
-
-    // PK인 roleId (String)를 사용한 조회는 JpaRepository의 findById()가 자동으로 제공합니다.
 }
+
