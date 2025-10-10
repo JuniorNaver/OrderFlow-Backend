@@ -30,7 +30,7 @@ public class NotiItem {
 
     // 내용 (CONTENT) -> 동적 데이터 또는 최종 알림 내용
     // 템플릿에 들어갈 JSON 형태의 동적 데이터(Payload)를 저장할 수 있도록 TEXT 타입 고려
-    @Column(name = "CONTENT", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "CONTENT", columnDefinition = "CLOB", nullable = false)
     private String content;
 
     // 읽음 여부 (필수 추가 항목)

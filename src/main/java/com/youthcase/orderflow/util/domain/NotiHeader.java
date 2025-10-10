@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
 @Entity // Jakarta Persistence: 엔티티임을 명시
 @Getter // Lombok: 모든 필드에 대한 Getter 생성
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // Lombok: 기본 생성자 (JPA 사용)
-@Table(name = "NOTI_HEADER") // 매핑할 테이블 이름 지정
+@Table(name = "NOTI_HEADER") // NotiItem이 참조하는 테이블명
 public class NotiHeader {
 
     // 알림헤더ID (NOTI_ID)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // DB에 따라 적절한 키 생성 전략 선택
-    @Column(name = "NOTI_ID", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // ID 자동 생성 전략 사용
+    @Column(name = "NOTI_ID", nullable = false) // NotiItem의 @JoinColumn(name = "NOTI_ID")와 일치해야 함
     private Long notiId;
 
     // 종류 (TYPE) - 알림 유형

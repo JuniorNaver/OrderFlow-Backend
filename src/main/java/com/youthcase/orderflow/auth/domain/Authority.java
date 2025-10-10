@@ -30,7 +30,7 @@ public class Authority {
     @Column(name = "description", length = 255)
     private String description;
 
-    // ✅ 필수 추가: 권한이 적용되는 URL 패턴
+    // 필수 추가: 권한이 적용되는 URL 패턴
     @Column(name = "url_pattern", nullable = true, length = 255)
     private String url;
 
