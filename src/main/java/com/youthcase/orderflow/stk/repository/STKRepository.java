@@ -29,4 +29,6 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     @Query("SELECT s FROM STK s JOIN s.lot l " +
             "WHERE s.status = 'ACTIVE' AND l.expDate <= :limitDate AND l.expDate > :targetDate")
     List<STK> findNearExpiryActiveStock(@Param("limitDate") Date limitDate, @Param("targetDate") Date targetDate);
+
+    List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpirationDateAsc(String gtin, int quantity);
 }
