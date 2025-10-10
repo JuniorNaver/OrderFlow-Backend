@@ -28,7 +28,7 @@ public class POHeader {
 
     // 상태(PR: 발주 요청, PO: 발주 완료, D: 삭제/취소)
     @Column(name = "STATUS", length = 10, nullable = false)
-    private Status status;
+    private POStatus status;
 
     // 매입총액
     @Column(name = "TOTAL_AMOUNT", nullable = false)

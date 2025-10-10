@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.po.dto;
 
-import com.youthcase.orderflow.po.domain.Status;
+import com.youthcase.orderflow.po.domain.POStatus;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class POHeaderResponseDTO {
     private Long poId;
-    private Status status;
+    private POStatus status;
     private Long totalAmount;
     private LocalDate actionDate;
     private String remarks;

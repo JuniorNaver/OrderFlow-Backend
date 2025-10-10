@@ -3,7 +3,7 @@ package com.youthcase.orderflow.po.service;
 import com.youthcase.orderflow.po.domain.PO;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
-import com.youthcase.orderflow.po.domain.Status;
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.po.repository.POItemRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,7 +28,7 @@ public class POServiceImpl implements POService {
                 .orElseThrow(() -> new EntityNotFoundException("발주를 찾을 수 없습니다. ID=" + poId));
 
         // 2. 상태를 'PO' 로 변경
-        poHeader.setStatus(Status.PO);
+        poHeader.setStatus(POStatus.PO);
 
         // 3. 저장
         POHeader savedHeader = poHeaderRepository.save(poHeader);

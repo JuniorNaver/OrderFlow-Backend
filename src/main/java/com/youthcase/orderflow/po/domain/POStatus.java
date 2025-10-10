@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.po.domain;
 
-public enum Status {
+public enum POStatus {
     PR,   // 발주 요청
     PO,   // 발주 완료
     S,    // 저장
