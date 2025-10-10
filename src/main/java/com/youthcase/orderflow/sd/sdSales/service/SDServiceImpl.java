@@ -48,7 +48,7 @@ public class SDServiceImpl implements SDService {
 
             // ✅ JPA 네이밍 방식으로 FIFO/FEFO 재고 조회
             List<STK> stockList = stkRepository
-                    .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpirationDateAsc(Long.valueOf(dto.getGtin()), 0);
+                    .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpirationDateAsc(dto.getGtin(), 0);
 
             int remaining = dto.getQuantity();
 
@@ -59,7 +59,7 @@ public class SDServiceImpl implements SDService {
                 int deduction = Math.min(available, remaining);
 
                 // 재고 차감
-                stk.setQuantity(available - deduction);
+                stk.updateQuantity(available - deduction);
 
                 // 판매 아이템 등록
                 SalesItem item = new SalesItem();
