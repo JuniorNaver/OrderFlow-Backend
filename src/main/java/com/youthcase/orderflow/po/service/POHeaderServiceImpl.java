@@ -16,7 +16,7 @@ public class POHeaderServiceImpl implements POHeaderService {
     @Override
     public List<POHeaderResponseDTO> findAll() {
         return poHeaderRepository.findAll().stream()
-                .map(this::toDto)
+                .map(this::toDto) //현재 클래스에 정의된 toDto() 메서드를 가리킴
                 .toList();
     }
 
@@ -27,7 +27,6 @@ public class POHeaderServiceImpl implements POHeaderService {
                 .totalAmount(poHeader.getTotalAmount())
                 .actionDate(poHeader.getActionDate())
                 .remarks(poHeader.getRemarks())
-                .username(poHeader.getUser().getUsername()) // User 엔티티에 username 필드 있다고 가정
                 .build();
     }
 }
