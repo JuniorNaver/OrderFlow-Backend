@@ -8,16 +8,13 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-
 
 @Entity
 @Table(name = "SD_RECEIPT_HEADER")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 public class ReceiptHeader {
 
     @Id
@@ -25,37 +22,38 @@ public class ReceiptHeader {
     @SequenceGenerator(name = "receipt_header_seq", sequenceName = "SD_RECEIPT_HEADER_SEQ", allocationSize = 1)
     private Long receiptId;
 
-    // ✅ 판매 헤더와 연결
-    @OneToOne
-    @JoinColumn(name = "sales_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sales_id", foreignKey = @ForeignKey(name = "FK_RECEIPT_SALES"))
     private SalesHeader salesHeader;
 
-    // ✅ 결제 헤더와 연결
-    @OneToOne
-    @JoinColumn(name = "payment_id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "payment_id", nullable = false, foreignKey = @ForeignKey(name = "FK_RECEIPT_PAYMENT"))
     private PaymentHeader paymentHeader;
 
-    // ✅ 환불 헤더 (선택적)
-    @OneToOne(optional = true)
-    @JoinColumn(name = "refund_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "refund_id", foreignKey = @ForeignKey(name = "FK_RECEIPT_REFUND"))
     private RefundHeader refundHeader;
 
-    private LocalDateTime receiptDate;
-    private String storeName;
+    @Column(name = "receipt_no", unique = true, nullable = false, length = 50)
+    private String receiptNo;
+
+    @Column(name = "total_amount", precision = 12, scale = 2, nullable = false)
     private BigDecimal totalAmount;
 
-    // ✅ 영수증 아이템 목록 (여기 없어서 빨간줄 뜬 거야)
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+    }
+
+    @Builder.Default
     @OneToMany(mappedBy = "receiptHeader", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReceiptItem> items;
+    private List<ReceiptItem> items = new ArrayList<>();
 
-    // ✅ 필요하면 수동 세터로 연관관계 유지
     public void setItems(List<ReceiptItem> items) {
-        this.items = items;
-        if (items != null) {
-            items.forEach(i -> i.setReceiptHeader(this));
-        }
+        this.items = items != null ? items : new ArrayList<>();
+        this.items.forEach(i -> i.setReceiptHeader(this));
     }
-
-    }
-
-
+}
