@@ -21,29 +21,30 @@ public class SalesItem {
     @SequenceGenerator(
             name = "sales_item_seq",
             sequenceName = "SALES_ITEM_SEQ",
-            allocationSize = 1)
+            allocationSize = 1
+    )
     private Long no;
 
-    @Column(name="PRODUCT_NAME", nullable = false)
-    private String productName;
-
-    @Column(name="QUANTITY", nullable = false)
-    private int salesQuantity; //아이템 한개의 양
-
-    @Column(name="SD_PRICE", precision= 12, scale=2 , nullable = false)
+    // ✅ 상품 단가
+    @Column(name = "SD_PRICE", precision = 12, scale = 2, nullable = false)
     private BigDecimal sdPrice;
 
-    // N:1 매핑 (아이템 → 헤더 FK)
+    // ✅ 판매 수량 (SalesQuantity)
+    @Column(name = "SALES_QUANTITY", nullable = false)
+    private int salesQuantity;
+
+    // ✅ N:1 매핑 (아이템 → 헤더)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ORDER_ID", nullable = false)
     private SalesHeader salesHeader;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "STK_ID", nullable = false)
-    private STK stk;
-
+    // ✅ N:1 매핑 (상품)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
     private Product product;
 
+    // ✅ N:1 매핑 (재고)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "STK_ID", nullable = false)
+    private STK stk;
 }

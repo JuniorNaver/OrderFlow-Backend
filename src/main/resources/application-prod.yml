@@ -1,22 +1,41 @@
 spring:
-  ## datasource (운영용) - 비밀번호/계정은 환경변수 사용
+  config:
+    import: optional:file:.env[.properties]   # ✅ .env 파일을 읽도록 설정
+
+  ## datasource (운영용 Oracle DB)
   datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    driver-class-name: oracle.jdbc.OracleDriver
 
   ## JPA 설정
   jpa:
     hibernate:
-      ddl-auto: validate       # 운영 환경에서는 테이블 구조 검증만
-    show-sql: false             # 운영 환경에서는 SQL 로그 출력 안 함
-    open-in-view: false          # 운영 환경 Lazy 로딩 방지
+      ddl-auto: validate          # 운영 환경에서는 테이블 구조 검증만
+    show-sql: false               # SQL 로그 비활성화 (보안/성능)
+    open-in-view: false           # Lazy 로딩 방지
     properties:
       hibernate:
         format_sql: false
         highlight_sql: false
         use_sql_comments: false
+
+  ## Mail 설정
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+## JWT 설정 (운영도 동일하게 .env에서 주입)
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expire-time: ${JWT_ACCESS_EXPIRE:3600000}
+  refresh-token-expire-time: ${JWT_REFRESH_EXPIRE:1209600000}
 
 ## logging 설정 (운영 환경에서는 INFO 수준)
 logging:

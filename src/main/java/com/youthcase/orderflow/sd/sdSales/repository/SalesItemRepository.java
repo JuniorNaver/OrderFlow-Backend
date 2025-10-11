@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
     @Query("SELECT new com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO( " +
-            "p.productName, si.sdPrice, si.salesQuantity, st.quantity) " +
+            "p.productName, si.sdPrice, si.salesQuantity, st.salesQuantity) " +
             "FROM SalesItem si " +
             "JOIN si.product p " +
             "JOIN si.stk st " +
