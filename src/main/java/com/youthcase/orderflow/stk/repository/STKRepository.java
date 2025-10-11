@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface STKRepository extends JpaRepository<STK, Long> {
 
-    List<STK> findBySpotId(Long spotId);
+    List<STK> findByWarehouse_WarehouseId(String warehouseId);
 
     // 유통기한 만료 재고 조회 (기존 로직)
     @Query("SELECT s FROM STK s JOIN s.lot l " +
@@ -30,5 +30,5 @@ public interface STKRepository extends JpaRepository<STK, Long> {
             "WHERE s.status = 'ACTIVE' AND l.expDate <= :limitDate AND l.expDate > :targetDate")
     List<STK> findNearExpiryActiveStock(@Param("limitDate") Date limitDate, @Param("targetDate") Date targetDate);
 
-    List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpirationDateAsc(String gtin, int quantity);
+    List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, int quantity);
 }
