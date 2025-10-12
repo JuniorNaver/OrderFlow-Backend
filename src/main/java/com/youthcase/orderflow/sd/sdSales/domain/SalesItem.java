@@ -33,6 +33,10 @@ public class SalesItem {
     @Column(name = "SALES_QUANTITY", nullable = false)
     private int salesQuantity;
 
+    //한개 단위 상품 총액
+    @Column(name = "SUBTOTAL", precision = 12, scale = 2, nullable = false)
+    private BigDecimal subtotal;
+
     // ✅ N:1 매핑 (아이템 → 헤더)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ORDER_ID", nullable = false)
