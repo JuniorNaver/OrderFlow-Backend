@@ -14,4 +14,5 @@ public class PaymentRequest {
     private Long orderId; //주문번호
     private BigDecimal amount; //결제금액
     private PaymentMethod paymentMethod; //결제방식
+    private String provider;
 }

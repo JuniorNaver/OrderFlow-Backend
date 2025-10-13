@@ -4,7 +4,8 @@ public enum PaymentStatus {
     REQUESTED("결제 요청"),
     APPROVED("결제 승인"),
     CANCELED("결제 취소"),
-    FAILED("결제 실패");
+    FAILED("결제 실패"),
+    PARTIALLY_APPROVED("부분 승인");
 
     private final String description;
 
