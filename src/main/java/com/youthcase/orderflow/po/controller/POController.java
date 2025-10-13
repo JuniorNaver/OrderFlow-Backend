@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/po")
+@RequestMapping("/api/po")
 public class POController {
 
     private final POHeaderService poHeaderService;
@@ -31,7 +31,7 @@ public class POController {
     }
 
     /** 장바구니 상품 수량 변경 */
-    @PutMapping("/items/{itemNo}")
+    @PutMapping("/update/{itemNo}")
     public POItemResponseDTO updateItemQuantity(@PathVariable Long itemNo, @RequestBody POItemRequestDTO dto) {
         return poItemService.updateItemQuantity(itemNo, dto);
     }
@@ -53,4 +53,5 @@ public class POController {
     public void confirmOrder(@PathVariable Long poId) {
         poService.confirmOrder(poId);
     }
+
 }
