@@ -11,7 +11,7 @@ spring:
   ## JPA 설정
   jpa:
     hibernate:
-      ddl-auto: update          # 개발 환경에서는 테이블 자동 생성/업데이트 허용
+      ddl-auto: create          # 개발 환경에서는 테이블 자동 생성/업데이트 허용
     show-sql: true              # SQL 로그 출력
     open-in-view: true          # Lazy 로딩을 View 단까지 허용 (Controller → Service → View 구조일 때만)
     properties:
