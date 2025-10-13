@@ -2,6 +2,9 @@ package com.youthcase.orderflow.sd.sdSales.service;
 
 import com.youthcase.orderflow.pr.domain.Product;
 import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentStatus;
+import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
 import com.youthcase.orderflow.sd.sdSales.domain.*;
 import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
@@ -13,6 +16,7 @@ import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SDServiceImpl implements SDService {
@@ -28,6 +33,7 @@ public class SDServiceImpl implements SDService {
     private final SalesItemRepository salesItemRepository;
     private final ProductRepository productRepository;
     private final STKRepository stkRepository;
+    private final PaymentHeaderRepository paymentHeaderRepository;
 
 
     //salesHeader 주문 생성
@@ -110,12 +116,27 @@ public class SDServiceImpl implements SDService {
 
     //salesHeader 주문완료
     @Override
+    @Transactional
     public void completeOrder(Long orderId) {
+        // 1️⃣ 주문 조회
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
-        header.setSalesStatus(SalesStatus.CANCELLED);
+        // 2️⃣ 결제 상태 확인 (PaymentHeader에서 가져옴)
+        PaymentHeader paymentHeader = paymentHeaderRepository.findBySalesHeader_OrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("결제 내역 없음"));
+
+        // 3️⃣ 결제 완료 여부 검증
+        if (paymentHeader.getPaymentStatus() != PaymentStatus.APPROVED) {
+            throw new IllegalStateException("💰 결제가 모두 완료되지 않았습니다.");
+        }
+
+        // 4️⃣ 주문 상태 변경
+        header.setSalesStatus(SalesStatus.COMPLETED);
+        header.setSalesDate(LocalDateTime.now());
         salesHeaderRepository.save(header);
+
+        log.info("✅ 주문 {} 결제 완료 및 판매 확정됨", orderId);
     }
 
 
