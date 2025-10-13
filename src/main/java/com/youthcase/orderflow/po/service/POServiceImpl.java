@@ -25,9 +25,9 @@ public class POServiceImpl implements POService {
     public PO confirmOrder(Long poId) {
         // 1. 발주 헤더 조회
         POHeader poHeader = poHeaderRepository.findById(poId)
-                .orElseThrow(() -> new EntityNotFoundException("발주를 찾을 수 없습니다. ID=" + poId));
+                .orElseThrow(() -> new EntityNotFoundException("발주를 찾을 수 없습니다."));
 
-        // 2. 상태를 'PO' 로 변경
+        // 2. 상태를 'PO'로 변경
         poHeader.setStatus(POStatus.PO);
 
         // 3. 저장
