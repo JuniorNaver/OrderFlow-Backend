@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -38,8 +39,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults())
                 // 1. CSRF (Cross-Site Request Forgery) 보호 비활성화:
-                // REST API는 JWT를 사용하며 세션을 사용하지 않으므로 CSRF가 필요하지 않습니다.
                 .csrf(AbstractHttpConfigurer::disable)
 
                 // 2. HTTP Basic 인증 비활성화
@@ -49,29 +50,32 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 4. URL별 접근 권한 설정
+                // 4. URL별 접근 권한 설정 (최신 Spring Security 6+ 문법 적용)
                 .authorizeHttpRequests(authorize -> authorize
-                        // 1. 누구나 접근 가능 (인증/재발급)
+                                // ----------------------------------------------------
+                                // [개발/테스트를 위해 수정된 핵심 부분]
+                                // 모든 API 경로 (/api/**)에 대해 인증 없이 접근을 허용합니다. (개발용)
+                                .requestMatchers("/api/**").permitAll()
+
+                                // 나머지 모든 요청 (정적 파일 등)도 모두 허용합니다.
+                                .anyRequest().permitAll()
+
+                        // ----------------------------------------------------
+                        // ✨ 원래의 엄격한 설정은 아래와 같았습니다.
+                        /*
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // 2. 역할 기반 접근 제어 (ROLE_ADMIN 권한이 필요)
-                        // 🚨 User 엔티티의 RoleId 필드에 "ROLE_" 접두사를 사용했으므로 hasRole 대신 hasAuthority를 사용하거나,
-                        //    CustomUserDetailsService에서 "ROLE_" 접두사를 붙여 SimpleGrantedAuthority로 변환했다면 hasRole 사용 가능
-                        .requestMatchers("/api/products/**").hasAuthority("PRODUCT_ADMIN") // 특정 권한 필요
-                        .requestMatchers("/api/orders/admin/**").hasRole("ADMIN") // RoleType의 ADMIN 역할 필요
-
-                        // 3. 인증된 사용자만 (나머지)
+                        .requestMatchers("/api/products/**").hasAuthority("PRODUCT_ADMIN")
+                        .requestMatchers("/api/orders/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                        */
                 )
 
                 // 5. JWT 필터 등록
-                // UsernamePasswordAuthenticationFilter 이전에 커스텀 JWT 필터를 삽입하여 토큰 검증을 수행합니다.
+                // 인증을 해제했으므로 토큰 검증은 진행되지만, 실패해도 접근은 허용됩니다.
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
                         UsernamePasswordAuthenticationFilter.class
                 );
-
-
 
         return http.build();
     }

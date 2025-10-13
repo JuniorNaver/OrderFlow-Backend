@@ -1,7 +1,7 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.6'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.youthcase'
@@ -9,132 +9,82 @@ version = '0.0.1-SNAPSHOT'
 description = 'Smart ERP-MM System for Convenience Store'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
     // ===========================
-    // Spring Boot 기본 의존성
+    // 🌱 Spring Boot 기본 의존성
     // ===========================
+    implementation 'org.springframework.boot:spring-boot-starter-web'           // MVC REST API
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'      // ORM + JPA
+    implementation 'org.springframework.boot:spring-boot-starter-security'      // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'     // 템플릿 엔진
+    implementation 'org.springframework.boot:spring-boot-starter-validation'    // Bean Validation
+    implementation 'org.springframework.boot:spring-boot-starter-mail'          // Gmail SMTP 지원
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'       // 논블로킹 WebFlux
 
-    // Spring Data JPA (ORM, DB 접근 및 엔티티 매핑)
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // Spring Boot Starter Validation 추가
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    // Thymeleaf (서버 사이드 렌더링 템플릿 엔진)
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-
-    // Thymeleaf 레이아웃 확장 (공통 레이아웃 관리)
-    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.2.0'
-
-    // Thymeleaf + Spring Security 연동
-    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-
-    // Spring Web (REST API 및 MVC 웹 개발)
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-
-    // Spring Security (인증/인가 처리)
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // 개발 편의 기능 (자동 리빌드 등)
+    // 개발 편의 기능 (자동 재시작 등)
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    // Oracle JDBC 드라이버 (Oracle DB 연동)
+    // Oracle JDBC 드라이버
     runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
 
+    // ===========================
+    // 🧩 Thymeleaf 확장
+    // ===========================
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.2.0'
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 
     // ===========================
-    // DTO/Entity 매핑 및 JSON 관련
+    // 🔐 JWT 관련
     // ===========================
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // ModelMapper (DTO ↔ Entity 변환 유틸)
+    // ===========================
+    // ⚙️ DTO/Entity 매핑 및 JSON
+    // ===========================
     implementation 'org.modelmapper:modelmapper:3.2.1'
-
-    // Gson (JSON 직렬화/역직렬화 라이브러리)
     implementation 'com.google.code.gson:gson:2.10.1'
 
-
     // ===========================
-    // Lombok 관련 의존성
+    // 🧱 Lombok (보일러플레이트 제거)
     // ===========================
-
-    // Lombok (Getter/Setter, Builder 등 보일러플레이트 코드 제거)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-
-    // 테스트 코드에서도 Lombok 사용 가능하게 설정
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-
     // ===========================
-    // 테스트 관련 의존성
+    // 🧪 테스트 관련
     // ===========================
-
-    // Spring Security 테스트 지원
-    testImplementation 'org.springframework.security:spring-security-test'
-
-    // Spring Boot 기본 테스트 (JUnit, Mockito 등 포함)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    // JUnit 플랫폼 런처 (테스트 실행 환경)
+    testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-
     // ===========================
-    // JWT 관련 의존성
+    // 🔧 환경 변수 관리 (.env 지원)
     // ===========================
-
-    // JWT API (인터페이스)
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-
-    // JWT 구현체 (실제 동작 로직)
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-
-    // JWT에서 JSON 처리를 위한 Jackson 연동
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-    // build.gradle
-    // 리액티브 웹 스택(WebFlux) 사용: 논블로킹 I/O + Netty 기반 서버
-    // - @RestController + Mono/Flux 반환
-    // - WebClient 로 비동기 HTTP 호출
-    // - PR 과 PO를 연겷시켜주는 장치
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
-    // ⭐ 1. Spring Security 핵심
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // ⭐ 2. JWT (Java JSON Web Token) 라이브러리
-    // io.jsonwebtoken:jjwt-api'는 JWT 토큰 생성 및 파싱에 사용됩니다.
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
-    // ⭐ 3. Spring Mail Starter (EmailService 실제 구현을 위해 필수)
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-
-    // ⭐ 4. Jakarta Validation API 및 Hibernate Validator (DTO 유효성 검사를 위해 필수)
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
+    // spring.config.import: optional:file:.env[.properties] 구문을 사용하면
+    // Spring Boot 3.5부터 별도 라이브러리 없이 동작하지만,
+    // 환경 변수 파싱이 필요한 경우 아래 라이브러리를 추가로 사용 가능
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 }
 
-
-
-
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }

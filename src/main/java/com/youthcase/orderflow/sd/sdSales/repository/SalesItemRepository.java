@@ -18,4 +18,6 @@ public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
             "JOIN si.stk st " +
             "WHERE si.salesHeader.orderId = :orderId")
     List<SalesItemDTO> findItemsByHeaderId(@Param("orderId") Long orderId);
+    List<SalesItem> findBySalesHeader_OrderId(Long orderId);
+
 }

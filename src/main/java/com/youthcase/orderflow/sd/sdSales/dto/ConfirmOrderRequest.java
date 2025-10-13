@@ -15,6 +15,7 @@ import java.util.List;
 public class ConfirmOrderRequest {
     private Long orderId;
     private List<ItemDTO> items;
+    private BigDecimal totalAmount; // ✅ 이거 추가!
 
     @Getter
     @Setter

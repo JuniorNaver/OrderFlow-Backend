@@ -3,6 +3,7 @@ package com.youthcase.orderflow.sd.sdSales.service;
 import com.youthcase.orderflow.pr.domain.Product;
 import com.youthcase.orderflow.pr.repository.ProductRepository;
 import com.youthcase.orderflow.sd.sdSales.domain.*;
+import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
@@ -14,7 +15,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -28,11 +32,53 @@ public class SDServiceImpl implements SDService {
 
     //salesHeader 주문 생성
     @Override
+    @Transactional
     public SalesHeader createOrder() {
+        String datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String lastOrderNo = salesHeaderRepository.findLastOrderNoByDate(datePrefix);
+
+        int nextSeq = 1;
+        if (lastOrderNo != null && lastOrderNo.length() > 9) {
+            String seqStr = lastOrderNo.substring(9); // "20251012-005" → "005"
+            nextSeq = Integer.parseInt(seqStr) + 1;
+        }
+
+        String newOrderNo = String.format("%s-%03d", datePrefix, nextSeq);
+
         SalesHeader header = new SalesHeader();
+        header.setOrderNo(newOrderNo);
         header.setSalesDate(LocalDateTime.now());
-        header.setSalesStatus(SalesStatus.PENDING); //주문 진행중 상태~~~
+        header.setSalesStatus(SalesStatus.PENDING);
+        header.setTotalAmount(BigDecimal.ZERO);
+
         return salesHeaderRepository.save(header);
+    }
+
+    //상품추가
+    @Override
+    @Transactional
+    public SalesItem addItemToOrder(AddItemRequest request) {
+        SalesHeader header = salesHeaderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new RuntimeException("주문 없음"));
+
+        Product product = productRepository.findByGtin(request.getGtin())
+                .orElseThrow(() -> new RuntimeException("상품 없음"));
+
+        SalesItem item = new SalesItem();
+        item.setSalesHeader(header);
+        item.setProduct(product);
+        item.setSalesQuantity(request.getQuantity());
+        item.setSdPrice(request.getPrice());
+
+        BigDecimal subtotal = request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        item.setSubtotal(subtotal);
+
+        header.setTotalAmount(header.getTotalAmount().add(subtotal));
+
+        salesItemRepository.save(item);
+        salesHeaderRepository.save(header);
+
+        return item;
     }
     //salesHeader 바코드로 아이템 추가 + 재고수정 (react+vite 연동)
     @Override
@@ -41,46 +87,19 @@ public class SDServiceImpl implements SDService {
         SalesHeader header = salesHeaderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
-        for (ConfirmOrderRequest.ItemDTO dto : request.getItems()) {
-            // 상품 조회
-            Product product = productRepository.findByGtin(String.valueOf(dto.getGtin()))
-                    .orElseThrow(() -> new RuntimeException("상품 없음"));
+        // ✅ 프론트에서 이미 재고 차감, SalesItem 추가 완료된 상태이므로
+        // 서버에서는 단순히 상태만 "COMPLETED" 로 변경하면 됨
+        header.setSalesStatus(SalesStatus.COMPLETED);
+        header.setSalesDate(LocalDateTime.now());
 
-            // ✅ JPA 네이밍 방식으로 FIFO/FEFO 재고 조회
-            List<STK> stockList = stkRepository
-                    .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpirationDateAsc(dto.getGtin(), 0);
-
-            int remaining = dto.getQuantity();
-
-            for (STK stk : stockList) {
-                if (remaining <= 0) break;
-
-                int available = stk.getQuantity();
-                int deduction = Math.min(available, remaining);
-
-                // 재고 차감
-                stk.updateQuantity(available - deduction);
-
-                // 판매 아이템 등록
-                SalesItem item = new SalesItem();
-                item.setSalesHeader(header);
-                item.setProduct(product);      // Product 엔티티 참조
-                item.setSalesQuantity(deduction);   // 판매 수량
-                item.setSdPrice(dto.getPrice());
-
-                header.getSalesItems().add(item);
-
-                remaining -= deduction;
-            }
-
-            if (remaining > 0) {
-                throw new RuntimeException("재고 부족");
-            }
+        // ✅ 총금액이 프론트 계산 결과로 넘어올 경우 반영
+        if (request.getTotalAmount() != null) {
+            header.setTotalAmount(request.getTotalAmount());
         }
 
-        header.setSalesStatus(SalesStatus.COMPLETED);
         salesHeaderRepository.save(header);
     }
+
 
 
     //salesHeader 주문에 속한 아이템 목록 조회, 보류도
@@ -140,6 +159,7 @@ public class SDServiceImpl implements SDService {
         // DTO 만들고
         SalesHeaderDTO dto = new SalesHeaderDTO(
                 header.getOrderId(),
+                header.getOrderNo(),
                 header.getSalesDate(),
                 header.getTotalAmount(),
                 header.getSalesStatus()
