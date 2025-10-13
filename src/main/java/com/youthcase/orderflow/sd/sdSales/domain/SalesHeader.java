@@ -34,6 +34,10 @@ public class SalesHeader {
     @Column(name= "TOTAL_AMOUNT", precision= 12, scale=2 , nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(name = "order_no", unique = true, length = 20)
+    private String orderNo;
+
+
     @Enumerated(EnumType.STRING)
     private SalesStatus salesStatus;
 

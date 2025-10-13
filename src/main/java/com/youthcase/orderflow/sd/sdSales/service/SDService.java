@@ -2,6 +2,7 @@ package com.youthcase.orderflow.sd.sdSales.service;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
+import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
@@ -14,6 +15,9 @@ public interface SDService{
     // 기본 판매로직
     // 주문(헤더) 생성
     SalesHeader createOrder();
+
+    //상품 추가
+    SalesItem addItemToOrder(AddItemRequest request);
 
     // 바코드+재고
     void confirmOrder(ConfirmOrderRequest request);
