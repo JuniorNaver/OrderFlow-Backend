@@ -52,6 +52,14 @@ public class Product {
     @Column(name = "ORDERABLE", nullable = false)
     private Boolean orderable = Boolean.TRUE; // 기본값: 발주 가능
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EXPIRY_TYPE", length = 20, nullable = false)
+    private ExpiryType expiryType = ExpiryType.NONE;
+
+    @jakarta.validation.constraints.Min(0)
+    @Column(name = "SHELF_LIFE_DAYS")
+    private Integer shelfLifeDays; // (옵션) 제조/포장일 + n일 계산용
+
     // --- 치수(mm): 음수 방지 + NUMBER(6,0) 명시 ---
     @PositiveOrZero
     @Max(999_999)

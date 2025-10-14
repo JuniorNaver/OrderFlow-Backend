@@ -1,8 +1,9 @@
 package com.youthcase.orderflow.pr.service;
 
 import com.youthcase.orderflow.pr.domain.Category;
+import com.youthcase.orderflow.pr.domain.ExpiryType;
 import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.pr.dto.ProductRequestDto;
+import com.youthcase.orderflow.pr.dto.ProductCreateDto;
 import com.youthcase.orderflow.pr.dto.ProductResponseDto;
 import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
 import com.youthcase.orderflow.pr.mapper.ProductMapper;
@@ -59,7 +60,7 @@ public class ProductService {
 
     /* ========= 생성 ========= */
     @PreAuthorize("hasRole('ADMIN')")
-    public ProductResponseDto create(ProductRequestDto dto) {
+    public ProductResponseDto create(ProductCreateDto dto) {
         if (productRepository.existsById(dto.gtin())) {
             throw new ConflictException("GTIN already exists: " + dto.gtin());
         }
@@ -67,14 +68,15 @@ public class ProductService {
                 .orElseThrow(() -> new NotFoundException("Category not found: " + dto.categoryCode()));
 
         // 금액 스케일(12,2) 고정
-       ProductRequestDto normalized = new ProductRequestDto(
+       ProductCreateDto normalized = new ProductCreateDto(
                 dto.gtin(),
                 dto.productName(),
                 dto.unit(),
                 dto.price().setScale(2, RoundingMode.HALF_UP),
                 dto.storageMethod(),
                 dto.categoryCode(),
-                dto.orderable()
+               dto.expiryType() == null ? ExpiryType.NONE : dto.expiryType(), // ← 기본값 보정
+               dto.shelfLifeDays()
         );
 
         Product saved = productRepository.save(ProductMapper.toEntity(normalized, category));
@@ -96,7 +98,9 @@ public class ProductService {
                 dto.unit(),
                 dto.price().setScale(2, RoundingMode.HALF_UP),
                 dto.storageMethod(),
-                dto.categoryCode()
+                dto.categoryCode(),
+                dto.expiryType(),
+                dto.shelfLifeDays()
         );
 
         ProductMapper.updateEntity(entity, normalized, category); // 더티체킹으로 UPDATE

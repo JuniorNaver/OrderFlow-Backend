@@ -1,11 +1,9 @@
 package com.youthcase.orderflow.pr.controller;
 
-import com.youthcase.orderflow.pr.dto.ProductRequestDto;
+import com.youthcase.orderflow.pr.dto.ProductCreateDto;
 import com.youthcase.orderflow.pr.dto.ProductResponseDto;
 import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
-import com.youthcase.orderflow.pr.domain.Product;
 import com.youthcase.orderflow.pr.service.ProductService;
-import com.youthcase.orderflow.pr.mapper.ProductMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -53,7 +51,7 @@ public class ProductController {
      * 400(검증 실패), 409(중복 GTIN)
      */
     @PostMapping
-    public ResponseEntity<ProductResponseDto> create(@Valid @RequestBody ProductRequestDto dto) {
+    public ResponseEntity<ProductResponseDto> create(@Valid @RequestBody ProductCreateDto dto) {
         var resp = productService.create(dto);
         return ResponseEntity
                 .created(URI.create("/api/products/" + resp.gtin()))
