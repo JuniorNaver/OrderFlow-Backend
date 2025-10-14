@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.pr.dto;
 
+import com.youthcase.orderflow.pr.domain.ExpiryType;
 import com.youthcase.orderflow.pr.domain.StorageMethod;
 import com.youthcase.orderflow.pr.domain.Unit;
 
@@ -12,7 +13,10 @@ public record ProductResponseDto(
         BigDecimal price,
         StorageMethod storageMethod,
         String categoryCode,
-        String categoryName
+        String categoryName,
+        ExpiryType expiryType,   // ← 추가
+        Integer shelfLifeDays,   // ← 추가(없으면 null)
+        Boolean orderable        // ← 선택: 프론트에 보여줄 거면 포함
+
 ) {}
 
-// dto폴더 변경이안돼

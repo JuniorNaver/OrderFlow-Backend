@@ -1,8 +1,10 @@
 package com.youthcase.orderflow.pr.dto;
 
+import com.youthcase.orderflow.pr.domain.ExpiryType;
 import com.youthcase.orderflow.pr.domain.StorageMethod;
 import com.youthcase.orderflow.pr.domain.Unit;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -13,5 +15,7 @@ public record ProductUpdateDto(
         @NotNull Unit unit,
         @NotNull @Digits(integer=10, fraction=2) BigDecimal price,
         @NotNull StorageMethod storageMethod,
-        @NotBlank String categoryCode
+        @NotBlank String categoryCode,
+        @NotNull ExpiryType expiryType,
+        @Min(0) Integer shelfLifeDays
 ) {}
