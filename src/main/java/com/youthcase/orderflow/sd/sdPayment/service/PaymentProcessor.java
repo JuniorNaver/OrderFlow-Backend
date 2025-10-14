@@ -1,9 +1,9 @@
-package com.youthcase.orderflow.sd.sdPayment.payment;
+package com.youthcase.orderflow.sd.sdPayment.service;
 
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
-import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
-import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
-import com.youthcase.orderflow.sd.sdPayment.payment.strategy.PaymentStrategy;
+import com.youthcase.orderflow.sd.sdPayment.dto.PaymentRequest;
+import com.youthcase.orderflow.sd.sdPayment.dto.PaymentResult;
+import com.youthcase.orderflow.sd.sdPayment.strategy.PaymentStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,12 @@ public class PaymentProcessor {
             throw new IllegalArgumentException("지원하지 않는 결제 수단: " + method);
         }
 
-        log.info("결제 취소 요청: 결제수단={}, 아이템ID={}", method, item != null ? item.getPaymentItemId() : "null");
+        if (item == null) {
+            log.warn("⚠️ 결제 취소 요청 실패: PaymentItem이 null입니다.");
+            return;
+        }
+
+        log.info("결제 취소 요청: 결제수단={}, 아이템ID={}", method, item.getPaymentItemId());
         strategy.cancel(item);
     }
 }

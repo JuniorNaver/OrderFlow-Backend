@@ -1,8 +1,8 @@
-package com.youthcase.orderflow.sd.sdPayment.payment.strategy;
+package com.youthcase.orderflow.sd.sdPayment.strategy;
 
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
-import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
-import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
+import com.youthcase.orderflow.sd.sdPayment.dto.PaymentRequest;
+import com.youthcase.orderflow.sd.sdPayment.dto.PaymentResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +14,17 @@ public class CardPaymentService implements PaymentStrategy {
 
     @Override
     public PaymentResult pay(PaymentRequest request) {
-        // TODO: RestTemplate/WebClient로 PG API 호출
         log.info("PG 카드 결제 요청: {}", request);
         String transactionNo = "CARD-" + UUID.randomUUID();
-        return new PaymentResult(true, "카드 결제 승인 완료", transactionNo);
+
+        return PaymentResult.builder()
+                .success(true)
+                .message("카드 결제 승인 완료")
+                .transactionId(transactionNo)
+                .method(request.getPaymentMethod())
+                .orderId(request.getOrderId())
+                .paidAmount(request.getAmount())
+                .build();
     }
 
     @Override
