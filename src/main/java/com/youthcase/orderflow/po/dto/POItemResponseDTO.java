@@ -13,7 +13,7 @@ import java.time.LocalDate;
 public class POItemResponseDTO {
     private Long itemNo;
     private String productName;
-    private String gtinCode;
+    private String gtin;
     private LocalDate expectedArrival;
     private Long unitPrice;
     private Long orderQty;
