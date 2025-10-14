@@ -1,14 +1,17 @@
 package com.youthcase.orderflow.po.controller;
 
 import com.youthcase.orderflow.po.domain.POStatus;
+import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.service.POHeaderService;
 import com.youthcase.orderflow.po.service.POItemService;
 import com.youthcase.orderflow.po.service.POService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/po")
@@ -37,16 +40,35 @@ public class POController {
     }
 
     /** 장바구니 상품 삭제  */
-    @DeleteMapping("/items/delete")
+    @DeleteMapping("/delete")
     public void deleteItem(@RequestParam List<Long> itemIds) {
         poItemService.deleteItem(itemIds);
     }
 
+
+
+
     /** 장바구니 저장 */
-    @PostMapping("/save/{poId}")
-    public void saveItem(@PathVariable Long poId, List<POItemRequestDTO> requestDTOList){
-        poItemService.saveItem(poId, requestDTOList);
+    @PostMapping("/{poId}/save")
+    public void saveCart(@PathVariable Long poId) {
+        poHeaderService.updateStatusToSaved(poId);
     }
+    /** 장바구니 목록 불러오기 */
+    @GetMapping("/{poId}/savedCart")
+    public ResponseEntity<List<POHeaderResponseDTO>> getSavedCartList(@PathVariable Long poId) {
+        List<POHeaderResponseDTO> savedItems = poItemService.getSavedCartList(poId);
+        return ResponseEntity.ok(savedItems);
+    }
+    /** 특정 장바구니 불러오기 */
+    @GetMapping("/{poId}/savedCart")
+    public ResponseEntity<List<POItemResponseDTO>> getSavedCart(@PathVariable Long poId) {
+        List<POItemResponseDTO> savedItems = poItemService.getSavedCartItems(poId);
+        return ResponseEntity.ok(savedItems);
+    }
+
+
+
+
 
     /** 발주 확정  */
     @PostMapping("/confirm/{poId}")
