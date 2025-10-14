@@ -1,8 +1,8 @@
-package com.youthcase.orderflow.sd.sdPayment.payment.strategy;
+package com.youthcase.orderflow.sd.sdPayment.strategy;
 
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
-import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentRequest;
-import com.youthcase.orderflow.sd.sdPayment.payment.dto.PaymentResult;
+import com.youthcase.orderflow.sd.sdPayment.dto.PaymentRequest;
+import com.youthcase.orderflow.sd.sdPayment.dto.PaymentResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,15 @@ public class CashPaymentService implements PaymentStrategy {
     @Override
     public PaymentResult pay(PaymentRequest request) {
         log.info("현금 결제 처리 시작: {}", request);
-        return new PaymentResult(true, "현금 결제 완료", null);
+
+        return PaymentResult.builder()
+                .success(true)
+                .message("현금 결제 완료")
+                .transactionId(null)
+                .method(request.getPaymentMethod())
+                .orderId(request.getOrderId())
+                .paidAmount(request.getAmount())
+                .build();
     }
 
     @Override

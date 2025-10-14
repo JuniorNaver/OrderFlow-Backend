@@ -42,3 +42,8 @@ logging:
     org.hibernate.SQL: debug                  # SQL 출력
     org.hibernate.type.descriptor.sql: trace  # 파라미터 값까지 출력
     org.springframework.security.web: info    # TRACE → INFO로 낮춤
+
+##아임포트 설정
+iamport:
+  api-key: ${IAMPORT_API_KEY}       # 환경변수 또는 Secret에 보관
+  api-secret: ${IAMPORT_API_SECRET}

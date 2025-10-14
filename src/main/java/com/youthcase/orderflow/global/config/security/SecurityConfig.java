@@ -56,6 +56,7 @@ public class SecurityConfig {
                                 // [개발/테스트를 위해 수정된 핵심 부분]
                                 // 모든 API 경로 (/api/**)에 대해 인증 없이 접근을 허용합니다. (개발용)
                                 .requestMatchers("/api/**").permitAll()
+//                                .requestMatchers("/api/payments/**").permitAll() 나중에 로그인 설정 후 반영
 
                                 // 나머지 모든 요청 (정적 파일 등)도 모두 허용합니다.
                                 .anyRequest().permitAll()

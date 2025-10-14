@@ -4,6 +4,8 @@ import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "PAYMENT_HEADER")
 @SequenceGenerator(
         name = "payment_header_seq",
@@ -24,17 +27,13 @@ public class PaymentHeader {
     @Column(name = "PAYMENT_ID", nullable = false)
     private Long paymentId;
 
-    @Column(name = "REQUESTED_TIME",
-            insertable = false, updatable = false,
-            columnDefinition = "DATE DEFAULT SYSDATE")
+    @CreatedDate
+    @Column(name = "REQUESTED_TIME",updatable = false)
     private LocalDateTime requestedTime;
 
     @Column(name = "CANCELED_TIME")
     private LocalDateTime canceledTime; // 결제 취소 시각
 
-
-    @Column(name = "TRANSACTION_NO", length = 50)
-    private String transactionNo; // PG사 은행 거래번호
 
     @Column(name= "TOTAL_AMOUNT", precision = 12, scale = 2)
     private BigDecimal totalAmount; // 총 결제금액 (NUMBER(12,2))
@@ -44,7 +43,7 @@ public class PaymentHeader {
     private PaymentStatus paymentStatus; // 결제 상태
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name  = "ORDER_ID", nullable = false)
+    @JoinColumn(name = "ORDER_ID", nullable = false, foreignKey = @ForeignKey(name = "FK_PAYMENT_ORDER"))
     private SalesHeader salesHeader;
 
     // 연관관계 설정 (1:N)
