@@ -55,6 +55,7 @@ public class AuthController {
      * [GET] 비밀번호 초기화 토큰의 유효성을 검증합니다.
      * GET /api/auth/password/validate-token?token={tokenValue}
      */
+
     @GetMapping("/password/validate-token")
     public ResponseEntity<String> validatePasswordResetToken(@RequestParam String token) {
 
@@ -70,6 +71,7 @@ public class AuthController {
      * [POST] 유효한 토큰과 함께 새 비밀번호를 받아 비밀번호를 재설정합니다.
      * POST /api/auth/password/reset
      */
+
     @PostMapping("/password/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
 
@@ -103,4 +105,14 @@ public class AuthController {
         TokenResponseDTO tokenResponse = authService.reissueToken(request.getRefreshToken());
         return ResponseEntity.ok(tokenResponse);
     }
+
+    /*
+    @PostMapping("/password/reset-request")
+    public ResponseEntity<Void> requestPasswordReset(@RequestBody PasswordResetRequestDTO request) {
+        // ... (비밀번호 초기화 토큰 생성 및 이메일 발송 로직)
+        authService.sendPasswordResetEmail(request.getUserId(), request.getEmail());
+        return ResponseEntity.noContent().build(); // 204 No Content
+    }
+    */
+
 }

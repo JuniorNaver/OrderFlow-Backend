@@ -21,5 +21,7 @@ public interface RoleRepository extends JpaRepository<Role, String> {
      * String 타입의 RoleId로 Role 엔티티를 조회합니다.
      */
     Optional<Role> findByRoleId(String roleId);
+
+
 }
 

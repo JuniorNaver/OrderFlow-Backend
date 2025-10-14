@@ -2,17 +2,15 @@ package com.youthcase.orderflow.auth.controller;
 
 import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.auth.dto.UserResponseDTO;
-import com.youthcase.orderflow.auth.dto.UserPasswordChangeRequestDTO; // 💡 DTO 임포트
+import com.youthcase.orderflow.auth.dto.UserPasswordChangeRequestDTO;
 import com.youthcase.orderflow.auth.service.UserService;
 import com.youthcase.orderflow.global.config.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid; // 💡 Jakarta Validation으로 수정
+import jakarta.validation.Valid;
 
-import java.util.Optional;
-// Map 임포트 제거
 
 @RestController
 @RequestMapping("/api/auth/users") // 사용자 본인 정보 관리를 위한 기본 경로
