@@ -1,57 +1,51 @@
 package com.youthcase.orderflow.stk.service;
 
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.dto.ProgressStatusDTO; // 👈 DTO import 추가
 import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
 import org.springframework.transaction.annotation.Transactional;
 
-
+import java.time.LocalDate; // 👈 날짜 타입을 LocalDate로 통일
 import java.util.Date;
 import java.util.List;
 
 public interface STKService {
 
-    /**
-     * 전체 재고 목록 조회
-     */
+    // ... (기존 CRUD 및 차감 메서드 생략)
+
     List<STK> findAllStocks();
-
-    /**
-     * 재고 등록 (생성)
-     */
     STK createStock(STK stock);
-
-    /**
-     * 단일 재고 조회
-     */
     STK findStockById(Long stkId);
-
-    /**
-     * 재고 수량 및 상태 수정
-     */
     STK updateStock(Long stkId, STK updatedStock);
-
-    /**
-     * 재고 삭제
-     */
     void deleteStock(Long stkId);
-
     @Transactional
     void deductStockForSalesOrder(StockDeductionRequestDTO request);
-
     List<STK> getStockByProductGtin(String gtin);
 
-    /**
-     * 유통기한이 만료된 재고를 조회하고 상태를 폐기(DISPOSED)로 변경합니다.
-     * @param targetDate 폐기 기준 날짜 (보통 new Date() 또는 Calendar를 이용한 오늘 자정)
-     * @return 폐기 처리된 재고 목록
-     */
-    List<STK> disposeExpiredStock(Date targetDate);
+    // --------------------------------------------------
+    // 📊 대시보드 현황 조회 메서드 추가
+    // --------------------------------------------------
 
     /**
-     * 유통기한 임박 재고의 상태를 NEAR_EXPIRY로 변경하고 목록을 반환합니다.
-     * @param targetDate 임박 재고를 판별할 기준 날짜 (보통 오늘)
-     * @return 상태가 변경된 재고 목록
+     * 창고 적재 용량 현황 데이터를 조회합니다.
+     * @return ProgressStatusDTO (사용 용량/총 용량)
      */
-    List<STK> markNearExpiryStock(java.util.Date targetDate);
+    ProgressStatusDTO getCapacityStatus();
+
+    /**
+     * 유통기한 임박 현황 데이터를 조회합니다.
+     * @param days 임박 기준으로 삼을 일 수 (예: 90일)
+     * @return ProgressStatusDTO (임박 수량/전체 수량)
+     */
+    ProgressStatusDTO getExpiryStatus(int days);
+
+
+    // --------------------------------------------------
+    // 유통기한 처리 로직 수정 (LocalDate로 변경)
+    // --------------------------------------------------
+
+    // Date 대신 LocalDate를 사용하여 일관성 및 안정성 확보
+    List<STK> disposeExpiredStock(LocalDate targetDate);
+    List<STK> markNearExpiryStock(LocalDate targetDate);
 
 }
