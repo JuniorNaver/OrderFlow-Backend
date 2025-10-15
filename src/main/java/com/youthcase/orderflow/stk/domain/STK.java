@@ -8,9 +8,11 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Getter
+@Setter // 👈 ⭐️ 이 어노테이션을 추가합니다!
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(

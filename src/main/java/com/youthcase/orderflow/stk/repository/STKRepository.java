@@ -6,29 +6,31 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date; // java.util.Date 타입 사용
+import java.time.LocalDate; // ⭐️ java.time.LocalDate 타입으로 변경
 import java.util.List;
 
 @Repository
 public interface STKRepository extends JpaRepository<STK, Long> {
 
-    List<STK> findByWarehouse_WarehouseId(String warehouseId);
+    // 1. 전체 재고의 수량(quantity) 합계를 구하는 메서드 (이전에 Service에서 요청한 메서드 추가)
+    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.status NOT IN ('DISPOSED', 'INACTIVE')")
+    Long sumActiveQuantity(); // ⭐️ COALESCE로 null 대신 0 반환, 이름 변경
 
-    // 유통기한 만료 재고 조회 (기존 로직)
+    // 2. 유통기한 만료 재고 조회
     @Query("SELECT s FROM STK s JOIN s.lot l " +
             "WHERE s.status = 'ACTIVE' AND l.expDate < :targetDate")
-    List<STK> findExpiredActiveStockBefore(@Param("targetDate") Date targetDate);
+    List<STK> findExpiredActiveStockBefore(@Param("targetDate") LocalDate targetDate); // ⭐️ 타입 변경
 
-    // ⭐️ 유통기한 임박 재고 조회 쿼리 추가
+    // 3. 유통기한 임박 재고 조회
     /**
-     * 현재 활성(ACTIVE) 상태의 재고 중 유통기한이 (오늘 + 임박일) 이내인 재고를 조회합니다.
-     * l.expDate <= :limitDate 를 통해 임박 기한 내에 있는 재고를 찾습니다.
-     * ⚠️ 단, 해당 쿼리는 DB의 날짜 계산 함수를 사용하는 것이 가장 효율적이나, JPQL의 단순 비교를 위해
-     * 서비스 레이어에서 임박일이 적용된 '기준 날짜'를 계산하여 넘겨야 합니다.
+     * 현재 활성(ACTIVE) 상태의 재고 중 유통기한이 (오늘 ~ limitDate) 사이에 있는 재고를 조회합니다.
+     * @param limitDate 임박 기준일 (예: 오늘 + 90일)
      */
     @Query("SELECT s FROM STK s JOIN s.lot l " +
-            "WHERE s.status = 'ACTIVE' AND l.expDate <= :limitDate AND l.expDate > :targetDate")
-    List<STK> findNearExpiryActiveStock(@Param("limitDate") Date limitDate, @Param("targetDate") Date targetDate);
+            "WHERE s.status = 'ACTIVE' AND l.expDate <= :limitDate AND l.expDate >= CURRENT_DATE")
+    List<STK> findNearExpiryActiveStock(@Param("limitDate") LocalDate limitDate);
+    // ⭐️ @Param("targetDate") 제거 및 쿼리에서 CURRENT_DATE(오늘) 사용
 
+    // 4. 특정 상품의 재고를 유통기한 오름차순으로 조회 (수량 > 0)
     List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, int quantity);
 }
