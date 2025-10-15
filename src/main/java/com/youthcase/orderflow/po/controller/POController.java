@@ -50,11 +50,12 @@ public class POController {
 
     /** 장바구니 저장 */
     @PostMapping("/{poId}/save")
-    public void saveCart(@PathVariable Long poId) {
+    public ResponseEntity<String> saveCart(@PathVariable Long poId) {
         poHeaderService.updateStatusToSaved(poId);
+        return ResponseEntity.ok("장바구니 저장 완료");
     }
     /** 장바구니 목록 불러오기 */
-    @GetMapping("/{poId}/savedCart")
+    @GetMapping("/saved")
     public ResponseEntity<List<POHeaderResponseDTO>> getSavedCartList(@PathVariable Long poId) {
         List<POHeaderResponseDTO> savedItems = poItemService.getSavedCartList(poId);
         return ResponseEntity.ok(savedItems);
@@ -69,11 +70,9 @@ public class POController {
 
 
 
-
     /** 발주 확정  */
     @PostMapping("/confirm/{poId}")
     public void confirmOrder(@PathVariable Long poId) {
         poService.confirmOrder(poId);
     }
-
 }

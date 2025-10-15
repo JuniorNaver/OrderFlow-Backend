@@ -15,8 +15,5 @@ public interface POHeaderService {
     /** 장바구니 저장*/
     void updateStatusToSaved(Long poId);
 
-    /** 상태로 찾기 */
-    public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
-        List<POHeader> findByStatus(POStatus status);
-    }
+
 }
