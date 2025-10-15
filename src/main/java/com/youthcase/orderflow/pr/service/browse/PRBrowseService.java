@@ -85,7 +85,7 @@ public class PRBrowseService {
             case "room"    -> StorageMethod.ROOM_TEMP;
             case "chilled" -> StorageMethod.COLD;
             case "frozen"  -> StorageMethod.FROZEN;
-            case "other"   -> null; // 기타는 스토리지 필터 해제
+            case "other"   -> StorageMethod.FROZEN; // 기타는 스토리지 필터 해제
             default        -> null;
         };
     }
