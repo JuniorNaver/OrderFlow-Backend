@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"poId", "product"})
+@ToString(exclude = {"poHeader", "gtin"})
 public class POItem {
 
     // 발주 아이템 고유 ID (PK)

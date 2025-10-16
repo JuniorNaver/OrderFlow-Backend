@@ -27,19 +27,28 @@ public class POController {
         this.poService = poService;
     }
 
+    /** 장바구니 PO 생성 */
+    @PostMapping("") // POST /api/po
+    public ResponseEntity<Map<String, Long>> createPO() {
+        Long poId = poHeaderService.createNewPO(); // status = PR
+        return ResponseEntity.ok(Map.of("poId", poId));
+    }
+
     /** 장바구니 상품 조회: 헤더id와 상태 기준으로 아이템 목록 찾아오기 */
     @GetMapping("/items")
     public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
         return poItemService.getAllItems(poId, status);
     }
 
-    /** 장바구니 상품 수량 변경 */
+
+
+
+    /** 상품 수량 변경 */
     @PutMapping("/update/{itemNo}")
     public POItemResponseDTO updateItemQuantity(@PathVariable Long itemNo, @RequestBody POItemRequestDTO dto) {
         return poItemService.updateItemQuantity(itemNo, dto);
     }
-
-    /** 장바구니 상품 삭제  */
+    /** 상품 삭제  */
     @DeleteMapping("/delete")
     public void deleteItem(@RequestParam List<Long> itemIds) {
         poItemService.deleteItem(itemIds);
@@ -56,9 +65,9 @@ public class POController {
     }
     /** 장바구니 목록 불러오기 */
     @GetMapping("/saved")
-    public ResponseEntity<List<POHeaderResponseDTO>> getSavedCartList(@PathVariable Long poId) {
-        List<POHeaderResponseDTO> savedItems = poItemService.getSavedCartList(poId);
-        return ResponseEntity.ok(savedItems);
+    public ResponseEntity<List<POHeaderResponseDTO>> getSavedCartList() {
+        List<POHeaderResponseDTO> savedList = poHeaderService.getSavedCartList();
+        return ResponseEntity.ok(savedList);
     }
     /** 특정 장바구니 불러오기 */
     @GetMapping("/{poId}/savedCart")
@@ -66,7 +75,6 @@ public class POController {
         List<POItemResponseDTO> savedItems = poItemService.getSavedCartItems(poId);
         return ResponseEntity.ok(savedItems);
     }
-
 
 
 
