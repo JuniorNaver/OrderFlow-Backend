@@ -1,8 +1,8 @@
 package com.youthcase.orderflow.pr.dto;
 
-import com.youthcase.orderflow.pr.domain.ExpiryType;
-import com.youthcase.orderflow.pr.domain.StorageMethod;
-import com.youthcase.orderflow.pr.domain.Unit;
+import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
+import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
+import com.youthcase.orderflow.pr.domain.enums.Unit;
 
 import java.math.BigDecimal;
 

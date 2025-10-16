@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.pr.domain;
+package com.youthcase.orderflow.pr.domain.enums;
 
 public enum AvailableStatus {
     AVAILABLE,    // 발주 가능

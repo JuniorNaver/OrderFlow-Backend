@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.pr;
 
 import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.pr.domain.StorageMethod;
+import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
 import com.youthcase.orderflow.pr.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;

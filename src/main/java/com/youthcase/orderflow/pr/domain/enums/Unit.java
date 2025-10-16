@@ -1,10 +1,10 @@
-package com.youthcase.orderflow.pr.domain;
+package com.youthcase.orderflow.pr.domain.enums;
 
 public enum Unit {
     EA("개"),     // 개
     BOX("박스"),    // 박스
     KG("킬로그램"),     // 킬로그램
-    ml("리터");       // 리터
+    ML("리터");       // 리터
     // 필요하면 계속 추가 가능
 
     private final String displayName;

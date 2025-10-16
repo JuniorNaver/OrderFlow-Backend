@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.pr.mapper;
 
-import com.youthcase.orderflow.pr.domain.ExpiryType;
+import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
 import com.youthcase.orderflow.pr.dto.ProductCreateDto;
 import com.youthcase.orderflow.pr.dto.ProductResponseDto;
 import com.youthcase.orderflow.pr.dto.ProductUpdateDto;

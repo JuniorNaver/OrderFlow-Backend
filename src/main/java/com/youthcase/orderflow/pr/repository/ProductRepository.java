@@ -1,7 +1,6 @@
 package com.youthcase.orderflow.pr.repository;
 
 import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.pr.domain.StorageMethod;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -51,7 +50,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     @Query("""
             select c.mediumCategory as name, count(distinct c.kanCode) as cnt
-            from Product p join p.category c
+            from Category c
             where c.totalCategory = :total
             group by c.mediumCategory
             order by c.mediumCategory
@@ -62,32 +61,40 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     // 기타: 대분류(largeCategory)로 코너 묶기
     @Query("""
             select c.largeCategory as name, count(distinct c.kanCode) as cnt
-            from Product p join p.category c
+            from Category c
             where c.totalCategory = :total
             group by c.largeCategory
             order by c.largeCategory
             """)
     List<Object[]> findCornersByTotalCategoryUsingLarge(@Param("total") String total);
 
+    // 중분류 코너 선택시
     @Query("""
-            select c.kanCode, c.smallCategory, count(p.gtin)
-            from Product p join p.category c
-            where c.totalCategory = :total
-              and (:cornerName is null or c.mediumCategory = :cornerName)
-            group by c.kanCode, c.smallCategory
-            order by c.smallCategory
-            """)
+select c.kanCode,
+       coalesce(c.smallCategory, c.mediumCategory, c.largeCategory),
+       count(p.gtin)
+from Category c
+left join Product p on p.category = c
+where c.totalCategory = :total
+  and (:cornerName is null or c.mediumCategory = :cornerName)
+group by c.kanCode, c.smallCategory, c.mediumCategory, c.largeCategory
+order by coalesce(c.smallCategory, c.mediumCategory, c.largeCategory)
+""")
     List<Object[]> findKanByTotalCategoryAndCorner(@Param("total") String total,
                                                    @Param("cornerName") String cornerName);
 
+    // 기타(대분류 코너 선택 시)
     @Query("""
-            select c.kanCode, coalesce(c.smallCategory, c.largeCategory), count(p.gtin)
-            from Product p join p.category c
-            where c.totalCategory = :total
-              and (:cornerName is null or c.largeCategory = :cornerName)
-            group by c.kanCode, c.smallCategory, c.largeCategory
-            order by coalesce(c.smallCategory, c.largeCategory)
-            """)
+select c.kanCode,
+       coalesce(c.smallCategory, c.largeCategory),
+       count(p.gtin)
+from Category c
+left join Product p on p.category = c
+where c.totalCategory = :total
+  and (:cornerName is null or c.largeCategory = :cornerName)
+group by c.kanCode, c.smallCategory, c.largeCategory
+order by coalesce(c.smallCategory, c.largeCategory)
+""")
     List<Object[]> findKanByTotalCategoryAndLargeCorner(@Param("total") String total,
                                                         @Param("cornerName") String cornerName);
 }
