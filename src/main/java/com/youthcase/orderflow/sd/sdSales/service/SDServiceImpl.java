@@ -14,10 +14,11 @@ import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesItemRepository;
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.repository.STKRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,7 +39,7 @@ public class SDServiceImpl implements SDService {
 
     //salesHeader 주문 생성
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public SalesHeader createOrder() {
         String datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String lastOrderNo = salesHeaderRepository.findLastOrderNoByDate(datePrefix);
@@ -57,34 +58,49 @@ public class SDServiceImpl implements SDService {
         header.setSalesStatus(SalesStatus.PENDING);
         header.setTotalAmount(BigDecimal.ZERO);
 
-        return salesHeaderRepository.save(header);
+        // ✅ 즉시 flush → DB에 바로 insert
+        SalesHeader saved = salesHeaderRepository.saveAndFlush(header);
+
+        log.info("✅ [createOrder] 주문 생성 완료: ID={}, NO={}", saved.getOrderId(), saved.getOrderNo());
+        return saved;
     }
 
     //상품추가
     @Override
     @Transactional
-    public SalesItem addItemToOrder(AddItemRequest request) {
+    public SalesItemDTO addItemToOrder(AddItemRequest request) {
         SalesHeader header = salesHeaderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
         Product product = productRepository.findByGtin(request.getGtin())
                 .orElseThrow(() -> new RuntimeException("상품 없음"));
 
+        STK stk = stkRepository
+                .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(request.getGtin(), 0)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고가 없습니다."));
+
         SalesItem item = new SalesItem();
         item.setSalesHeader(header);
         item.setProduct(product);
+        item.setStk(stk);
         item.setSalesQuantity(request.getQuantity());
         item.setSdPrice(request.getPrice());
 
         BigDecimal subtotal = request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
         item.setSubtotal(subtotal);
 
+        if (header.getTotalAmount() == null) {
+            header.setTotalAmount(BigDecimal.ZERO);
+        }
         header.setTotalAmount(header.getTotalAmount().add(subtotal));
 
         salesItemRepository.save(item);
         salesHeaderRepository.save(header);
 
-        return item;
+        // ✅ 엔티티를 DTO로 변환해서 반환
+        return SalesItemDTO.fromEntity(item);
     }
     //salesHeader 바코드로 아이템 추가 + 재고수정 (react+vite 연동)
     @Override

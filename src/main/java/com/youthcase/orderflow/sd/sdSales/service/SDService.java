@@ -17,7 +17,7 @@ public interface SDService{
     SalesHeader createOrder();
 
     //상품 추가
-    SalesItem addItemToOrder(AddItemRequest request);
+    SalesItemDTO addItemToOrder(AddItemRequest request);
 
     // 바코드+재고
     void confirmOrder(ConfirmOrderRequest request);

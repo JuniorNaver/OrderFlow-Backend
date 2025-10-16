@@ -39,13 +39,16 @@ public class SDController {
 
     //상품 추가
     @PostMapping("/{orderId}/add-item")
-    public ResponseEntity<SalesItem> addItemToOrder(
+    public ResponseEntity<SalesItemDTO> addItemToOrder(
             @PathVariable Long orderId,
             @RequestBody AddItemRequest request) {
-
-        request.setOrderId(orderId); // 🔹 URL 경로의 orderId를 DTO에 반영
-        SalesItem item = sdService.addItemToOrder(request);
-        return ResponseEntity.ok(item);
+        request.setOrderId(orderId);
+        SalesItemDTO dto = sdService.addItemToOrder(request);
+        return ResponseEntity.ok(dto);
+    }
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
 
 
