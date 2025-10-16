@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RefundResponseDTO {
+public class RefundResponse {
     private Long refundId;
     private Long paymentId;
     private double refundAmount;
@@ -19,5 +19,5 @@ public class RefundResponseDTO {
     private String reason;
     private LocalDateTime requestedTime;
     private LocalDateTime approvedTime;
-    private List<RefundItemDTO> items;
+    private List<RefundItemResponse> items;
 }

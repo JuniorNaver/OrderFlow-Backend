@@ -33,7 +33,10 @@ public class PaymentItem {
     private BigDecimal amount; // 결제 금액
 
     @Column(name = "TRANSACTION_NO", length = 50)
-    private String transactionNo; // 카드사, 간편결제 승인번호(부분 결제용)
+    private String transactionNo;
+
+    @Column(name = "IMP_UID", length = 50)
+    private String impUid; // ✅ 아임포트 거래 고유 ID (간편결제 환불용)
 
     // FK 매핑
     @ManyToOne(fetch = FetchType.LAZY)

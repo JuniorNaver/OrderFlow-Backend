@@ -53,7 +53,7 @@ public class EasyPaymentService implements PaymentStrategy {
             return PaymentResult.builder()
                     .success(isSuccess)
                     .message(isSuccess ? "간편결제 성공" : "간편결제 실패 (" + status + ")")
-                    .transactionId(impUid)               // 아임포트 거래 고유 ID
+                    .impUid(impUid)               // 아임포트 거래 고유 ID
                     .method(PaymentMethod.EASY)
                     .orderId(request.getOrderId())
                     .paidAmount(amount)
