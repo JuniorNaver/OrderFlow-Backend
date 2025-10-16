@@ -30,3 +30,4 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     int deleteOldReceipts(@Param("cutoff") LocalDateTime cutoff);
 
 }
+

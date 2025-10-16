@@ -16,8 +16,8 @@ public class ReceiptResponse {
     private String receiptNo;
     private LocalDateTime issuedAt;
 
-    private String branchName;
-    private String branchAddress;
+    private String storeName;
+    private String storeAddress;
 
     private BigDecimal totalAmount;
     private String paymentMethod;
@@ -29,13 +29,13 @@ public class ReceiptResponse {
         return ReceiptResponse.builder()
                 .receiptNo(r.getReceiptNo())
                 .issuedAt(r.getIssuedAt())
-                .storeName(r.getStore().getName())
-                .storeAddress(r.getStore().getAddress())
+                .storeName(r.getStore().getStoreName()) // ✅ 수정됨
+                .storeAddress(r.getStore().getAddress()) // ✅ 수정됨
                 .totalAmount(r.getPaymentHeader().getTotalAmount())
                 .paymentMethod(r.getPaymentHeader().getPaymentItems().get(0).getPaymentMethod().name())
                 .refundStatus(r.getRefundHeader() != null ? "REFUNDED" : "NORMAL")
                 .items(r.getSalesHeader().getSalesItems().stream()
-                        .map(SalesItemDTO::fromEntity)
+                        .map(item -> SalesItemDTO.fromEntity(item))
                         .toList())
                 .build();
     }

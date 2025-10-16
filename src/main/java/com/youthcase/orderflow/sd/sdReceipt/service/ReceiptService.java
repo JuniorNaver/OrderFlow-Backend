@@ -1,17 +1,18 @@
 package com.youthcase.orderflow.sd.sdReceipt.service;
 
-import com.youthcase.orderflow.branch.domain.BranchInfo; // ✅ 누락된 import 추가
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdReceipt.domain.Receipt;
 import com.youthcase.orderflow.sd.sdReceipt.dto.ReceiptResponse;
 import com.youthcase.orderflow.sd.sdReceipt.repository.ReceiptRepository;
 import com.youthcase.orderflow.sd.sdRefund.domain.RefundHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,13 +31,13 @@ public class ReceiptService {
      */
     @Transactional
     public Receipt createReceipt(SalesHeader sales, PaymentHeader payment,
-                                 RefundHeader refund, BranchInfo branch) {
+                                 RefundHeader refund, Store store) {
 
         Receipt receipt = Receipt.builder()
                 .salesHeader(sales)
                 .paymentHeader(payment)
                 .refundHeader(refund)
-                .branchInfo(branch)
+                .store(store)
                 .build();
 
         return receiptRepository.save(receipt);
