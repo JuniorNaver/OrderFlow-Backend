@@ -37,67 +37,57 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     public interface CornerRow {
         String getCornerName();
+
         Long getCategoryCount();
     }
+
     public interface KanRow {
         String getKan();
-        String getName();
+
+        String getLabel();
+
         Long getProductCount();
     }
 
     @Query("""
-  select coalesce(c.mediumCategory, c.largeCategory) as cornerName,
-         count(distinct c.kanCode) as categoryCount
-  from Product p join p.category c
-  where (:sm is null or p.storageMethod = :sm)
-  group by coalesce(c.mediumCategory, c.largeCategory)
-  order by cornerName
-""")
-    List<Object[]> findCornersByZone(@Param("sm") StorageMethod sm);
+            select c.mediumCategory as name, count(distinct c.kanCode) as cnt
+            from Product p join p.category c
+            where c.totalCategory = :total
+            group by c.mediumCategory
+            order by c.mediumCategory
+            """)
+    List<Object[]> findCornersByTotalCategory(@Param("total") String total);
 
-    @Query("""
-  select c.kanCode as kan,
-         coalesce(c.smallCategory, c.mediumCategory, c.largeCategory) as name,
-         count(p) as productCount
-  from Product p join p.category c
-  where (:sm is null or p.storageMethod = :sm)
-    and (
-      (:cornerName is null and coalesce(c.mediumCategory, c.largeCategory) is null)
-      or coalesce(c.mediumCategory, c.largeCategory) = :cornerName
-    )
-  group by c.kanCode, coalesce(c.smallCategory, c.mediumCategory, c.largeCategory)
-  order by name
-""")
-    List<Object[]> findKanByZoneAndCorner(@Param("sm") StorageMethod sm,
-                                          @Param("cornerName") String cornerName);
 
     // 기타: 대분류(largeCategory)로 코너 묶기
     @Query("""
-  select c.largeCategory as cornerName,
-         count(distinct c.kanCode) as categoryCount
-  from Product p join p.category c
-  where (:sm is null or p.storageMethod = :sm)
-  group by c.largeCategory
-  order by cornerName
-""")
-    List<Object[]> findCornersByZoneUsingLarge(@Param("sm") StorageMethod sm);
+            select c.largeCategory as name, count(distinct c.kanCode) as cnt
+            from Product p join p.category c
+            where c.totalCategory = :total
+            group by c.largeCategory
+            order by c.largeCategory
+            """)
+    List<Object[]> findCornersByTotalCategoryUsingLarge(@Param("total") String total);
 
-    // 기타: 대분류 이름으로 KAN 묶기
     @Query("""
-  select c.kanCode as kan,
-         coalesce(c.smallCategory, c.mediumCategory, c.largeCategory) as name,
-         count(p) as productCount
-  from Product p join p.category c
-  where (:sm is null or p.storageMethod = :sm)
-    and (
-      (:cornerName is null and c.largeCategory is null)
-      or c.largeCategory = :cornerName
-    )
-  group by c.kanCode, coalesce(c.smallCategory, c.mediumCategory, c.largeCategory)
-  order by name
-""")
-    List<Object[]> findKanByZoneAndLargeCorner(@Param("sm") StorageMethod sm,
-                                               @Param("cornerName") String cornerName);
+            select c.kanCode, c.smallCategory, count(p.gtin)
+            from Product p join p.category c
+            where c.totalCategory = :total
+              and (:cornerName is null or c.mediumCategory = :cornerName)
+            group by c.kanCode, c.smallCategory
+            order by c.smallCategory
+            """)
+    List<Object[]> findKanByTotalCategoryAndCorner(@Param("total") String total,
+                                                   @Param("cornerName") String cornerName);
 
-
+    @Query("""
+            select c.kanCode, coalesce(c.smallCategory, c.largeCategory), count(p.gtin)
+            from Product p join p.category c
+            where c.totalCategory = :total
+              and (:cornerName is null or c.largeCategory = :cornerName)
+            group by c.kanCode, c.smallCategory, c.largeCategory
+            order by coalesce(c.smallCategory, c.largeCategory)
+            """)
+    List<Object[]> findKanByTotalCategoryAndLargeCorner(@Param("total") String total,
+                                                        @Param("cornerName") String cornerName);
 }

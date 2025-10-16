@@ -29,14 +29,14 @@ public class Product {
     private String productName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "UNIT", nullable = false, length = 20)
+    @Column(name = "UNIT", length = 20)
     private Unit unit;
 
     @Column(name = "PRICE", precision = 12, scale = 2, nullable = false)
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "STORAGE_METHOD", nullable = false, length = 20)
+    @Column(name = "STORAGE_METHOD", length = 20)
     private StorageMethod storageMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,7 +53,7 @@ public class Product {
     private Boolean orderable = Boolean.TRUE; // 기본값: 발주 가능
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "EXPIRY_TYPE", length = 20, nullable = false)
+    @Column(name = "EXPIRY_TYPE", length = 20)
     private ExpiryType expiryType = ExpiryType.NONE;
 
     @jakarta.validation.constraints.Min(0)
