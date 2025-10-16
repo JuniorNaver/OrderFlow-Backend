@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.pr.controller;
 
 import com.youthcase.orderflow.pr.service.browse.PRBrowseService;
+import com.youthcase.orderflow.pr.service.browse.dto.ProductItemDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,20 @@ public class PRBrowseController {
             @RequestParam("cornerId") String cornerId
     ) {
         var body = svc.categories(zone, cornerId);
+        return ResponseEntity.ok(body);
+    }
+
+    @GetMapping("/products")
+    public ResponseEntity<List<ProductItemDto>> products(
+            @RequestParam String kan,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+
+        int p = Math.max(0, page);
+        int s = Math.min(Math.max(1, size), 100);
+
+        var body = svc.productsByKan(kan, p, s);
         return ResponseEntity.ok(body);
     }
 

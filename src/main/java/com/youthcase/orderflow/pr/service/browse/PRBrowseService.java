@@ -2,7 +2,10 @@ package com.youthcase.orderflow.pr.service.browse;
 
 import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
 import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.pr.service.browse.dto.ProductItemDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,22 @@ public class PRBrowseService {
                     int cnt = ((Number) r[1]).intValue();
                     return new CornerDto(slug(name), name, "", cnt);
                 })
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductItemDto> productsByKan(String kan, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productRepository.findByCategory_KanCode(kan, pageable)
+                .stream()
+                .map(p -> new ProductItemDto(
+                        p.getGtin(),
+                        p.getProductName(),
+                        p.getUnit() != null ? p.getUnit().name() : null,
+                        p.getPrice() != null ? p.getPrice().toPlainString() : null,
+                        p.getImageUrl(),
+                        Boolean.TRUE.equals(p.getOrderable())
+                ))
                 .toList();
     }
 
