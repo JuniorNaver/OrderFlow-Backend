@@ -3,10 +3,7 @@ package com.youthcase.orderflow.pr.domain;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -21,6 +18,8 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true) // 동등성은 GTIN 기준
 public class Product {
     @Id
