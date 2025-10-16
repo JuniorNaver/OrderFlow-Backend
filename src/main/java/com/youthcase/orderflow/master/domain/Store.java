@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 /**
@@ -135,12 +136,12 @@ public class Store {
     @CreatedDate
     @Column(name = "CREATED_AT", nullable = false, updatable = false)
     @Comment("등록 일시 (자동 생성)")
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "UPDATED_AT", nullable = false)
     @Comment("수정 일시 (자동 갱신)")
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     // ────────────────────────────────
     // 🔹 기본값 설정

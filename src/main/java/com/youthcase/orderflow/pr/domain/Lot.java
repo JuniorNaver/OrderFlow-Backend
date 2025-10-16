@@ -26,10 +26,10 @@ public class Lot {
     private Long lotId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GTIN", nullable = false)
+    @JoinColumn(name = "GTIN", nullable = true)
     private Product product;
 
-    @Column(name = "EXP_DATE", nullable = false)
+    @Column(name = "EXP_DATE", nullable = true)
     private LocalDate expDate;
 
     @Enumerated(EnumType.STRING)
@@ -53,7 +53,7 @@ public class Lot {
 
     // FK: GR_HEADER
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GR_ID", nullable = false)
+    @JoinColumn(name = "GR_ID", nullable = true)
     private GRHeader grHeader;
 
     @Transient

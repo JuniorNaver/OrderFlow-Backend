@@ -10,6 +10,5 @@ public interface StoreRepository extends JpaRepository<Store, String> {
     // 필요 시 맞춤형 조회도 추가 가능
     Store findByStoreName(String storeName);
 
-    // 특정 지점 ID 존재 여부 확인
     boolean existsByStoreId(String storeId);
 }
