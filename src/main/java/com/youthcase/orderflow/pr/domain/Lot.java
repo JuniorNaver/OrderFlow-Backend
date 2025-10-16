@@ -1,5 +1,7 @@
 package com.youthcase.orderflow.pr.domain;
 
+import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
+import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,10 +53,10 @@ public class Lot {
     @Column(name = "UPDATED_AT", nullable = false)
     private OffsetDateTime updatedAt;
 
-    // FK: GR_HEADER
+    // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GR_ID", nullable = true)
-    private GRHeader grHeader;
+    @JoinColumn(name = "GoodsReceiptHeader", nullable = true)
+    private GoodsReceiptHeader GoodsReceiptHeader;
 
     @Transient
     public long getRemainDays() {

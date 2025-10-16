@@ -1,8 +1,8 @@
 package com.youthcase.orderflow.pr.dto;
 
-import com.youthcase.orderflow.pr.domain.ExpiryType;
-import com.youthcase.orderflow.pr.domain.StorageMethod;
-import com.youthcase.orderflow.pr.domain.Unit;
+import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
+import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
+import com.youthcase.orderflow.pr.domain.enums.Unit;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

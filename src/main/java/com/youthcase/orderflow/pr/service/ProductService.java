@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.pr.service;
 
 import com.youthcase.orderflow.pr.domain.Category;
-import com.youthcase.orderflow.pr.domain.ExpiryType;
+import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
 import com.youthcase.orderflow.pr.domain.Product;
 import com.youthcase.orderflow.pr.dto.ProductCreateDto;
 import com.youthcase.orderflow.pr.dto.ProductResponseDto;

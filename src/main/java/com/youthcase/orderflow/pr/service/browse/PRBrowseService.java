@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.pr.service.browse;
 
-import com.youthcase.orderflow.pr.domain.StorageMethod;
+import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
 import com.youthcase.orderflow.pr.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
