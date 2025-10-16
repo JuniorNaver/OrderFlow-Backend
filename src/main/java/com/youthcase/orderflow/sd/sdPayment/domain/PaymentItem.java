@@ -29,6 +29,10 @@ public class PaymentItem {
     @Column(name = "PAYMENT_METHOD", length = 20, nullable = false)
     private PaymentMethod paymentMethod; // 결제 수단 (CARD, CASH, EASY_PAYMENTS...)
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "PAYMENT_STATUS", length = 20)
+    private PaymentStatus paymentStatus;
+
     @Column(name = "AMOUNT", precision = 12, scale = 2)
     private BigDecimal amount; // 결제 금액
 
