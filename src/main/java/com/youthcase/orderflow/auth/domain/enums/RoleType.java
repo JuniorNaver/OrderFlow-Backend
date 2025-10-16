@@ -2,7 +2,7 @@ package com.youthcase.orderflow.auth.domain.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
+import java.util.Arrays; // Arrays 임포트 추가
 
 @Getter
 @RequiredArgsConstructor
@@ -12,9 +12,19 @@ public enum RoleType {
     MANAGER("ROLE_MANAGER", "점장 권한"),
     CLERK("ROLE_CLERK", "점원 권한");
 
-    // DB에 저장될 실제 역할 ID (예: Spring Security에서 사용하는 'ROLE_' 접두사)
     private final String roleId;
-
-    // 역할에 대한 설명
     private final String description;
+
+    /**
+     * 역할 ID(String)를 받아 해당하는 RoleType Enum 상수를 반환합니다.
+     * @param roleId (예: "ROLE_MANAGER")
+     * @return 일치하는 RoleType 상수
+     * @throws IllegalArgumentException 일치하는 RoleType이 없을 경우
+     */
+    public static RoleType fromRoleId(String roleId) {
+        return Arrays.stream(RoleType.values())
+                .filter(roleType -> roleType.getRoleId().equalsIgnoreCase(roleId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid Role ID: " + roleId));
+    }
 }
