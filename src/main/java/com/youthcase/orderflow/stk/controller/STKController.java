@@ -2,6 +2,7 @@ package com.youthcase.orderflow.stk.controller;
 
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO; // ProgressStatusDTO import
+import com.youthcase.orderflow.stk.dto.StockResponse;
 import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -90,5 +91,14 @@ public class STKController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+    //상품검색
+    @GetMapping("/search")
+    public ResponseEntity<List<StockResponse>> searchByProductName(@RequestParam String name) {
+        List<StockResponse> results = stkService.searchByProductName(name)
+                .stream()
+                .map(StockResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(results);
     }
 }
