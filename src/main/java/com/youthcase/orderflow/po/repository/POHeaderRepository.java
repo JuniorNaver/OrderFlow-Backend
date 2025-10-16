@@ -24,4 +24,5 @@ public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     @Query("UPDATE POHeader h SET h.status = :status WHERE h.poId = :poId")
     void updateStatus(@Param("poId") Long poId, @Param("status") POStatus status);
 
+
 }

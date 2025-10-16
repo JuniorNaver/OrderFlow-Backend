@@ -9,11 +9,17 @@ import java.util.List;
 
 public interface POHeaderService {
 
+    /** PO생성 */
+    Long createNewPO();
+
     /** 모든 발주 헤더 조회 */
     List<POHeaderResponseDTO> findAll();
 
     /** 장바구니 저장*/
     void updateStatusToSaved(Long poId);
 
+    /** 저장된 장바구니 불러오기 */
+    List<POHeaderResponseDTO> getSavedCartList();
 
 }
+
