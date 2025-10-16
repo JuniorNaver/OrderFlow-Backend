@@ -20,7 +20,7 @@ public class CardPaymentService implements PaymentStrategy {
         return PaymentResult.builder()
                 .success(true)
                 .message("카드 결제 승인 완료")
-                .transactionId(transactionNo)
+                .transactionNo(transactionNo)
                 .method(request.getPaymentMethod())
                 .orderId(request.getOrderId())
                 .paidAmount(request.getAmount())

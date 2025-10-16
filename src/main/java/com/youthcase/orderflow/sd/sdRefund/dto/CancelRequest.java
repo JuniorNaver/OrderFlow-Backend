@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.sd.sdPayment.dto;
+package com.youthcase.orderflow.sd.sdRefund.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

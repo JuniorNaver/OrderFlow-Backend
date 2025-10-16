@@ -7,7 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RefundItemDTO {
+public class RefundItemResponse {
     private Long paymentItemId;
     private int refundQuantity;
     private int refundAmount;

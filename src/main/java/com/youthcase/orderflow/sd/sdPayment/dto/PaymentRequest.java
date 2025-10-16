@@ -15,6 +15,7 @@ public class PaymentRequest {
     private BigDecimal amount; //결제금액
     private PaymentMethod paymentMethod; //결제방식
 
+    private String transactionNo;       // 카드사 승인번호
     private String impUid;             // 아임포트 결제 고유 ID (imp_1234567890)
     private String merchantUid;        // 가맹점 주문번호 (order_2025_0001 등)
 
