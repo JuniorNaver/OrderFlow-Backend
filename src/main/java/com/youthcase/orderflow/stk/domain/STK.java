@@ -2,7 +2,7 @@ package com.youthcase.orderflow.stk.domain;
 
 import com.youthcase.orderflow.pr.domain.Lot;
 import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.gr.domain.GR;
+import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -48,7 +48,7 @@ public class STK {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GR_ID")
-    private GR goodsReceipt;
+    private GoodsReceiptHeader goodsReceipt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", nullable = false)
@@ -59,7 +59,7 @@ public class STK {
     private Lot lot;
 
     @Builder
-    public STK(Boolean hasExpirationDate, Integer quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GR goodsReceipt, Product product, Lot lot) {
+    public STK(Boolean hasExpirationDate, Integer quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GoodsReceiptHeader goodsReceipt, Product product, Lot lot) {
         this.hasExpirationDate = hasExpirationDate;
         this.quantity = quantity;
         this.lastUpdatedAt = lastUpdatedAt;
