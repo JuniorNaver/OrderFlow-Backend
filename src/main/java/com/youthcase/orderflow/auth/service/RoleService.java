@@ -2,7 +2,10 @@ package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.domain.Role;
 import com.youthcase.orderflow.auth.domain.enums.RoleType;
-import java.util.List; // List import 추가
+import com.youthcase.orderflow.auth.dto.RolePermissionDto;       // DTO 임포트 추가
+import com.youthcase.orderflow.auth.dto.RolePermissionUpdateDto; // DTO 임포트 추가
+
+import java.util.List;
 import java.util.Optional;
 
 public interface RoleService {
@@ -33,4 +36,20 @@ public interface RoleService {
      * @param authorityId 회수할 권한 ID
      */
     void removeAuthorityFromRole(String roleId, Long authorityId);
+
+    // --- 일괄 처리 메서드 (프론트엔드 연동) ---
+
+    /**
+     * [GET] 시스템에 정의된 모든 역할 목록과 현재 권한 매핑 상태를 조회합니다.
+     * Controller의 getAllRolePermissions 메서드에 대응합니다.
+     * @return 역할별 권한 DTO 목록
+     */
+    List<RolePermissionDto> findAllRolePermissions();
+
+    /**
+     * [PUT] 프론트엔드에서 전달된 역할-권한 변경 목록을 일괄적으로 DB에 반영합니다.
+     * Controller의 updateAllRolePermissions 메서드에 대응합니다.
+     * @param updateList 변경된 역할-권한 매핑 목록
+     */
+    void updateAllRolePermissions(List<RolePermissionUpdateDto> updateList);
 }
