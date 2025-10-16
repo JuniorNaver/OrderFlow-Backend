@@ -17,7 +17,7 @@ public class CashPaymentService implements PaymentStrategy {
         return PaymentResult.builder()
                 .success(true)
                 .message("현금 결제 완료")
-                .transactionId(null)
+                .transactionNo(null)
                 .method(request.getPaymentMethod())
                 .orderId(request.getOrderId())
                 .paidAmount(request.getAmount())

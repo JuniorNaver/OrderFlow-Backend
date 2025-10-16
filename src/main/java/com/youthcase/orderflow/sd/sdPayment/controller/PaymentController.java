@@ -38,7 +38,7 @@ public class PaymentController {
             PaymentResult result = paymentProcessor.processPayment(request);
 
             if (result.isSuccess()) {
-                log.info("✅ 결제 성공: {}", result.getTransactionId());
+                log.info("✅ 결제 성공: {}", result.getTransactionNo());
                 return ResponseEntity.status(HttpStatus.CREATED).body(result);
             } else {
                 log.warn("❌ 결제 실패: {}", result.getMessage());
@@ -87,7 +87,7 @@ public class PaymentController {
             return ResponseEntity.ok(PaymentResult.builder()
                     .success(true)
                     .message("결제 취소 완료")
-                    .transactionId(item.getTransactionNo())
+                    .transactionNo(item.getTransactionNo())
                     .method(item.getPaymentMethod())
                     .orderId(item.getPaymentHeader().getSalesHeader().getOrderId())
                     .paidAmount(item.getAmount())
