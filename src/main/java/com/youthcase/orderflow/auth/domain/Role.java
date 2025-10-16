@@ -24,7 +24,7 @@ public class Role {
     @Column(name = "role_id", length = 50)
     private String roleId;
 
-    // 역할 타입 (Enum을 사용하여 정의된 역할 목록 관리)
+    // 역할 타입 (Enum을 사용하여 정의된 역할 목록 관리) / Enum 이름: ADMIN, MANAGER, CLERK
     @Enumerated(EnumType.STRING)
     @Column(name = "role_type", nullable = false, unique = true, length = 50)
     private RoleType roleType;
