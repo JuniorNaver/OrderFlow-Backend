@@ -8,6 +8,7 @@ import com.youthcase.orderflow.sd.sdPayment.dto.PaymentResult;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentItemRepository;
 import com.youthcase.orderflow.sd.sdPayment.service.PaymentProcessor;
+import com.youthcase.orderflow.sd.sdPayment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +22,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/payments")
 public class PaymentController {
 
-    private final PaymentProcessor paymentProcessor;
+    private final PaymentService paymentService;
     private final PaymentHeaderRepository paymentHeaderRepository;
     private final PaymentItemRepository paymentItemRepository;
+    private final PaymentProcessor paymentProcessor;
 
     /**
      * 💳 결제 요청 (카드 / 현금 / 간편결제)
@@ -35,7 +37,8 @@ public class PaymentController {
                 request.getPaymentMethod(), request.getOrderId(), request.getAmount());
 
         try {
-            PaymentResult result = paymentProcessor.processPayment(request);
+            // ✅ 결제 로직 전체를 서비스에 위임
+            PaymentResult result = paymentService.createPayment(request);
 
             if (result.isSuccess()) {
                 log.info("✅ 결제 성공: {}", result.getTransactionNo());
@@ -54,6 +57,7 @@ public class PaymentController {
                             .build());
         }
     }
+
 
     /**
      * 📄 결제 단건 조회
