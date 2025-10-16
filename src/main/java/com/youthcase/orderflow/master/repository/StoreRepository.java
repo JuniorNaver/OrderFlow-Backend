@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StoreRepository extends JpaRepository<Store, String> {
 
-    boolean existsByStoreId(String storeId); // 중복 등록 방지용
+    // 필요 시 맞춤형 조회도 추가 가능
+    Store findByStoreName(String storeName);
 }
