@@ -1,0 +1,65 @@
+package com.youthcase.orderflow.gr.domain;
+
+import com.youthcase.orderflow.auth.domain.User;
+import com.youthcase.orderflow.po.domain.POHeader;
+import com.youthcase.orderflow.stk.domain.Warehouse;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "MM_GR_HEADER")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class GoodsReceiptHeader {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gr_header_seq_gen")
+    @SequenceGenerator(
+            name = "gr_header_seq_gen",
+            sequenceName = "MM_GR_HEADER_SEQ",
+            allocationSize = 1
+    )
+    @Column(name = "GR_HEADER_ID")
+    private Long id;  // 입고내역ID (PK)
+
+    @Column(name = "STATUS", length = 20, nullable = false)
+    private String status; // 상태 (예: RECEIVED, CONFIRMED 등)
+
+    @Column(name = "RECEIPT_DATE", nullable = false)
+    private LocalDate receiptDate; // 입고일자
+
+    @Column(name = "NOTE", length = 255)
+    private String note; // 비고
+
+    // ✅ FK: 창고 (WAREHOUSE_MASTER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "WAREHOUSE_ID", nullable = false)
+    private Warehouse warehouse;
+
+    // ✅ FK: 발주내역 (PO_HEADER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PO_ID", nullable = false)
+    private POHeader poHeader;
+
+    // ✅ FK: 계정 (APP_USER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_ID", nullable = false)
+    private User user;
+
+    // ✅ 1:N 관계 - 입고 아이템
+    @OneToMany(mappedBy = "header", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<GoodsReceiptItem> items = new ArrayList<>();
+
+    public void addItem(GoodsReceiptItem item) {
+        this.items.add(item);
+        item.setHeader(this);
+    }
+}

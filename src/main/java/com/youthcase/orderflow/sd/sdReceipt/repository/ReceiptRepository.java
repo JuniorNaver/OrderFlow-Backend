@@ -28,4 +28,6 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     @Transactional
     @Query("DELETE FROM Receipt r WHERE r.issuedAt < :cutoff")
     int deleteOldReceipts(@Param("cutoff") LocalDateTime cutoff);
+
 }
+
