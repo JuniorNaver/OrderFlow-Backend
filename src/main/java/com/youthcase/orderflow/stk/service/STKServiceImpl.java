@@ -140,4 +140,9 @@ public class STKServiceImpl implements STKService {
         System.out.println("LOG: 유통기한 임박 재고 상태 업데이트 작업 (기준일: " + targetDate + ")");
         return Collections.emptyList();
     }
+
+    @Override
+    public List<STK> searchByProductName(String name) {
+        return stkRepository.findByProduct_ProductNameContainingIgnoreCase(name);
+    }
 }

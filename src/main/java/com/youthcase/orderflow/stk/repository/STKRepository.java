@@ -33,4 +33,7 @@ public interface STKRepository extends JpaRepository<STK, Long> {
 
     // 4. 특정 상품의 재고를 유통기한 오름차순으로 조회 (수량 > 0)
     List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, int quantity);
+
+    // 5. 상품명으로 재고 검색 (대소문자 무시, 부분 일치)
+    List<STK> findByProduct_ProductNameContainingIgnoreCase(String name);
 }

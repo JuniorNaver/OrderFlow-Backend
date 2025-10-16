@@ -47,5 +47,6 @@ public interface STKService {
     // Date 대신 LocalDate를 사용하여 일관성 및 안정성 확보
     List<STK> disposeExpiredStock(LocalDate targetDate);
     List<STK> markNearExpiryStock(LocalDate targetDate);
+    List<STK> searchByProductName(String name);
 
 }
