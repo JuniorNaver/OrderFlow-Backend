@@ -1,7 +1,7 @@
-package com.youthcase.orderflow.stk.service;
+package com.youthcase.orderflow.master.service;
 
-import com.youthcase.orderflow.stk.domain.Warehouse;
-import com.youthcase.orderflow.stk.dto.WarehouseUpdateDTO;
+import com.youthcase.orderflow.master.domain.Warehouse;
+import com.youthcase.orderflow.master.dto.WarehouseUpdateDTO;
 
 import java.util.List;
 

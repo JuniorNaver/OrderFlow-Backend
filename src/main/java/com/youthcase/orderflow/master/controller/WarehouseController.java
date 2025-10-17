@@ -1,10 +1,10 @@
-package com.youthcase.orderflow.stk.controller;
+package com.youthcase.orderflow.master.controller;
 
-import com.youthcase.orderflow.stk.domain.Warehouse;
-import com.youthcase.orderflow.stk.service.WarehouseService;
-import com.youthcase.orderflow.stk.dto.WarehouseRequestDTO;
-import com.youthcase.orderflow.stk.dto.WarehouseResponseDTO;
-import com.youthcase.orderflow.stk.dto.WarehouseUpdateDTO;
+import com.youthcase.orderflow.master.domain.Warehouse;
+import com.youthcase.orderflow.master.service.WarehouseService;
+import com.youthcase.orderflow.master.dto.WarehouseRequestDTO;
+import com.youthcase.orderflow.master.dto.WarehouseResponseDTO;
+import com.youthcase.orderflow.master.dto.WarehouseUpdateDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

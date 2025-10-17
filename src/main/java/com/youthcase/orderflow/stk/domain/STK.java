@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.stk.domain;
 
+import com.youthcase.orderflow.master.domain.Warehouse;
 import com.youthcase.orderflow.pr.domain.Lot;
 import com.youthcase.orderflow.master.domain.Product;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;

@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.stk.domain;
+package com.youthcase.orderflow.master.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
