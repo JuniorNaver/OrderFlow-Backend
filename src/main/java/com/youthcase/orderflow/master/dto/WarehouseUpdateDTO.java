@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.stk.dto;
+package com.youthcase.orderflow.master.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

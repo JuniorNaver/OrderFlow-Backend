@@ -1,6 +1,6 @@
-package com.youthcase.orderflow.stk.dto;
+package com.youthcase.orderflow.master.dto;
 
-import com.youthcase.orderflow.stk.domain.Warehouse;
+import com.youthcase.orderflow.master.domain.Warehouse;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

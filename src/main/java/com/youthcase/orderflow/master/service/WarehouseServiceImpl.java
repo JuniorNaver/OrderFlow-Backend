@@ -1,9 +1,8 @@
-package com.youthcase.orderflow.stk.service; // 별도의 impl 패키지를 사용하는 것이 일반적입니다.
+package com.youthcase.orderflow.master.service; // 별도의 impl 패키지를 사용하는 것이 일반적입니다.
 
-import com.youthcase.orderflow.stk.domain.Warehouse;
-import com.youthcase.orderflow.stk.dto.WarehouseUpdateDTO;
-import com.youthcase.orderflow.stk.repository.WarehouseRepository;
-import com.youthcase.orderflow.stk.service.WarehouseService; // 인터페이스 참조
+import com.youthcase.orderflow.master.domain.Warehouse;
+import com.youthcase.orderflow.master.dto.WarehouseUpdateDTO;
+import com.youthcase.orderflow.master.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
