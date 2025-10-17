@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.sd.sdSales.service;
 
-import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.master.domain.Product;
+import com.youthcase.orderflow.master.repository.ProductRepository;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentStatus;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;

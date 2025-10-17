@@ -1,8 +1,6 @@
-package com.youthcase.orderflow.pr.domain;
+package com.youthcase.orderflow.master.domain;
 
-import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
-import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
-import com.youthcase.orderflow.pr.domain.enums.Unit;
+import com.youthcase.orderflow.pr.domain.Category;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;

@@ -1,6 +1,6 @@
-package com.youthcase.orderflow.pr.repository;
+package com.youthcase.orderflow.master.repository;
 
-import com.youthcase.orderflow.pr.domain.Product;
+import com.youthcase.orderflow.master.domain.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

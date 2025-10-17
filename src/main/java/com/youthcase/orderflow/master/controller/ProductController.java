@@ -1,9 +1,9 @@
-package com.youthcase.orderflow.pr.controller;
+package com.youthcase.orderflow.master.controller;
 
-import com.youthcase.orderflow.pr.dto.ProductCreateDto;
-import com.youthcase.orderflow.pr.dto.ProductResponseDto;
-import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
-import com.youthcase.orderflow.pr.service.ProductService;
+import com.youthcase.orderflow.master.dto.ProductCreateDto;
+import com.youthcase.orderflow.master.dto.ProductResponseDto;
+import com.youthcase.orderflow.master.dto.ProductUpdateDto;
+import com.youthcase.orderflow.master.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

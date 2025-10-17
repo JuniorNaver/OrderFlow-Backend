@@ -1,11 +1,11 @@
-package com.youthcase.orderflow.pr.mapper;
+package com.youthcase.orderflow.master.mapper;
 
-import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
-import com.youthcase.orderflow.pr.dto.ProductCreateDto;
-import com.youthcase.orderflow.pr.dto.ProductResponseDto;
-import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
+import com.youthcase.orderflow.master.domain.ExpiryType;
+import com.youthcase.orderflow.master.dto.ProductCreateDto;
+import com.youthcase.orderflow.master.dto.ProductResponseDto;
+import com.youthcase.orderflow.master.dto.ProductUpdateDto;
 import com.youthcase.orderflow.pr.domain.Category;
-import com.youthcase.orderflow.pr.domain.Product;
+import com.youthcase.orderflow.master.domain.Product;
 
 import java.math.RoundingMode;
 

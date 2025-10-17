@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.pr.domain;
 
+import com.youthcase.orderflow.master.domain.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

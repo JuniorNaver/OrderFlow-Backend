@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.pr.domain.enums;
+package com.youthcase.orderflow.master.domain;
 
 public enum StorageMethod {
     ROOM_TEMP(2, "실온"),   // 상온: 2일

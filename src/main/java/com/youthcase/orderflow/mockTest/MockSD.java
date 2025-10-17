@@ -1,16 +1,17 @@
 package com.youthcase.orderflow.mockTest;
 
+import com.youthcase.orderflow.master.domain.Product;
 import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.master.domain.Warehouse;
 import com.youthcase.orderflow.master.repository.StoreRepository;
 import com.youthcase.orderflow.master.repository.WarehouseRepository;
 import com.youthcase.orderflow.pr.domain.*;
-import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
-import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
-import com.youthcase.orderflow.pr.domain.enums.Unit;
+import com.youthcase.orderflow.master.domain.ExpiryType;
+import com.youthcase.orderflow.master.domain.StorageMethod;
+import com.youthcase.orderflow.master.domain.Unit;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
 import com.youthcase.orderflow.pr.repository.LotRepository;
-import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.master.repository.ProductRepository;
 import com.youthcase.orderflow.stk.domain.*;
 import com.youthcase.orderflow.stk.repository.*;
 import jakarta.persistence.EntityManager;

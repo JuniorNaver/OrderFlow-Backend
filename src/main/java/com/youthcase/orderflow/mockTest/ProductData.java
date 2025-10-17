@@ -1,11 +1,11 @@
-package com.youthcase.orderflow.pr.mock;
+package com.youthcase.orderflow.mockTest;
 
-import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
-import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
-import com.youthcase.orderflow.pr.domain.enums.Unit;
+import com.youthcase.orderflow.master.domain.ExpiryType;
+import com.youthcase.orderflow.master.domain.Product;
+import com.youthcase.orderflow.master.domain.StorageMethod;
+import com.youthcase.orderflow.master.domain.Unit;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
-import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.master.repository.ProductRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
