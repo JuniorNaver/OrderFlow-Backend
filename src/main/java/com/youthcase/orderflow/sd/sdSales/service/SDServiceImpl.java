@@ -100,7 +100,7 @@ public class SDServiceImpl implements SDService {
         salesHeaderRepository.save(header);
 
         // ✅ 엔티티를 DTO로 변환해서 반환
-        return SalesItemDTO.fromEntity(item);
+        return SalesItemDTO.from(item);
     }
     //salesHeader 바코드로 아이템 추가 + 재고수정 (react+vite 연동)
     @Override
@@ -139,7 +139,7 @@ public class SDServiceImpl implements SDService {
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
         // 2️⃣ 결제 상태 확인 (PaymentHeader에서 가져옴)
-        PaymentHeader paymentHeader = paymentHeaderRepository.findBySalesHeader_OrderId(orderId)
+        PaymentHeader paymentHeader = paymentHeaderRepository.findFirstBySalesHeader_OrderIdOrderByPaymentIdDesc(orderId)
                 .orElseThrow(() -> new RuntimeException("결제 내역 없음"));
 
         // 3️⃣ 결제 완료 여부 검증

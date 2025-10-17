@@ -8,4 +8,7 @@ public interface PaymentService {
     PaymentResult createPayment(PaymentRequest request);
 
     void savePayment(PaymentResult result);
+
+    PaymentResult cancelPayment(Long paymentItemId);
+
 }

@@ -6,6 +6,7 @@ import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
+import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
 import com.youthcase.orderflow.sd.sdSales.service.SDService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.util.List;
 public class SDController {
 
     private final SDService sdService;
+    private final SalesHeaderRepository salesHeaderRepository;
 
     // 1. 주문 생성 (판매등록 버튼 클릭시)
     @PostMapping("/create")
@@ -35,6 +37,13 @@ public class SDController {
         );
 
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<SalesHeaderDTO> getOrder(@PathVariable Long orderId) {
+        SalesHeader header = salesHeaderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
+        return ResponseEntity.ok(SalesHeaderDTO.from(header));
     }
 
     //상품 추가
