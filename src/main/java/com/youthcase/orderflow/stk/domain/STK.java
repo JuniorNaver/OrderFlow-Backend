@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.stk.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.youthcase.orderflow.master.domain.Warehouse;
 import com.youthcase.orderflow.pr.domain.Lot;
 import com.youthcase.orderflow.master.domain.Product;
@@ -43,8 +44,10 @@ public class STK {
     private String status;
 
     // ============= FK 매핑 =============
+    // ⭐️ WAREHOUSE_MASTER 엔티티를 참조하는 필드 (WarehouseId를 기반으로 추정)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "WAREHOUSE_ID", nullable = false)
+    @JoinColumn(name = "WAREHOUSE_ID", referencedColumnName = "WAREHOUSE_ID")
+    @JsonIgnore // ⭐️ 이 필드를 JSON 변환 시 무시하도록 설정
     private Warehouse warehouse;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,8 +58,10 @@ public class STK {
     @JoinColumn(name = "GTIN", nullable = false)
     private Product product;
 
+    // ⭐️ LOT 엔티티를 참조하는 필드 (LotId를 기반으로 추정)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "LOT_ID", nullable = false)
+    @JoinColumn(name = "LOT_ID", referencedColumnName = "LOT_ID")
+    @JsonIgnore // ⭐️ 이 필드를 JSON 변환 시 무시하도록 설정
     private Lot lot;
 
     @Builder
@@ -116,5 +121,8 @@ public class STK {
         this.status = newStatus;
         this.lastUpdatedAt = java.time.LocalDateTime.now();
     }
+
+    // ⭐️ 위치 변경 필요 여부를 나타내는 필드를 추가합니다.
+    private Boolean isRelocationNeeded;
 }
 
