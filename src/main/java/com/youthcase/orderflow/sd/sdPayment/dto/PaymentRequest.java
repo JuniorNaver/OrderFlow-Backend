@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentMethod;
 import lombok.*;
 
@@ -31,6 +32,12 @@ public class PaymentRequest {
 
     // ✅ 선택적 PG 데이터
     private String transactionNo;        // 카드사 승인번호 등
+
+    @JsonProperty("imp_uid")
     private String impUid;               // 아임포트 결제 고유 ID
+
+    @JsonProperty("merchant_uid")
     private String merchantUid;          // 가맹점 주문번호
+
+    private String provider;
 }

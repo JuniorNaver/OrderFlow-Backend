@@ -34,55 +34,72 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResult createPayment(PaymentRequest request) {
+        try {
+            // ✅ 주문 조회
+            SalesHeader salesHeader = salesHeaderRepository.findById(request.getOrderId())
+                    .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
 
-        // 주문 조회
-        SalesHeader salesHeader = salesHeaderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
+            // ✅ PaymentHeader 생성
+            PaymentHeader header = new PaymentHeader();
+            header.setSalesHeader(salesHeader);
+            header.setTotalAmount(
+                    request.getTotalAmount() != null
+                            ? request.getTotalAmount()
+                            : request.getAmount()
+            );
+            header.setPaymentStatus(PaymentStatus.APPROVED);
+            paymentHeaderRepository.save(header);
 
-        // ✅ PaymentHeader 생성
-        PaymentHeader header = new PaymentHeader();
-        header.setSalesHeader(salesHeader);
-        header.setTotalAmount(request.getTotalAmount() != null
-                ? request.getTotalAmount()
-                : request.getAmount()); // 단일/복수 대응
-        header.setPaymentStatus(PaymentStatus.APPROVED);
-        paymentHeaderRepository.save(header);
-
-        // ✅ 1️⃣ 혼합 결제 처리
-        if (request.getSplits() != null && !request.getSplits().isEmpty()) {
-            for (PaymentSplit split : request.getSplits()) {
-                processOnePayment(split.getMethod(), split.getAmount(), header, request.getOrderId());
+            // ✅ 결제 처리 (혼합결제 vs 단일결제)
+            if (request.getSplits() != null && !request.getSplits().isEmpty()) {
+                for (PaymentSplit split : request.getSplits()) {
+                    processOnePayment(request, split.getMethod(), split.getAmount(), header, request.getOrderId());
+                }
+            } else {
+                processOnePayment(request, request.getPaymentMethod(), request.getAmount(), header, request.getOrderId());
             }
-        }
-        // ✅ 2️⃣ 단일 결제 처리
-        else {
-            processOnePayment(request.getPaymentMethod(), request.getAmount(), header, request.getOrderId());
-        }
 
-        log.info("✅ 결제 완료 - orderId={}, totalAmount={}",
-                request.getOrderId(), header.getTotalAmount());
+            log.info("✅ 결제 완료 - orderId={}, totalAmount={}",
+                    request.getOrderId(), header.getTotalAmount());
 
-        return PaymentResult.builder()
-                .success(true)
-                .message("결제 완료")
-                .orderId(request.getOrderId())
-                .paidAmount(header.getTotalAmount())
-                .build();
+            return PaymentResult.builder()
+                    .success(true)
+                    .message("결제 완료")
+                    .orderId(request.getOrderId())
+                    .paidAmount(header.getTotalAmount())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("❌ 결제 중 오류 발생: {}", e.getMessage(), e);
+            return PaymentResult.builder()
+                    .success(false)
+                    .message("결제 실패: " + e.getMessage())
+                    .orderId(request.getOrderId())
+                    .build();
+        }
     }
 
-    private void processOnePayment(PaymentMethod method, BigDecimal amount, PaymentHeader header, Long orderId) {
+    /**
+     * ✅ 개별 결제 수행 메서드 (카드/현금/간편결제)
+     */
+    private void processOnePayment(PaymentRequest request, PaymentMethod method, BigDecimal amount, PaymentHeader header, Long orderId) {
         String methodKey = method.getKey().toLowerCase();
         PaymentStrategy strategy = strategyMap.get(methodKey);
+
         if (strategy == null) {
             throw new IllegalArgumentException("지원하지 않는 결제 수단: " + method);
         }
 
-        // ✅ 개별 결제 수행
+        // ✅ 개별 결제 실행
         PaymentResult result = strategy.pay(
                 PaymentRequest.builder()
                         .orderId(orderId)
                         .amount(amount)
                         .paymentMethod(method)
+                        .impUid(request.getImpUid())          // ✅ 프론트에서 전달된 아임포트 imp_uid
+                        .merchantUid(request.getMerchantUid()) // ✅ merchant_uid
+                        .provider(request.getProvider())       // ✅ 간편결제 공급자 (kakaopay/toss)
+                        .transactionNo(request.getTransactionNo())
                         .build()
         );
 
@@ -99,12 +116,14 @@ public class PaymentServiceImpl implements PaymentService {
         item.setPaymentStatus(PaymentStatus.APPROVED);
         paymentItemRepository.save(item);
 
-        log.info("🧾 결제 수단 저장 - method={}, amount={}", method, amount);
+        header.getPaymentItems().add(item);
+
+        log.info("🧾 결제 수단 저장 완료 - method={}, amount={}", method, amount);
     }
 
     @Override
     public void savePayment(PaymentResult result) {
-        // ⚙️ 필요 시 외부 PG Webhook 수신 시 사용할 수 있는 메서드 (선택적)
+        // ⚙️ 외부 PG(Webhook) 수신 시 결제 데이터 저장용
         SalesHeader salesHeader = salesHeaderRepository.findById(result.getOrderId())
                 .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
 
@@ -134,13 +153,17 @@ public class PaymentServiceImpl implements PaymentService {
 
         String methodKey = item.getPaymentMethod().getKey().toLowerCase();
         PaymentStrategy strategy = strategyMap.get(methodKey);
+
         if (strategy == null) {
             throw new IllegalArgumentException("지원하지 않는 결제 수단: " + item.getPaymentMethod());
         }
 
+        // ✅ 결제 취소 처리
         strategy.cancel(item);
         item.setPaymentStatus(PaymentStatus.CANCELED);
         paymentItemRepository.save(item);
+
+        log.info("🧾 결제 취소 완료 - transactionNo={}", item.getTransactionNo());
 
         return PaymentResult.builder()
                 .success(true)
@@ -151,7 +174,4 @@ public class PaymentServiceImpl implements PaymentService {
                 .paidAmount(item.getAmount())
                 .build();
     }
-
-
-
 }
