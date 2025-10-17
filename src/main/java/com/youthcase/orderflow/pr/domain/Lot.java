@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -44,6 +43,7 @@ public class Lot {
     private BigDecimal qty;
 
     public enum LotStatus { ACTIVE, ON_HOLD, CONSUMED, EXPIRED, DISPOSED, RETURNED }
+
     @Enumerated(EnumType.STRING)
     @Column(name = "STATUS", length = 20, nullable = false)
     private LotStatus status = LotStatus.ACTIVE;
@@ -56,8 +56,9 @@ public class Lot {
 
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
+    // ORA-00904 오류 해결 및 DB 컬럼명 일치 (GOODS_RECEIPT_HEADER)
     @JoinColumn(name = "GR_HEADER_ID", nullable = true)
-    private GoodsReceiptHeader GoodsReceiptHeader;
+    private GoodsReceiptHeader goodsReceiptHeader; // Java 컨벤션에 따라 소문자로 시작하도록 변경
 
     @Transient
     public long getRemainDays() {
@@ -75,4 +76,4 @@ public class Lot {
     void onUpdate() {
         updatedAt = OffsetDateTime.now();
     }
-  }
+}
