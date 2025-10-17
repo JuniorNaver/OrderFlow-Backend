@@ -1,13 +1,11 @@
 package com.youthcase.orderflow.master.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 
 @Data
 @Entity
@@ -33,17 +31,21 @@ public class Warehouse {
     @Column(name = "CURRENT_CAPACITY", nullable = false)
     private Double currentCapacity; // 현재 적재 부피 (CBM 단위)
 
-    @Column(name = "SPOT_ID", nullable = false)
-    private Long spotId;
+    // ✅ FK 설정 (STORE_ID → STORE_MASTER.STORE_ID)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "STORE_ID", nullable = false)
+    @Comment("소속 지점 (STORE_MASTER 참조)")
+    private Store store;
 
     @Builder
-    public Warehouse(String warehouseId, String storageCondition, Double maxCapacity, Double currentCapacity, Long spotId) {
+    public Warehouse(String warehouseId, String storageCondition,
+                     Double maxCapacity, Double currentCapacity, Store store) {
         this.warehouseId = warehouseId;
         this.storageCondition = storageCondition;
         // this.capacityUom은 final 필드로 선언하여 빌더에서 제외하고 "CBM"으로 고정합니다.
         this.maxCapacity = maxCapacity;
         this.currentCapacity = currentCapacity;
-        this.spotId = spotId;
+        this.store = store;
     }
 
     /**

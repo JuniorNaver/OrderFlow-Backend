@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.master.dto;
 
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.master.domain.Warehouse;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,18 +23,18 @@ public class WarehouseRequestDTO {
     private Double maxCapacity;
 
     @NotNull(message = "지점 ID는 필수입니다.")
-    private Long spotId;
+    private String storeId;
 
     // CURRENT_CAPACITY는 등록 시점에는 0 또는 널이므로 요청 DTO에서는 제외합니다.
 
     // DTO -> Entity 변환 메서드
-    public Warehouse toEntity() {
+    public Warehouse toEntity(Store store) {
         return Warehouse.builder()
                 .warehouseId(this.warehouseId)
                 .storageCondition(this.storageCondition)
                 .maxCapacity(this.maxCapacity)
                 .currentCapacity(0.0) // 초기 적재 용량은 0으로 설정
-                .spotId(this.spotId)
+                .store(store)
                 .build();
     }
 }

@@ -12,7 +12,8 @@ public class WarehouseResponseDTO {
     private String storageCondition;
     private Double maxCapacity;
     private Double currentCapacity;
-    private Long spotId;
+    private String storeId;
+    private String storeName;
 
     // Entity -> DTO 변환을 위한 생성자
     public WarehouseResponseDTO(Warehouse warehouse) {
@@ -20,6 +21,11 @@ public class WarehouseResponseDTO {
         this.storageCondition = warehouse.getStorageCondition();
         this.maxCapacity = warehouse.getMaxCapacity();
         this.currentCapacity = warehouse.getCurrentCapacity();
-        this.spotId = warehouse.getSpotId();
+
+        // ✅ Store 정보 포함
+        if (warehouse.getStore() != null) {
+            this.storeId = warehouse.getStore().getStoreId();
+            this.storeName = warehouse.getStore().getStoreName();
+        }
     }
 }

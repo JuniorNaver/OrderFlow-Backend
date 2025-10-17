@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "MM_STOCK",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UQ_STOCK", columnNames = {"WAREHOUSE_ID", "GTIN", "LOT_ID"})
+                @UniqueConstraint(name = "UQ_STOCK", columnNames = {"WAREHOUSE_ID", "GR_HEADER_ID", "LOT_ID"})
         }
 )
 public class STK {
@@ -48,7 +48,7 @@ public class STK {
     private Warehouse warehouse;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GR_ID")
+    @JoinColumn(name = "GR_HEADER_ID")
     private GoodsReceiptHeader goodsReceipt;
 
     @ManyToOne(fetch = FetchType.LAZY)

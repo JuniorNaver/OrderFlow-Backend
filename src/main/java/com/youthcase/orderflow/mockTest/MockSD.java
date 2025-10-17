@@ -44,8 +44,8 @@ public class MockSD {
             System.out.println("🚀 [MOCK DATA INIT] POS SD 모듈용 테스트 데이터 세팅 시작");
 
             // ✅ 1. 매장 생성
-            if (storeRepository.count() == 0) {
-                Store store = Store.builder()
+            Store store = storeRepository.findById("S001").orElseGet(() -> {
+                Store s = Store.builder()
                         .storeId("S001")
                         .storeName("서울 강남점")
                         .brandCode("CU")
@@ -55,9 +55,10 @@ public class MockSD {
                         .postCode("06234")
                         .active(true)
                         .build();
-                storeRepository.saveAndFlush(store);
-                System.out.println("✅ 매장 생성 완료: " + store.getStoreName());
-            }
+                storeRepository.saveAndFlush(s);
+                System.out.println("✅ 매장 생성 완료: " + s.getStoreName());
+                return s;
+            });
 
             // ✅ 2. 창고 (WAREHOUSE_MASTER)
             Warehouse warehouse = warehouseRepository.findById("W001").orElseGet(() -> {
@@ -66,7 +67,7 @@ public class MockSD {
                         .storageCondition("ROOM")
                         .maxCapacity(1000.0)
                         .currentCapacity(100.0)
-                        .spotId(1L)
+                        .store(store)
                         .build();
                 warehouseRepository.saveAndFlush(w);
                 System.out.println("✅ 창고 생성 완료: " + w.getWarehouseId());

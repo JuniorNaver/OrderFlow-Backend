@@ -28,12 +28,13 @@ class WarehouseServiceTests {
 
     // 테스트에 사용할 샘플 창고 데이터 생성 헬퍼 메소드
     private Warehouse createSampleWarehouse(String id, String condition) {
-        Warehouse warehouse = new Warehouse();
-        warehouse.setWarehouseId(id);
-        warehouse.setStorageCondition(condition);
-        warehouse.setMaxCapacity(500.0);
-        warehouse.setCurrentCapacity((double) 0);
-        warehouse.setSpotId(1L);
+        Warehouse warehouse = Warehouse.builder()
+                .warehouseId(id)
+                .storageCondition(condition)
+                .maxCapacity(500.0)
+                .currentCapacity(0.0)
+                .spotId(1L)
+                .build();
         return warehouse;
     }
 

@@ -1,7 +1,9 @@
 package com.youthcase.orderflow.master.service; // 별도의 impl 패키지를 사용하는 것이 일반적입니다.
 
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.master.domain.Warehouse;
 import com.youthcase.orderflow.master.dto.WarehouseUpdateDTO;
+import com.youthcase.orderflow.master.repository.StoreRepository;
 import com.youthcase.orderflow.master.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.NoSuchElementException;
 public class WarehouseServiceImpl implements WarehouseService { // 인터페이스 구현
 
     private final WarehouseRepository warehouseRepository;
+    private final StoreRepository storeRepository;
 
     // ====================================================================
     // 1. 창고 등록 (Create)
@@ -52,10 +55,13 @@ public class WarehouseServiceImpl implements WarehouseService { // 인터페이�
     public Warehouse updateWarehouse(String warehouseId, WarehouseUpdateDTO updateDto) {
         Warehouse existingWarehouse = getWarehouseById(warehouseId); // 기존 Entity 조회
 
+        Store store = storeRepository.findById(updateDto.getStoreId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다."));
+
         // DTO의 데이터를 Entity에 반영
         existingWarehouse.setStorageCondition(updateDto.getStorageCondition());
         existingWarehouse.setMaxCapacity(updateDto.getMaxCapacity());
-        existingWarehouse.setSpotId(updateDto.getSpotId());
+        existingWarehouse.setStore(store);
 
         return warehouseRepository.save(existingWarehouse);
     }

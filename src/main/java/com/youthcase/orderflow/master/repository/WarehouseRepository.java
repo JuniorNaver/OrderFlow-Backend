@@ -10,5 +10,6 @@ import java.util.List;
 @Repository
 public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
 
-    List<Warehouse> findBySpotId(Long spotId);
+    // ✅ Store FK 기준으로 조회
+    List<Warehouse> findByStore_StoreId(String storeId);
 }
