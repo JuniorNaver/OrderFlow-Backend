@@ -17,7 +17,7 @@ import java.time.temporal.ChronoUnit;
 @Table(name = "LOT", indexes = {
         @Index(name="IX_LOT_PROD_EXP", columnList="GTIN, EXP_DATE"),
         @Index(name="IX_LOT_EXP", columnList="EXP_DATE"),
-        @Index(name="IX_LOT_GR", columnList="GR_ID")
+        @Index(name="IX_LOT_GR", columnList="GR_HEADER_ID")
 })
 @Getter
 @Setter
@@ -56,7 +56,7 @@ public class Lot {
 
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GoodsReceiptHeader", nullable = true)
+    @JoinColumn(name = "GR_HEADER_ID", nullable = true)
     private GoodsReceiptHeader GoodsReceiptHeader;
 
     @Transient

@@ -17,8 +17,8 @@ public class WarehouseUpdateDTO {
     @NotNull(message = "최대 적재 용량은 필수입니다.")
     private Double maxCapacity;
 
-    @NotNull(message = "지점 ID는 필수입니다.")
-    private Long spotId;
+    @NotBlank(message = "지점 ID는 필수입니다.")
+    private String storeId;
 
     // 현재 적재 용량(CURRENT_CAPACITY)는 비즈니스 로직에 의해 변경되어야 하므로,
     // 마스터 정보 수정 API에서는 일반적으로 요청받지 않습니다.
