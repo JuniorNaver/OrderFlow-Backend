@@ -1,9 +1,9 @@
 package com.youthcase.orderflow.stk.service;
 
-import com.youthcase.orderflow.master.domain.Warehouse;
-import com.youthcase.orderflow.master.dto.WarehouseUpdateDTO; // DTO 클래스명 통일 반영
+import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
+import com.youthcase.orderflow.master.warehouse.dto.WarehouseUpdateDTO; // DTO 클래스명 통일 반영
 
-import com.youthcase.orderflow.master.service.WarehouseService;
+import com.youthcase.orderflow.master.warehouse.service.WarehouseService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

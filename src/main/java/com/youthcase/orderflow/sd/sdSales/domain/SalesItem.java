@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.domain;
 
-import com.youthcase.orderflow.master.domain.Product;
+import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.stk.domain.STK;
 import jakarta.persistence.*;
 import lombok.*;

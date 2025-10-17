@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.pr.service.browse;
 
-import com.youthcase.orderflow.master.domain.StorageMethod;
-import com.youthcase.orderflow.master.repository.ProductRepository;
+import com.youthcase.orderflow.master.product.domain.StorageMethod;
+import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.pr.service.browse.dto.ProductItemDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

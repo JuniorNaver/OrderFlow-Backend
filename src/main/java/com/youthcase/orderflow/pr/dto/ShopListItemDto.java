@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.pr.dto;
 
-import com.youthcase.orderflow.master.domain.StorageMethod;
-import com.youthcase.orderflow.master.domain.Unit;
+import com.youthcase.orderflow.master.product.domain.StorageMethod;
+import com.youthcase.orderflow.master.product.domain.Unit;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
