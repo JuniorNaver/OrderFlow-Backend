@@ -1,6 +1,6 @@
-package com.youthcase.orderflow.stk.repository;
+package com.youthcase.orderflow.master.repository;
 
-import com.youthcase.orderflow.stk.domain.Warehouse;
+import com.youthcase.orderflow.master.domain.Warehouse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

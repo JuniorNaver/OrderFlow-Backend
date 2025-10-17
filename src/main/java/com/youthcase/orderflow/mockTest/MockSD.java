@@ -1,7 +1,9 @@
 package com.youthcase.orderflow.mockTest;
 
 import com.youthcase.orderflow.master.domain.Store;
+import com.youthcase.orderflow.master.domain.Warehouse;
 import com.youthcase.orderflow.master.repository.StoreRepository;
+import com.youthcase.orderflow.master.repository.WarehouseRepository;
 import com.youthcase.orderflow.pr.domain.*;
 import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
 import com.youthcase.orderflow.pr.domain.enums.StorageMethod;

@@ -7,7 +7,7 @@ import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.pr.repository.ProductRepository;
-import com.youthcase.orderflow.stk.repository.WarehouseRepository;
+import com.youthcase.orderflow.master.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
