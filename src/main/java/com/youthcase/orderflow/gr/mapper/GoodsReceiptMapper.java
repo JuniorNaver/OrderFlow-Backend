@@ -5,7 +5,7 @@ import com.youthcase.orderflow.gr.dto.*;
 import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.master.domain.Product;
-import com.youthcase.orderflow.stk.domain.Warehouse;
+import com.youthcase.orderflow.master.domain.Warehouse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
