@@ -1,11 +1,11 @@
 package com.youthcase.orderflow.mockTest;
 
-import com.youthcase.orderflow.master.domain.ExpiryType;
-import com.youthcase.orderflow.master.domain.Product;
-import com.youthcase.orderflow.master.domain.StorageMethod;
-import com.youthcase.orderflow.master.domain.Unit;
+import com.youthcase.orderflow.master.product.domain.ExpiryType;
+import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.product.domain.StorageMethod;
+import com.youthcase.orderflow.master.product.domain.Unit;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
-import com.youthcase.orderflow.master.repository.ProductRepository;
+import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
