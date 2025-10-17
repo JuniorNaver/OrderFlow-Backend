@@ -1,8 +1,8 @@
-package com.youthcase.orderflow.pr.dto;
+package com.youthcase.orderflow.master.dto;
 
-import com.youthcase.orderflow.pr.domain.enums.StorageMethod;
-import com.youthcase.orderflow.pr.domain.enums.Unit;
-import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
+import com.youthcase.orderflow.master.domain.StorageMethod;
+import com.youthcase.orderflow.master.domain.Unit;
+import com.youthcase.orderflow.master.domain.ExpiryType;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;

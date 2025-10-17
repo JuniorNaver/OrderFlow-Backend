@@ -2,7 +2,7 @@ package com.youthcase.orderflow.pr.service;
 
 import com.youthcase.orderflow.pr.dto.ShopListItemDto;
 
-import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.master.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

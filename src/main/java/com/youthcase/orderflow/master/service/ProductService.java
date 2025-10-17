@@ -1,14 +1,14 @@
-package com.youthcase.orderflow.pr.service;
+package com.youthcase.orderflow.master.service;
 
 import com.youthcase.orderflow.pr.domain.Category;
-import com.youthcase.orderflow.pr.domain.enums.ExpiryType;
-import com.youthcase.orderflow.pr.domain.Product;
-import com.youthcase.orderflow.pr.dto.ProductCreateDto;
-import com.youthcase.orderflow.pr.dto.ProductResponseDto;
-import com.youthcase.orderflow.pr.dto.ProductUpdateDto;
-import com.youthcase.orderflow.pr.mapper.ProductMapper;
+import com.youthcase.orderflow.master.domain.ExpiryType;
+import com.youthcase.orderflow.master.domain.Product;
+import com.youthcase.orderflow.master.dto.ProductCreateDto;
+import com.youthcase.orderflow.master.dto.ProductResponseDto;
+import com.youthcase.orderflow.master.dto.ProductUpdateDto;
+import com.youthcase.orderflow.master.mapper.ProductMapper;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
-import com.youthcase.orderflow.pr.repository.ProductRepository;
+import com.youthcase.orderflow.master.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

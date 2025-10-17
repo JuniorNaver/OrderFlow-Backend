@@ -1,3 +1,3 @@
-package com.youthcase.orderflow.pr.domain.enums;
+package com.youthcase.orderflow.master.domain;
 
 public enum ExpiryType { USE_BY, BEST_BEFORE, NONE}

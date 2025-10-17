@@ -8,7 +8,6 @@ import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.po.repository.POItemRepository;
-import com.youthcase.orderflow.pr.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

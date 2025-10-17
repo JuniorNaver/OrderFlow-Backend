@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.pr.service;
+package com.youthcase.orderflow.master.service;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

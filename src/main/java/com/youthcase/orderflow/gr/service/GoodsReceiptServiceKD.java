@@ -6,7 +6,7 @@
 //import com.youthcase.orderflow.gr.repository.GrItemRepositoryKD;
 //import com.youthcase.orderflow.gr.repository.LotRepositoryKD;
 //import com.youthcase.orderflow.po.repository.POHeaderRepository;
-//import com.youthcase.orderflow.pr.repository.ProductRepository;
+//import com.youthcase.orderflow.master.repository.ProductRepository;
 //import lombok.RequiredArgsConstructor;
 //import lombok.extern.slf4j.Slf4j;
 //import org.springframework.data.domain.Page;
