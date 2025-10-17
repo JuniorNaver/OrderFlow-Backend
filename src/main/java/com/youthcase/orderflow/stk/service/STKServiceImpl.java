@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,8 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional(readOnly = true)
     public List<STK> findAllStocks() {
-        return stkRepository.findAll();
+        // 일반 findAll() 대신, 상세 정보를 미리 로딩하는 메서드를 사용
+        return stkRepository.findAllWithDetails();
     }
 
     @Override
@@ -47,12 +49,15 @@ public class STKServiceImpl implements STKService {
     public STK updateStock(Long stkId, STK stockDetails) {
         STK existingStock = findStockById(stkId);
 
-        // STK 엔티티의 @Setter가 있다면 setQuantity 사용 가능
-        // STK 엔티티의 updateQuantity(Integer newQuantity) 메서드를 사용하는 것이 권장됨
-        if (stockDetails.getQuantity() != null) {
-            // existingStock.setQuantity(stockDetails.getQuantity()); // 👈 STK 엔티티에 setQuantity가 없다면 오류 발생
-            // 임시로 STK 엔티티에 updateQuantity가 있다고 가정하고 사용합니다.
-            // (STK 엔티티에 @Setter를 추가하거나, updateQuantity 메서드를 사용하세요.)
+        // STK 엔티티의 자체 메서드를 사용하여 안전하게 수량 업데이트
+        if (stockDetails.getQuantity() != null && !stockDetails.getQuantity().equals(existingStock.getQuantity())) {
+            existingStock.updateQuantity(stockDetails.getQuantity());
+        }
+
+        // 상태 업데이트
+        if (stockDetails.getStatus() != null && !stockDetails.getStatus().equals(existingStock.getStatus())) {
+            // STK 엔티티에 updateStatus(String) 메서드가 있다고 가정하고 사용합니다.
+            existingStock.updateStatus(stockDetails.getStatus());
         }
 
         // [TODO] 업데이트 시 필요한 비즈니스 로직 및 변경 추적 로직 추가
@@ -81,8 +86,8 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional(readOnly = true)
     public List<STK> getStockByProductGtin(String gtin) {
-        // [TODO] 실제 DB 연동 로직 (예: stkRepository.findByProductGtin(gtin))으로 교체 필요
-        return Collections.emptyList();
+        // GTIN과 수량 > 0 조건을 만족하는 재고를 유통기한 오름차순으로 조회
+        return stkRepository.findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0);
     }
 
     // --------------------------------------------------
@@ -92,22 +97,27 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional(readOnly = true)
     public ProgressStatusDTO getCapacityStatus() {
-        // [TODO] 창고 용량 조회 로직 구현
+        // [TODO: 실제 구현 시]
+        Long totalCapacity = 1000L; // 예시: WarehouseRepository 등에서 조회
+        Long usedCapacity = stkRepository.sumActiveQuantity(); // 활성 수량 합계 조회
 
-        // ⭐️ 요구되는 4개의 인자에 맞춰 수정 (제목 추가)
-        return new ProgressStatusDTO("창고 적재 용량 현황", 1000L, 780L, "CBM");
+        return new ProgressStatusDTO("창고 적재 용량 현황", totalCapacity, usedCapacity, "CBM");
     }
-
-    // STKServiceImpl.java (106행 근처)
 
     @Override
     @Transactional(readOnly = true)
     public ProgressStatusDTO getExpiryStatus(int days) {
-        // [TODO] 유통기한 임박 현황 조회 로직 구현
+        // [TODO: 실제 구현 시]
+        LocalDate expiryLimitDate = LocalDate.now().plusDays(days);
+        List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(expiryLimitDate);
 
-        // ⭐️ 요구되는 4개의 인자에 맞춰 수정 (제목 추가)
+        Long totalActiveStock = stkRepository.sumActiveQuantity();
+        Long nearExpiryQuantity = nearExpiryStocks.stream()
+                .mapToLong(STK::getQuantity)
+                .sum();
+
         String title = "유통기한 임박 현황 (" + days + "일 이내)";
-        return new ProgressStatusDTO(title, 5000L, 1275L, "개");
+        return new ProgressStatusDTO(title, totalActiveStock, nearExpiryQuantity, "개");
     }
 
 
@@ -116,33 +126,64 @@ public class STKServiceImpl implements STKService {
     // --------------------------------------------------
 
     /**
-     * 유통기한이 지난 재고를 폐기 처리합니다. (반환 타입 List<STK>에 맞춤)
+     * 유통기한이 지난 재고를 폐기 처리합니다.
      * @param targetDate 기준 날짜
      * @return 폐기 처리된 재고 목록
      */
     @Override
     @Transactional
     public List<STK> disposeExpiredStock(LocalDate targetDate) {
-        // [TODO] 실제 DB 로직 구현: targetDate 이전에 만료된 재고를 조회 및 상태 업데이트 후 저장
-        System.out.println("LOG: 만료 재고 폐기 처리 작업 (기준일: " + targetDate + ")");
-        return Collections.emptyList();
+        // 1. targetDate 이전에 만료된 활성 재고 조회
+        List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(targetDate);
+
+        // 2. 상태를 'DISPOSED'로 변경하고 수량을 0으로 설정
+        expiredStocks.forEach(stock -> {
+            stock.updateStatus("DISPOSED");
+            stock.setQuantity(0); // 수량 필드에 @Setter가 있다고 가정
+        });
+
+        // 3. 변경사항 저장
+        return stkRepository.saveAll(expiredStocks);
     }
 
     /**
-     * 유통기한 임박 재고의 상태를 갱신합니다. (반환 타입 List<STK>에 맞춤)
-     * @param targetDate 기준 날짜
+     * 유통기한 임박 재고의 상태를 갱신합니다.
+     * @param targetDate 임박 기준으로 삼을 날짜 (예: 오늘 + 90일)
      * @return 상태 갱신된 재고 목록
      */
     @Override
     @Transactional
-    public List<STK> markNearExpiryStock(LocalDate targetDate) { // ⭐️ List<STK> 반환 타입에 맞게 수정
-        // [TODO] 실제 DB 로직 구현: targetDate를 기준으로 임박 재고를 조회 및 상태 업데이트 후 저장
-        System.out.println("LOG: 유통기한 임박 재고 상태 업데이트 작업 (기준일: " + targetDate + ")");
-        return Collections.emptyList();
+    public List<STK> markNearExpiryStock(LocalDate targetDate) {
+        // 1. targetDate까지 임박 재고 조회 (현재 날짜 포함)
+        List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(targetDate);
+
+        // 2. 상태를 'NEAR_EXPIRY'로 변경
+        nearExpiryStocks.forEach(stock -> {
+            stock.updateStatus("NEAR_EXPIRY");
+        });
+
+        // 3. 변경사항 저장
+        return stkRepository.saveAll(nearExpiryStocks);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<STK> searchByProductName(String name) {
         return stkRepository.findByProduct_ProductNameContainingIgnoreCase(name);
+    }
+
+    /**
+     * 위치 변경이 필요한 재고 목록을 조회합니다.
+     * (예: 보관 조건이 맞지 않거나, 비효율적인 위치에 있는 재고)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<STK> findRelocationRequiredStocks() {
+        // ⭐️ STKRepository에서 특정 조건에 맞는 재고 목록을 조회하는 메서드를 호출해야 합니다.
+        // 예시: isRelocationNeeded 필드가 true인 재고를 찾는다고 가정합니다.
+        return stkRepository.findByIsRelocationNeededTrue();
+
+        // 💡 또는, 현재 위치 (location)가 비효율적이라고 판단되는 재고를 조회할 수도 있습니다.
+        // return stkRepository.findByLocationNotLike("Optimal%");
     }
 }
