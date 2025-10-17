@@ -48,6 +48,7 @@ public class STK {
     private Warehouse warehouse;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // STK 테이블 구조의 "GR ID" 컬럼명에 따라 "GR_ID"로 지정
     @JoinColumn(name = "GR_ID")
     private GoodsReceiptHeader goodsReceipt;
 
