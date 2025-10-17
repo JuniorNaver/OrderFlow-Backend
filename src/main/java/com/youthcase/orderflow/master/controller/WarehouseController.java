@@ -1,6 +1,8 @@
 package com.youthcase.orderflow.master.controller;
 
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.master.domain.Warehouse;
+import com.youthcase.orderflow.master.repository.StoreRepository;
 import com.youthcase.orderflow.master.service.WarehouseService;
 import com.youthcase.orderflow.master.dto.WarehouseRequestDTO;
 import com.youthcase.orderflow.master.dto.WarehouseResponseDTO;
@@ -21,18 +23,26 @@ import java.util.stream.Collectors;
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
-
+    private final StoreRepository storeRepository;
 
     // 1. 창고 등록 (Create) - RequestDto 사용, @Valid 적용
     @PostMapping
     public ResponseEntity<WarehouseResponseDTO> createWarehouse(@RequestBody @Valid WarehouseRequestDTO requestDto) {
-        // DTO를 Entity로 변환하여 Service에 전달
-        Warehouse newWarehouse = requestDto.toEntity();
+        try {
+            // ✅ 1️⃣ Store ID로 실제 엔티티 조회
+            Store store = storeRepository.findById(requestDto.getStoreId())
+                    .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다."));
 
-        Warehouse createdWarehouse = warehouseService.createWarehouse(newWarehouse);
+            // ✅ 2️⃣ Store 주입 후 Entity 생성
+            Warehouse newWarehouse = requestDto.toEntity(store);
 
-        // Service에서 받은 Entity를 ResponseDto로 변환하여 반환
-        return new ResponseEntity<>(new WarehouseResponseDTO(createdWarehouse), HttpStatus.CREATED); // 201
+            Warehouse createdWarehouse = warehouseService.createWarehouse(newWarehouse);
+
+            // Service에서 받은 Entity를 ResponseDto로 변환하여 반환
+            return new ResponseEntity<>(new WarehouseResponseDTO(createdWarehouse), HttpStatus.CREATED); // 201
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 잘못된 지점 ID
+        }
     }
 
     // 2. 전체 창고 조회 (Read All) - ResponseDto 사용

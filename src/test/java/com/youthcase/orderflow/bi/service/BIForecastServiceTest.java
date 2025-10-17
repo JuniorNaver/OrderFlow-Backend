@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -48,8 +49,8 @@ class BIForecastServiceTest {
                 .productId(1001L)
                 .periodStartKey("20251001")
                 .periodEndKey("20251007")
-                .forecastQty(100.0)
-                .confidenceRate(90.0)
+                .forecastQty(BigDecimal.valueOf(100.0))
+                .confidenceRate(BigDecimal.valueOf(90.0))
                 .modelVersion("v1.0")
                 .calculatedAt(LocalDateTime.now())
                 .build();

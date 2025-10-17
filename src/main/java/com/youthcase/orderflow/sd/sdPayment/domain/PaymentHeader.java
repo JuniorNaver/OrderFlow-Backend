@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -47,8 +48,6 @@ public class PaymentHeader {
     private SalesHeader salesHeader;
 
     // 연관관계 설정 (1:N)
-    @OneToMany(mappedBy = "paymentHeader",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    private List<PaymentItem> paymentItems;
+    @OneToMany(mappedBy = "paymentHeader", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PaymentItem> paymentItems = new ArrayList<>();
 }

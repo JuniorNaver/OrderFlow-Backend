@@ -10,12 +10,13 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SalesItemDTO {
 
-    private String productName;
-    private BigDecimal sdPrice;
-    private int salesQuantity;
-    private int stockQuantity;
+    private final String productName;
+    private final BigDecimal sdPrice;
+    private final int salesQuantity;
+    private final int stockQuantity;
 
-    public static SalesItemDTO fromEntity(SalesItem s) {
+    // ✅ 엔티티 → DTO 변환 (NPE 안전)
+    public static SalesItemDTO from(SalesItem s) {
         String name = (s.getProduct() != null && s.getProduct().getProductName() != null)
                 ? s.getProduct().getProductName()
                 : "상품명 미등록";

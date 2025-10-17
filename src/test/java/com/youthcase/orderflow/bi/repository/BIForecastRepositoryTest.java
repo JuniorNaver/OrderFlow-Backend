@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,8 +33,8 @@ class BIForecastRepositoryTest {
                 .productId(1001L)
                 .periodStartKey("20251001")
                 .periodEndKey("20251007")
-                .forecastQty(125.5)
-                .confidenceRate(92.4)
+                .forecastQty(BigDecimal.valueOf(125.5))
+                .confidenceRate(BigDecimal.valueOf(92.4))
                 .modelVersion("v1.0")
                 .calculatedAt(LocalDateTime.now())
                 .build();

@@ -37,4 +37,27 @@ public class SalesHeaderDTO {
         this.salesItems = new ArrayList<>();
     }
 
+    public static SalesHeaderDTO from(com.youthcase.orderflow.sd.sdSales.domain.SalesHeader entity) {
+        if (entity == null) return null;
+
+        SalesHeaderDTO dto = new SalesHeaderDTO(
+                entity.getOrderId(),
+                entity.getOrderNo(),
+                entity.getSalesDate(),
+                entity.getTotalAmount(),
+                entity.getSalesStatus()
+        );
+
+        // ✅ SalesItem 리스트 변환 (NPE 방지 포함)
+        if (entity.getSalesItems() != null) {
+            List<SalesItemDTO> itemDTOs = new ArrayList<>();
+            for (SalesItem item : entity.getSalesItems()) {
+                itemDTOs.add(SalesItemDTO.from(item));
+            }
+            dto.setSalesItems(itemDTOs);
+        }
+
+        return dto;
+    }
+
 }

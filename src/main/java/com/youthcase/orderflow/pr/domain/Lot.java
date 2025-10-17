@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit;
 @Table(name = "LOT", indexes = {
         @Index(name="IX_LOT_PROD_EXP", columnList="GTIN, EXP_DATE"),
         @Index(name="IX_LOT_EXP", columnList="EXP_DATE"),
-        @Index(name="IX_LOT_GR", columnList="GOODS_RECEIPT_HEADER")
+        @Index(name="IX_LOT_GR", columnList="GR_HEADER_ID")
 })
 @Getter
 @Setter
@@ -57,7 +57,7 @@ public class Lot {
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
     // ORA-00904 오류 해결 및 DB 컬럼명 일치 (GOODS_RECEIPT_HEADER)
-    @JoinColumn(name = "GOODS_RECEIPT_HEADER", nullable = true)
+    @JoinColumn(name = "GR_HEADER_ID", nullable = true)
     private GoodsReceiptHeader goodsReceiptHeader; // Java 컨벤션에 따라 소문자로 시작하도록 변경
 
     @Transient
