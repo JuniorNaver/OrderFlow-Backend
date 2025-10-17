@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.domain;
 
+import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -45,6 +46,11 @@ public class SalesHeader {
     @Builder.Default
     @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SalesItem> salesItems = new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PaymentHeader> paymentHeaders = new ArrayList<>();
 
 
 }
