@@ -41,9 +41,9 @@ public class ProductSeeder implements CommandLineRunner {
         List<Seed> seeds = List.of(
                 new Seed("8809778498260","하림 맛나면 448g (112g x 4봉)", Unit.BOX, "950",   StorageMethod.ROOM_TEMP, "01120401", null, null),
                 new Seed("8801073216624","삼양 뿌팟퐁커리 불닭볶음면 큰컵 105g", Unit.EA, "1100",  StorageMethod.ROOM_TEMP, "01120401", null, null),
-                new Seed("8800000000010","서울우유 1L",        Unit.ML, "2900",  StorageMethod.COLD,      "01020101", null, null),
-                new Seed("8800000000011","매일우유 900ml",     Unit.ML, "2700",  StorageMethod.COLD,      "01020101", null, null),
-                new Seed("8800000000020","비비고 왕교자 1.05kg",Unit.KG, "10900", StorageMethod.FROZEN,    "01120301", null, null)
+                new Seed("8800000000010","서울우유 1L",        Unit.EA, "2900",  StorageMethod.COLD,      "01020101", null, null),
+                new Seed("8800000000011","매일우유 900ml",     Unit.EA, "2700",  StorageMethod.COLD,      "01020101", null, null),
+                new Seed("8800000000020","비비고 왕교자 1.05kg",Unit.EA, "10900", StorageMethod.FROZEN,    "01120301", null, null)
         );
 
         int inserted = 0, skipped = 0, missingCat = 0;
