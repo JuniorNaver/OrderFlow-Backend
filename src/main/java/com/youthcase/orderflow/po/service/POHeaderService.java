@@ -16,10 +16,11 @@ public interface POHeaderService {
     List<POHeaderResponseDTO> findAll();
 
     /** 장바구니 저장*/
-    void updateStatusToSaved(Long poId);
+    void saveCart(Long poId, String remarks);
 
     /** 저장된 장바구니 불러오기 */
     List<POHeaderResponseDTO> getSavedCartList();
+
 
 }
 
