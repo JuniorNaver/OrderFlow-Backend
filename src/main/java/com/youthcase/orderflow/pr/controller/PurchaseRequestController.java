@@ -18,7 +18,7 @@ package com.youthcase.orderflow.pr.controller;
 
 import com.youthcase.orderflow.pr.dto.PurchaseRequestCreateDto;
 import com.youthcase.orderflow.pr.dto.PurchaseRequestDto;
-import com.youthcase.orderflow.master.service.NotFoundException;
+import com.youthcase.orderflow.master.product.service.NotFoundException;
 import com.youthcase.orderflow.pr.service.PurchaseRequestService;
 import com.youthcase.orderflow.bi.dto.RecommendDTO;
 import com.youthcase.orderflow.bi.service.recommend.BIRecommendService;

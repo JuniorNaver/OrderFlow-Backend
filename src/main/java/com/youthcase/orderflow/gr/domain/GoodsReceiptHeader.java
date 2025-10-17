@@ -2,7 +2,7 @@ package com.youthcase.orderflow.gr.domain;
 
 import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.po.domain.POHeader;
-import com.youthcase.orderflow.master.domain.Warehouse;
+import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import jakarta.persistence.*;
 import lombok.*;
 
