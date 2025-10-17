@@ -35,7 +35,7 @@ public class ReceiptResponse {
                 .paymentMethod(r.getPaymentHeader().getPaymentItems().get(0).getPaymentMethod().name())
                 .refundStatus(r.getRefundHeader() != null ? "REFUNDED" : "NORMAL")
                 .items(r.getSalesHeader().getSalesItems().stream()
-                        .map(item -> SalesItemDTO.fromEntity(item))
+                        .map(item -> SalesItemDTO.from(item))
                         .toList())
                 .build();
     }

@@ -15,5 +15,6 @@ public interface PaymentHeaderRepository extends JpaRepository<PaymentHeader, Lo
     List<PaymentHeader> findByPaymentStatus(PaymentStatus status);
 
     //주문 단위 결제 내역 조회(헤더 단위)
-    Optional<PaymentHeader> findBySalesHeader_OrderId(Long orderId);
+    Optional<PaymentHeader> findFirstBySalesHeader_OrderIdOrderByPaymentIdDesc(Long orderId);
+
 }

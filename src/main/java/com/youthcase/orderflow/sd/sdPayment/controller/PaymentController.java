@@ -7,7 +7,6 @@ import com.youthcase.orderflow.sd.sdPayment.dto.PaymentResponse;
 import com.youthcase.orderflow.sd.sdPayment.dto.PaymentResult;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentItemRepository;
-import com.youthcase.orderflow.sd.sdPayment.service.PaymentProcessor;
 import com.youthcase.orderflow.sd.sdPayment.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final PaymentHeaderRepository paymentHeaderRepository;
     private final PaymentItemRepository paymentItemRepository;
-    private final PaymentProcessor paymentProcessor;
 
     /**
      * 💳 결제 요청 (카드 / 현금 / 간편결제)
@@ -80,22 +78,10 @@ public class PaymentController {
     public ResponseEntity<PaymentResult> cancelPayment(@PathVariable Long itemId) {
         log.info("🧾 [결제취소요청] paymentItemId={}", itemId);
 
-        PaymentItem item = paymentItemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("결제 항목을 찾을 수 없습니다."));
-
         try {
-            paymentProcessor.cancelPayment(item.getPaymentMethod().getKey(), item);
-            log.info("✅ 결제 취소 완료 - method={}, transactionNo={}",
-                    item.getPaymentMethod(), item.getTransactionNo());
-
-            return ResponseEntity.ok(PaymentResult.builder()
-                    .success(true)
-                    .message("결제 취소 완료")
-                    .transactionNo(item.getTransactionNo())
-                    .method(item.getPaymentMethod())
-                    .orderId(item.getPaymentHeader().getSalesHeader().getOrderId())
-                    .paidAmount(item.getAmount())
-                    .build());
+            PaymentResult result = paymentService.cancelPayment(itemId);
+            log.info("✅ 결제 취소 완료 - transactionNo={}", result.getTransactionNo());
+            return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             log.error("❌ 결제 취소 실패: {}", e.getMessage(), e);
