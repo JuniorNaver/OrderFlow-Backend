@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.service;
 
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentMethod;
@@ -10,6 +11,8 @@ import com.youthcase.orderflow.sd.sdPayment.dto.PaymentSplit;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentItemRepository;
 import com.youthcase.orderflow.sd.sdPayment.strategy.PaymentStrategy;
+import com.youthcase.orderflow.sd.sdReceipt.service.ReceiptService;
+import com.youthcase.orderflow.sd.sdRefund.domain.RefundHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentHeaderRepository paymentHeaderRepository;
     private final PaymentItemRepository paymentItemRepository;
     private final SalesHeaderRepository salesHeaderRepository;
+
+    private final ReceiptService receiptService;
 
     @Override
     @Transactional
@@ -59,12 +64,23 @@ public class PaymentServiceImpl implements PaymentService {
                 processOnePayment(request, request.getPaymentMethod(), request.getAmount(), header, request.getOrderId());
             }
 
-            log.info("✅ 결제 완료 - orderId={}, totalAmount={}",
-                    request.getOrderId(), header.getTotalAmount());
+            log.info("✅ 결제 완료 - orderId={}, totalAmount={}", request.getOrderId(), header.getTotalAmount());
+
+            // ✅ 영수증 생성 추가
+            Store store = salesHeader.getStore(); // Store 가져오기
+            receiptService.createReceipt(
+                    salesHeader,
+                    header,
+                    (RefundHeader) null,  // 환불 아닐 경우 null
+                    store
+            );
+
+            log.info("🧾 영수증 생성 완료 - salesId={}, paymentId={}",
+                    salesHeader.getOrderNo(), header.getPaymentId());
 
             return PaymentResult.builder()
                     .success(true)
-                    .message("결제 완료")
+                    .message("결제 완료 및 영수증 생성됨")
                     .orderId(request.getOrderId())
                     .paidAmount(header.getTotalAmount())
                     .build();
@@ -82,7 +98,13 @@ public class PaymentServiceImpl implements PaymentService {
     /**
      * ✅ 개별 결제 수행 메서드 (카드/현금/간편결제)
      */
-    private void processOnePayment(PaymentRequest request, PaymentMethod method, BigDecimal amount, PaymentHeader header, Long orderId) {
+    private void processOnePayment(
+            PaymentRequest request,
+            PaymentMethod method,
+            BigDecimal amount,
+            PaymentHeader header,
+            Long orderId
+    ) {
         String methodKey = method.getKey().toLowerCase();
         PaymentStrategy strategy = strategyMap.get(methodKey);
 
@@ -90,18 +112,27 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalArgumentException("지원하지 않는 결제 수단: " + method);
         }
 
+        // ✅ impUid 보정 로직 추가
+        String impUid = request.getImpUid();
+        if (impUid == null || impUid.isBlank()) {
+            // 테스트 모드 또는 mock 환경 대응
+            impUid = "IMP_TEST_" + System.currentTimeMillis();
+            log.warn("⚠️ impUid 비어있음 → 테스트용 impUid로 대체: {}", impUid);
+        }
+
+        // ✅ 새로운 PaymentRequest 빌드 시 보정된 impUid 사용
+        PaymentRequest safeRequest = PaymentRequest.builder()
+                .orderId(orderId)
+                .amount(amount)
+                .paymentMethod(method)
+                .impUid(impUid)
+                .merchantUid(request.getMerchantUid())
+                .provider(request.getProvider())
+                .transactionNo(request.getTransactionNo())
+                .build();
+
         // ✅ 개별 결제 실행
-        PaymentResult result = strategy.pay(
-                PaymentRequest.builder()
-                        .orderId(orderId)
-                        .amount(amount)
-                        .paymentMethod(method)
-                        .impUid(request.getImpUid())          // ✅ 프론트에서 전달된 아임포트 imp_uid
-                        .merchantUid(request.getMerchantUid()) // ✅ merchant_uid
-                        .provider(request.getProvider())       // ✅ 간편결제 공급자 (kakaopay/toss)
-                        .transactionNo(request.getTransactionNo())
-                        .build()
-        );
+        PaymentResult result = strategy.pay(safeRequest);
 
         if (!result.isSuccess()) {
             throw new IllegalStateException("결제 실패: " + result.getMessage());
@@ -118,7 +149,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         header.getPaymentItems().add(item);
 
-        log.info("🧾 결제 수단 저장 완료 - method={}, amount={}", method, amount);
+        log.info("🧾 결제 수단 저장 완료 - method={}, amount={}, impUid={}", method, amount, impUid);
     }
 
     @Override

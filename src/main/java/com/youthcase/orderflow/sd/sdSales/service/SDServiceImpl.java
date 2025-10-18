@@ -1,7 +1,9 @@
 package com.youthcase.orderflow.sd.sdSales.service;
 
 import com.youthcase.orderflow.master.domain.Product;
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.master.repository.ProductRepository;
+import com.youthcase.orderflow.master.repository.StoreRepository;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentStatus;
 import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
@@ -35,6 +37,7 @@ public class SDServiceImpl implements SDService {
     private final ProductRepository productRepository;
     private final STKRepository stkRepository;
     private final PaymentHeaderRepository paymentHeaderRepository;
+    private final StoreRepository storeRepository;
 
 
     //salesHeader 주문 생성
@@ -52,11 +55,16 @@ public class SDServiceImpl implements SDService {
 
         String newOrderNo = String.format("%s-%03d", datePrefix, nextSeq);
 
+        Store store = storeRepository.findById("S001")
+                .orElseThrow(() -> new RuntimeException("점포 정보를 찾을 수 없습니다."));
+
+
         SalesHeader header = new SalesHeader();
         header.setOrderNo(newOrderNo);
         header.setSalesDate(LocalDateTime.now());
         header.setSalesStatus(SalesStatus.PENDING);
         header.setTotalAmount(BigDecimal.ZERO);
+        header.setStore(store);
 
         // ✅ 즉시 flush → DB에 바로 insert
         SalesHeader saved = salesHeaderRepository.saveAndFlush(header);
@@ -97,7 +105,7 @@ public class SDServiceImpl implements SDService {
         header.setTotalAmount(header.getTotalAmount().add(subtotal));
 
         salesItemRepository.save(item);
-        salesHeaderRepository.save(header);
+        salesHeaderRepository.saveAndFlush(header);
 
         // ✅ 엔티티를 DTO로 변환해서 반환
         return SalesItemDTO.from(item);
@@ -147,12 +155,22 @@ public class SDServiceImpl implements SDService {
             throw new IllegalStateException("💰 결제가 모두 완료되지 않았습니다.");
         }
 
-        // 4️⃣ 주문 상태 변경
+        // ✅ 4️⃣ 총액 다시 계산 (SalesItem 기준)
+        BigDecimal totalAmount = salesItemRepository.findItemsByHeaderId(orderId)
+                .stream()
+                .map(SalesItemDTO::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        header.setTotalAmount(totalAmount);
+
+        // 5️⃣ 주문 상태 변경
         header.setSalesStatus(SalesStatus.COMPLETED);
         header.setSalesDate(LocalDateTime.now());
+
         salesHeaderRepository.save(header);
 
-        log.info("✅ 주문 {} 결제 완료 및 판매 확정됨", orderId);
+        log.info("✅ 주문 {} 결제 완료 및 판매 확정됨 (총액: ₩{})",
+                orderId, totalAmount);
     }
 
 
@@ -207,6 +225,49 @@ public class SDServiceImpl implements SDService {
         dto.setSalesItems(items);
 
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public void saveOrUpdateOrder(Long orderId, List<SalesItemDTO> items, SalesStatus status) {
+        SalesHeader header = salesHeaderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("주문 없음"));
+
+        // ✅ 기존 아이템 완전 삭제 (지연 로딩 이슈 없이)
+        salesItemRepository.deleteBySalesHeader(header);
+
+        // ✅ 새 아이템 추가
+        List<SalesItem> newItems = items.stream().map(dto -> {
+            SalesItem item = new SalesItem();
+            item.setSalesHeader(header);
+            item.setSalesQuantity(dto.getSalesQuantity());
+            item.setSdPrice(dto.getSdPrice());
+            item.setSubtotal(dto.getSdPrice().multiply(BigDecimal.valueOf(dto.getSalesQuantity())));
+
+            Product product = productRepository.findByProductName(dto.getProductName())
+                    .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
+            item.setProduct(product);
+
+            STK stk = stkRepository.findTopByProduct_Gtin(product.getGtin()).orElse(null);
+            item.setStk(stk);
+
+            return item;
+        }).toList();
+
+        salesItemRepository.saveAll(newItems);
+
+        // ✅ 총액 재계산
+        BigDecimal total = newItems.stream()
+                .map(i -> i.getSdPrice().multiply(BigDecimal.valueOf(i.getSalesQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        header.setTotalAmount(total);
+
+        // ✅ 상태 및 날짜 업데이트
+        header.setSalesStatus(status);
+        header.setSalesDate(LocalDateTime.now());
+        salesHeaderRepository.save(header);
+
+        log.info("💾 주문 {} 저장 완료 (상태: {}, 총액: ₩{})", orderId, status, total);
     }
 
     //보류 주문 취소

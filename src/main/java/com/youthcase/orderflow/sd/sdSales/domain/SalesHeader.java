@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.domain;
 
+import com.youthcase.orderflow.master.domain.Store;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import jakarta.persistence.*;
 import lombok.*;
@@ -51,6 +52,10 @@ public class SalesHeader {
     @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PaymentHeader> paymentHeaders = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "STORE_ID")
+    private Store store;
 
 
 }

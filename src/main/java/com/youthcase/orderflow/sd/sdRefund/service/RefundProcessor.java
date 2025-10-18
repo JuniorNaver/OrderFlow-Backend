@@ -20,15 +20,22 @@ public class RefundProcessor {
 
     @Transactional
     public RefundResponse processRefund(RefundHeader header) {
+        if (header.getPaymentHeader() == null ||
+                header.getPaymentHeader().getPaymentItems() == null ||
+                header.getPaymentHeader().getPaymentItems().isEmpty()) {
+            throw new IllegalStateException("환불할 결제 항목이 존재하지 않습니다.");
+        }
+
         String method = header.getPaymentHeader()
                 .getPaymentItems()
                 .get(0)
                 .getPaymentMethod()
-                .name(); // CARD / CASH / EASY
+                .name(); // "CARD" | "CASH" | "EASY"
 
         RefundStrategy strategy = strategyMap.get(method);
-        if (strategy == null)
+        if (strategy == null) {
             throw new IllegalArgumentException("지원하지 않는 환불 방식: " + method);
+        }
 
         log.info("▶️ [{}] 환불 처리 시작 (refundId={})", method, header.getRefundId());
 
@@ -37,8 +44,12 @@ public class RefundProcessor {
             header.setRefundStatus(RefundStatus.FAILED);
             return RefundResponse.builder()
                     .refundId(header.getRefundId())
+                    .paymentId(header.getPaymentHeader().getPaymentId())
+                    .refundAmount(header.getRefundAmount().doubleValue())
                     .refundStatus(RefundStatus.FAILED)
-                    .reason("PG 검증 실패")
+                    .reason("PG/내부 검증 실패")
+                    .requestedTime(header.getRequestedTime())
+                    .approvedTime(header.getApprovedTime())
                     .build();
         }
 

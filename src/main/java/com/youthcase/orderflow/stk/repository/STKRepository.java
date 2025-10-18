@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate; // ⭐️ java.time.LocalDate 타입으로 변경
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface STKRepository extends JpaRepository<STK, Long> {
@@ -36,4 +37,6 @@ public interface STKRepository extends JpaRepository<STK, Long> {
 
     // 5. 상품명으로 재고 검색 (대소문자 무시, 부분 일치)
     List<STK> findByProduct_ProductNameContainingIgnoreCase(String name);
+
+    Optional<STK> findTopByProduct_Gtin(String gtin);
 }

@@ -2,6 +2,7 @@ package com.youthcase.orderflow.sd.sdSales.controller;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesStatus;
 import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
@@ -82,10 +83,10 @@ public class SDController {
         sdService.completeOrder(orderId);
     }
 
-    //보류처리
+    // ✅ 보류 시 전체 주문 정보 갱신
     @PostMapping("/{orderId}/hold")
-    public void holdOrder(@PathVariable Long orderId) {
-        sdService.holdOrder(orderId);
+    public void holdOrder(@PathVariable Long orderId, @RequestBody List<SalesItemDTO> items) {
+        sdService.saveOrUpdateOrder(orderId, items, SalesStatus.HOLD);
     }
 
     //보류 목록 조회
@@ -104,6 +105,15 @@ public class SDController {
     @DeleteMapping("/{orderId}/cancel")
     public void cancelOrder(@PathVariable Long orderId) {
         sdService.cancelOrder(orderId);
+    }
+
+    @PostMapping("/{orderId}/save")
+    public ResponseEntity<Void> saveOrUpdateOrder(
+            @PathVariable Long orderId,
+            @RequestBody List<SalesItemDTO> items
+    ) {
+        sdService.saveOrUpdateOrder(orderId, items, SalesStatus.HOLD);
+        return ResponseEntity.ok().build();
     }
 
 }

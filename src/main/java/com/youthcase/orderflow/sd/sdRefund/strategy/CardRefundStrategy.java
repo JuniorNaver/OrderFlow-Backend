@@ -14,14 +14,14 @@ public class CardRefundStrategy implements RefundStrategy {
 
     @Override
     public boolean verify(RefundHeader header) {
-        // 카드 결제는 PG 검증 없음
+        // 모의 카드결제: 내부 거래번호 유효성만 별도 검증하려면 여기서 처리 가능
+        // (현재는 Controller의 /verify에서 처리하므로 true 가정)
         return true;
     }
 
     @Override
     public RefundResponse refund(RefundHeader header) {
         log.info("💳 카드 환불 처리 시작: {}", header.getRefundId());
-
         header.setRefundStatus(RefundStatus.COMPLETED);
         header.setApprovedTime(LocalDateTime.now());
 

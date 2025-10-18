@@ -14,7 +14,7 @@ public class CashRefundStrategy implements RefundStrategy {
 
     @Override
     public boolean verify(RefundHeader header) {
-        // 현금 환불은 별도 검증 불필요
+        // 현금 환불은 별도 PG 검증 없음 (영수증 검증은 Controller 단계 완료 가정)
         return true;
     }
 

@@ -21,4 +21,6 @@ public interface PaymentItemRepository extends JpaRepository<PaymentItem, Long> 
         GROUP BY i.paymentMethod
     """)
     List<PaymentMethodSummary> getPaymentSumByMethod();
+
+    boolean existsByTransactionNo(String transactionNo); // ✅ 카드 검증용
 }

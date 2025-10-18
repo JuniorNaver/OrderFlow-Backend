@@ -2,6 +2,7 @@ package com.youthcase.orderflow.sd.sdSales.service;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesStatus;
 import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
@@ -43,5 +44,7 @@ public interface SDService{
 
     //보류된 주문 다시 열기
     public SalesHeaderDTO resumeOrder(Long orderId);
+
+    void saveOrUpdateOrder(Long orderId, List<SalesItemDTO> items, SalesStatus status);
 
 }
