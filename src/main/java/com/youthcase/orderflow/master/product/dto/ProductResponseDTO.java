@@ -16,7 +16,12 @@ public record ProductResponseDTO(
         String categoryName,
         ExpiryType expiryType,   // ← 추가
         Integer shelfLifeDays,   // ← 추가(없으면 null)
-        Boolean orderable        // ← 선택: 프론트에 보여줄 거면 포함
+        Boolean orderable,        // ← 선택: 프론트에 보여줄 거면 포함
+        String imageUrl,
+        String description,
+        Integer widthMm,
+        Integer depthMm,
+        Integer heightMm
 
 ) {}
 

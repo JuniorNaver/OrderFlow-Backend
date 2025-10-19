@@ -32,9 +32,9 @@ public class ProductData {
         List<Seed> seeds = List.of(
                 new Seed("8800000000001","진라면 매운맛(봉지)", Unit.EA, "950",   StorageMethod.ROOM_TEMP, "01120401"), // 실온/라면/봉지라면
                 new Seed("8800000000002","신라면(봉지)",       Unit.BOX, "1100",  StorageMethod.ROOM_TEMP, "01120401"),
-                new Seed("8800000000010","서울우유 1000ml",        Unit.ML, "2900",  StorageMethod.COLD,      "01020101"), // 냉장/유제품/우유/일반우유
-                new Seed("8800000000011","매일우유 900ml",     Unit.ML, "2700",  StorageMethod.COLD,      "01020101"),
-                new Seed("8800000000020","비비고 왕교자 1.05kg",Unit.EA, "10900", StorageMethod.FROZEN,    "01120301")  // 냉동/냉동만두
+                new Seed("8801115115809","서울우유 저지방 우유 200ml",        Unit.ML, "2900",  StorageMethod.COLD,      "01020101"), // 냉장/유제품/우유/일반우유
+                new Seed("8809929360583","레 제주 더 밀크 유기농 A2 플러스 180mL",     Unit.ML, "2700",  StorageMethod.COLD,      "01020102"),
+                new Seed("8809456642756","굿프랜즈 푸짐한 한끼 왕교자 1.05kg",Unit.EA, "10900", StorageMethod.FROZEN,    "01120301")  // 냉동/냉동만두
         );
 
         int inserted = 0;
