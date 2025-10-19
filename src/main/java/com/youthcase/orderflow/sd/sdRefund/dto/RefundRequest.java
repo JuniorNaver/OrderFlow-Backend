@@ -1,8 +1,7 @@
 package com.youthcase.orderflow.sd.sdRefund.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -10,7 +9,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class RefundRequest {
-    private Long paymentId;            // ✅ 환불은 Payment 기준
-    private String reason;             // 환불 사유
-    private List<RefundItemResponse> items;// 환불 상품 목록
+    @NotNull
+    private Long paymentId;     // ✅ 환불은 반드시 Payment 기준으로
+    @NotNull
+    private Integer cancelAmount;
+    private String reason;
 }

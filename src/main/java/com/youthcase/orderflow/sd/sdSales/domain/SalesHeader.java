@@ -1,15 +1,14 @@
 package com.youthcase.orderflow.sd.sdSales.domain;
 
+import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 @Setter
 @Getter
 @Entity
@@ -38,7 +37,6 @@ public class SalesHeader {
     @Column(name = "order_no", unique = true, length = 20)
     private String orderNo;
 
-
     @Enumerated(EnumType.STRING)
     private SalesStatus salesStatus;
 
@@ -47,10 +45,13 @@ public class SalesHeader {
     @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SalesItem> salesItems = new ArrayList<>();
 
-
     @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PaymentHeader> paymentHeaders = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "STORE_ID")
+    private Store store;
 
 
 }
