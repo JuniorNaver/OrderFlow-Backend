@@ -37,11 +37,12 @@ public class POHeaderServiceImpl implements POHeaderService {
 
     /** 장바구니 저장*/
     @Override
-    public void updateStatusToSaved(Long poId) {
+    public void saveCart(Long poId, String remarks) {
         POHeader header = poHeaderRepository.findById(poId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 발주 헤더가 존재하지 않습니다."));
 
         header.setStatus(POStatus.S);
+        header.setRemarks(remarks);
         poHeaderRepository.save(header);
     }
 

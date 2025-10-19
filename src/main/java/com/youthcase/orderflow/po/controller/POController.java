@@ -58,10 +58,14 @@ public class POController {
 
 
     /** 장바구니 저장 */
-    @PostMapping("/{poId}/save")
-    public ResponseEntity<String> saveCart(@PathVariable Long poId) {
-        poHeaderService.updateStatusToSaved(poId);
-        return ResponseEntity.ok("장바구니 저장 완료");
+    @PostMapping("/save/{poId}")
+    public ResponseEntity<String> saveCart(
+            @PathVariable Long poId,
+            @RequestBody Map<String, String> requestBody
+    ) {
+        String remarks = requestBody.get("remarks");
+        poHeaderService.saveCart(poId, remarks);
+        return ResponseEntity.ok().build();
     }
     /** 장바구니 목록 불러오기 */
     @GetMapping("/saved")

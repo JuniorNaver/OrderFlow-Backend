@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.sd.sdReceipt.domain;
 
-import com.youthcase.orderflow.master.domain.Store;
+import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdRefund.domain.RefundHeader;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;

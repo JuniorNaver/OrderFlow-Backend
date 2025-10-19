@@ -1,6 +1,6 @@
 package com.youthcase.orderflow.sd.sdPayment.service;
 
-import com.youthcase.orderflow.master.domain.Store;
+import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
 import com.youthcase.orderflow.sd.sdPayment.domain.PaymentMethod;
