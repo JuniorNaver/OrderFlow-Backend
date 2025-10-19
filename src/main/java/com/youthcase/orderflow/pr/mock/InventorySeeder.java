@@ -24,9 +24,9 @@ public class InventorySeeder implements CommandLineRunner {
         // GTIN은 ProductSeeder에 있는 것과 맞춰서
         inventoryService.receive("8809778498260", 30); // 하림 맛나면
         inventoryService.receive("8801073216624", 25); // 삼양 큰컵
-        inventoryService.receive("8800000000010", 50); // 서울우유
-        inventoryService.receive("8800000000011", 40); // 매일우유
-        inventoryService.receive("8800000000020", 15); // 비비고 왕교자
+        inventoryService.receive("8801115115809", 50); // 서울우유
+        inventoryService.receive("8809929360583", 40); // 매일우유
+        inventoryService.receive("8809456642756", 15); // 비비고 왕교자
 
         log.info("InventorySeeder done.");
     }

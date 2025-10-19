@@ -32,7 +32,12 @@ public class ProductMapper {
                 categoryName,
                 p.getExpiryType(),
                 p.getShelfLifeDays(),
-                p.getOrderable()
+                p.getOrderable(),
+                p.getImageUrl(),
+                p.getDescription(),
+                p.getWidthMm(),
+                p.getDepthMm(),
+                p.getHeightMm()
         );
     }
 
