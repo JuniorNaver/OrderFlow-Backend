@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate; // ⭐️ java.time.LocalDate 타입으로 변경
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface STKRepository extends JpaRepository<STK, Long> {
@@ -49,6 +50,8 @@ public interface STKRepository extends JpaRepository<STK, Long> {
      * ⭐️ STK 엔티티에 'isRelocationNeeded' 필드가 Boolean 타입으로 존재한다고 가정
      */
     List<STK> findByIsRelocationNeededTrue();
+
+    Optional<STK> findTopByProduct_Gtin(String gtin);
 
     // 💡 또 다른 예시: 위치 코드에 'R' (Relocation, 임시 보관소 등)이 포함된 재고를 제외하는 경우
     // List<STK> findByLocationNotContaining(String code);

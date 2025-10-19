@@ -41,7 +41,7 @@ public class InventoryService {
         if (inv != null) return inv;
 
         // master 모듈의 Product 프록시 참조 (존재해야 함)
-        var productRef = em.getReference(com.youthcase.orderflow.master.domain.Product.class, gtin);
+        var productRef = em.getReference(com.youthcase.orderflow.master.product.domain.Product.class, gtin);
 
         inv = new Inventory();
         inv.setProduct(productRef);
