@@ -42,310 +42,72 @@ public class ProductSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         List<Seed> seeds = List.of(
-                new Seed("8801120000000", "서울우유 저지방 우유 200ml", Unit.ML, "2500", StorageMethod.COLD, "01020101",
-                        "https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd4e91179-7014-4295-be67-a8f4d0d6ff36%2Fd4e91179-7014-4295-be67-a8f4d0d6ff36_front_angle_1000.jpg?alt=media&token=8148e663-1066-43f5-8452-dcf4d19b4434",
-                        "서울우유의 저지방 우유 200ml 팩 제품", ExpiryType.USE_BY, 7, 55, 35, 112),
-
-                new Seed("8801111000001", "매일우유 오리지널 900ml", Unit.ML, "2700", StorageMethod.COLD, "01020101",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmaeil_milk_900ml.png?alt=media",
-                        "매일유업의 대표 우유 제품 900ml", ExpiryType.USE_BY, 7, 70, 70, 230),
-
-                new Seed("8801111000002", "서울우유 멸균우유 1L", Unit.ML, "2900", StorageMethod.ROOM_TEMP, "01020101",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fseoul_sterilized_1l.png?alt=media",
-                        "실온 보관 가능한 멸균우유 1L 팩", ExpiryType.BEST_BEFORE, 180, 70, 70, 240),
-
-                new Seed("8801073216624", "삼양 불닭볶음면 큰컵 105g", Unit.EA, "1500", StorageMethod.ROOM_TEMP, "01120401",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsamyang_firecup_105g.png?alt=media",
-                        "매운맛 라면 컵형 불닭볶음면", ExpiryType.BEST_BEFORE, 180, 100, 100, 100),
-
-                new Seed("8801043039001", "농심 신라면 큰사발 114g", Unit.EA, "1600", StorageMethod.ROOM_TEMP, "01120401",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fshinramen_cup_114g.png?alt=media",
-                        "농심 신라면 컵라면 114g", ExpiryType.BEST_BEFORE, 180, 105, 105, 110),
-
-                new Seed("8801043042001", "농심 너구리 컵 110g", Unit.EA, "1600", StorageMethod.ROOM_TEMP, "01120401",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fneoguri_cup_110g.png?alt=media",
-                        "해물맛 라면 너구리 컵 110g", ExpiryType.BEST_BEFORE, 180, 105, 105, 110),
-
-                new Seed("8801007300476", "빙그레 딸기맛우유 240ml", Unit.ML, "2100", StorageMethod.COLD, "01020203",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_strawberry_240ml.png?alt=media",
-                        "빙그레 딸기맛우유 240ml", ExpiryType.USE_BY, 7, 60, 60, 115),
-
-                new Seed("8801007300483", "빙그레 바나나맛우유 240ml", Unit.ML, "2100", StorageMethod.COLD, "01020203",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_banana_240ml.png?alt=media",
-                        "국민음료 빙그레 바나나맛우유 240ml", ExpiryType.USE_BY, 7, 60, 60, 115),
-
-                new Seed("8801056085101", "남양 요구르트 85ml", Unit.ML, "1900", StorageMethod.COLD, "01020202",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fnamyang_yogurt_85ml.png?alt=media",
-                        "남양 오리지널 요구르트 85ml", ExpiryType.USE_BY, 7, 40, 40, 90),
-
-                new Seed("8809460000000", "굿프렌즈 고추튀김 1kg", Unit.KG, "5400", StorageMethod.FROZEN, "01080107",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fchili_fry_1kg.png?alt=media",
-                        "바삭한 고추튀김 냉동식품 1kg", ExpiryType.BEST_BEFORE, 365, 265, 80, 380),
-
-                new Seed("8801110000000", "풀무원 홀아이스 3kg", Unit.KG, "4700", StorageMethod.FROZEN, "01080114",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fwhole_ice_3kg.png?alt=media",
-                        "음료 냉각 및 보관용 홀아이스 3kg", ExpiryType.BEST_BEFORE, 365, 3000, 4700, 100),
-
-                new Seed("8802260000000", "롯데 설레임 밀크쉐이크 저당 160ml", Unit.ML, "2500", StorageMethod.FROZEN, "01080301",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsulleim_shake_160ml.png?alt=media",
-                        "설레임 밀크쉐이크 저당 버전 160ml", ExpiryType.BEST_BEFORE, 365, 80, 33, 160),
-
-                new Seed("8802260000001", "롯데 미니 스크류바 300ml (25ml x 12개)", Unit.ML, "3200", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmini_screwbar_300ml.png?alt=media",
-                        "롯데 미니 스크류바 멀티팩 12개입", ExpiryType.BEST_BEFORE, 365, 212, 47, 167),
-
-                new Seed("8802260000002", "롯데 조이 그릭요거트 땅콩버터 애플 220ml", Unit.ML, "2900", StorageMethod.FROZEN, "01080305",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fjoy_greek_220ml.png?alt=media",
-                        "조이 그릭요거트 땅콩버터 애플맛 아이스디저트", ExpiryType.BEST_BEFORE, 365, 60, 100, 92),
-
-                new Seed("8801115111111", "빙그레 메로나 70ml", Unit.ML, "1500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_merona_70ml.png?alt=media",
-                        "빙그레 메로나 70ml 바형 아이스크림", ExpiryType.BEST_BEFORE, 365, 38, 25, 155),
-
-                new Seed("8801115222222", "롯데 월드콘 160ml", Unit.ML, "2500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_worldcone_160ml.png?alt=media",
-                        "롯데 월드콘 초코아몬드 160ml", ExpiryType.BEST_BEFORE, 365, 75, 75, 160),
-
-                new Seed("8801115333333", "롯데 돼지바 90ml", Unit.ML, "1800", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_pigbar_90ml.png?alt=media",
-                        "롯데 돼지바 오리지널 90ml", ExpiryType.BEST_BEFORE, 365, 42, 25, 155),
-
-                new Seed("8801115444444", "롯데 찰떡아이스 120ml", Unit.ML, "1900", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_chaltteok_120ml.png?alt=media",
-                        "롯데 찰떡아이스 바닐라 120ml", ExpiryType.BEST_BEFORE, 365, 60, 40, 155),
-
-                new Seed("8801115555555", "빙그레 투게더 바닐라 900ml", Unit.ML, "4800", StorageMethod.FROZEN, "01080303",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_together_900ml.png?alt=media",
-                        "빙그레 투게더 바닐라 900ml 대용량", ExpiryType.BEST_BEFORE, 365, 120, 120, 130),
-
-                new Seed("8801115666666", "롯데 나뚜루 녹차 474ml", Unit.ML, "5500", StorageMethod.FROZEN, "01080303",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_natuur_green_474ml.png?alt=media",
-                        "롯데 나뚜루 녹차 아이스크림 474ml", ExpiryType.BEST_BEFORE, 365, 110, 110, 110),
-
-                new Seed("8801115777777", "빙그레 쿠앤크콘 160ml", Unit.ML, "2400", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_cookncream_160ml.png?alt=media",
-                        "쿠키앤크림 콘타입 아이스크림 160ml", ExpiryType.BEST_BEFORE, 365, 75, 75, 160),
-
-                new Seed("8801115888888", "롯데 죠스바 70ml", Unit.ML, "1500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_jawsbar_70ml.png?alt=media",
-                        "죠스바 오리지널 70ml 바형 아이스크림", ExpiryType.BEST_BEFORE, 365, 35, 20, 150),
-
-                new Seed("8801115999999", "빙그레 붕어싸만코 150ml", Unit.ML, "2500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_samanko_150ml.png?alt=media",
-                        "붕어싸만코 바닐라 아이스크림 150ml", ExpiryType.BEST_BEFORE, 365, 75, 40, 160),
-
-                new Seed("8801120000003", "롯데 스크류바 70ml", Unit.ML, "1500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_screwbar_70ml.png?alt=media",
-                        "스크류바 딸기맛 아이스크림 70ml", ExpiryType.BEST_BEFORE, 365, 38, 25, 150),
-
-                new Seed("8801120111111", "롯데 빵빠레 바닐라 160ml", Unit.ML, "2200", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_bbangpare_160ml.png?alt=media",
-                        "롯데 빵빠레 바닐라 아이스크림 160ml", ExpiryType.BEST_BEFORE, 365, 75, 75, 160),
-
-                new Seed("8801120222222", "빙그레 비비빅 90ml", Unit.ML, "1800", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_bibibig_90ml.png?alt=media",
-                        "팥 아이스크림 비비빅 90ml", ExpiryType.BEST_BEFORE, 365, 42, 25, 155),
-
-                new Seed("8801120333333", "롯데 설레임 딸기쉐이크 160ml", Unit.ML, "2500", StorageMethod.FROZEN, "01080301",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsulleim_strawberry_160ml.png?alt=media",
-                        "설레임 딸기쉐이크 160ml 아이스디저트", ExpiryType.BEST_BEFORE, 365, 80, 33, 160),
-
-                new Seed("8801120444444", "빙그레 요맘때 150ml", Unit.ML, "2400", StorageMethod.FROZEN, "01080303",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_yomam_150ml.png?alt=media",
-                        "빙그레 요맘때 요거트맛 아이스크림 150ml", ExpiryType.BEST_BEFORE, 365, 70, 70, 150),
-
-                new Seed("8801120555555", "롯데 월드콘 쿠앤크 160ml", Unit.ML, "2500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_worldcone_cncr_160ml.png?alt=media",
-                        "월드콘 쿠키앤크림 콘 160ml", ExpiryType.BEST_BEFORE, 365, 75, 75, 160),
-
-                new Seed("8801120666666", "롯데 나뚜루 바닐라 474ml", Unit.ML, "5500", StorageMethod.FROZEN, "01080303",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_natuur_vanilla_474ml.png?alt=media",
-                        "롯데 나뚜루 바닐라 아이스크림 474ml", ExpiryType.BEST_BEFORE, 365, 110, 110, 110),
-
-                new Seed("8801120777777", "빙그레 투게더 초코 900ml", Unit.ML, "4800", StorageMethod.FROZEN, "01080303",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_together_choco_900ml.png?alt=media",
-                        "빙그레 투게더 초코맛 900ml 대용량 아이스크림", ExpiryType.BEST_BEFORE, 365, 120, 120, 130),
-
-                new Seed("8801120888888", "빙그레 슈퍼콘 쿠앤크 160ml", Unit.ML, "2500", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_supercone_cncr_160ml.png?alt=media",
-                        "빙그레 슈퍼콘 쿠앤크 아이스크림 160ml", ExpiryType.BEST_BEFORE, 365, 75, 75, 160),
-
-                new Seed("8801120999999", "롯데 와일드바디 바닐라 70ml", Unit.ML, "1800", StorageMethod.FROZEN, "01080302",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_wildbody_70ml.png?alt=media",
-                        "롯데 와일드바디 바닐라 아이스크림 70ml", ExpiryType.BEST_BEFORE, 365, 35, 20, 150),
-
-                new Seed("8801130000000", "빙그레 구슬아이스 딸기 150ml", Unit.ML, "2700", StorageMethod.FROZEN, "01080305",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_strawbead_150ml.png?alt=media",
-                        "빙그레 구슬아이스 딸기맛 150ml", ExpiryType.BEST_BEFORE, 365, 70, 70, 150),
-
-                new Seed("8801130111111", "롯데 빙하수 500ml", Unit.ML, "1000", StorageMethod.ROOM_TEMP, "01010101",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_icewater_500ml.png?alt=media",
-                        "롯데 빙하수 생수 500ml", ExpiryType.BEST_BEFORE, 180, 65, 65, 210),
-
-                new Seed("8801130222222", "하이트진로 아이시스 500ml", Unit.ML, "1000", StorageMethod.ROOM_TEMP, "01010101",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fhite_isis_500ml.png?alt=media",
-                        "하이트진로 아이시스 8.0 생수 500ml", ExpiryType.BEST_BEFORE, 180, 65, 65, 210),
-
-                new Seed("8801130333333", "제주 삼다수 2L", Unit.ML, "1500", StorageMethod.ROOM_TEMP, "01010101",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsamdasu_2l.png?alt=media",
-                        "제주 삼다수 2L 생수", ExpiryType.BEST_BEFORE, 180, 100, 100, 320),
-
-                new Seed("8801130444444", "롯데 펩시콜라 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_pepsi_355ml.png?alt=media",
-                        "펩시콜라 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801130555555", "코카콜라 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fcocacola_355ml.png?alt=media",
-                        "코카콜라 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801130666666", "칠성사이다 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fchilsung_355ml.png?alt=media",
-                        "칠성사이다 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801130777777", "몬스터 에너지 355ml", Unit.ML, "2500", StorageMethod.ROOM_TEMP, "01010103",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmonster_energy_355ml.png?alt=media",
-                        "몬스터 에너지 드링크 355ml 캔", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801130888888", "레드불 250ml", Unit.ML, "2800", StorageMethod.ROOM_TEMP, "01010103",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fredbull_250ml.png?alt=media",
-                        "레드불 에너지 드링크 250ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801130999999", "코카콜라 제로 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fcocacola_zero_355ml.png?alt=media",
-                        "코카콜라 제로 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801140000000", "스프라이트 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsprite_355ml.png?alt=media",
-                        "스프라이트 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801140111111", "핫식스 250ml", Unit.ML, "2000", StorageMethod.ROOM_TEMP, "01010103",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fhotsix_250ml.png?alt=media",
-                        "롯데 핫식스 에너지드링크 250ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801140222222", "롯데 레몬에이드 340ml", Unit.ML, "1800", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_lemonade_340ml.png?alt=media",
-                        "롯데 레몬에이드 340ml 캔음료", ExpiryType.BEST_BEFORE, 180, 60, 60, 120),
-
-                new Seed("8801140333333", "칸타타 아메리카노 275ml", Unit.ML, "2500", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fcantata_americano_275ml.png?alt=media",
-                        "칸타타 아메리카노 블랙 275ml 캔커피", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801140444444", "조지아 오리지널 240ml", Unit.ML, "2200", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fgeorgia_original_240ml.png?alt=media",
-                        "조지아 오리지널 캔커피 240ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 115),
-
-                new Seed("8801140555555", "레쓰비 175ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fletsbe_175ml.png?alt=media",
-                        "레쓰비 마일드 커피 175ml 캔", ExpiryType.BEST_BEFORE, 180, 50, 50, 100),
-
-                new Seed("8801140666666", "맥스웰하우스 오리지널 240ml", Unit.ML, "2000", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmaxwell_original_240ml.png?alt=media",
-                        "맥스웰하우스 오리지널 캔커피 240ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 115),
-
-                new Seed("8801130777777", "몬스터 에너지 355ml", Unit.ML, "2500", StorageMethod.ROOM_TEMP, "01010103",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmonster_energy_355ml.png?alt=media",
-                        "몬스터 에너지 드링크 355ml 캔", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801130888888", "레드불 250ml", Unit.ML, "2800", StorageMethod.ROOM_TEMP, "01010103",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fredbull_250ml.png?alt=media",
-                        "레드불 에너지 드링크 250ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801130999999", "코카콜라 제로 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fcocacola_zero_355ml.png?alt=media",
-                        "코카콜라 제로 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801140000000", "스프라이트 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsprite_355ml.png?alt=media",
-                        "스프라이트 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801140111111", "핫식스 250ml", Unit.ML, "2000", StorageMethod.ROOM_TEMP, "01010103",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fhotsix_250ml.png?alt=media",
-                        "롯데 핫식스 에너지드링크 250ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801140222222", "롯데 레몬에이드 340ml", Unit.ML, "1800", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Flotte_lemonade_340ml.png?alt=media",
-                        "롯데 레몬에이드 340ml 캔음료", ExpiryType.BEST_BEFORE, 180, 60, 60, 120),
-
-                new Seed("8801140333333", "칸타타 아메리카노 275ml", Unit.ML, "2500", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fcantata_americano_275ml.png?alt=media",
-                        "칸타타 아메리카노 블랙 275ml 캔커피", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801140444444", "조지아 오리지널 240ml", Unit.ML, "2200", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fgeorgia_original_240ml.png?alt=media",
-                        "조지아 오리지널 캔커피 240ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 115),
-
-                new Seed("8801140555555", "레쓰비 175ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fletsbe_175ml.png?alt=media",
-                        "레쓰비 마일드 커피 175ml 캔", ExpiryType.BEST_BEFORE, 180, 50, 50, 100),
-
-                new Seed("8801140666666", "맥스웰하우스 오리지널 240ml", Unit.ML, "2000", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmaxwell_original_240ml.png?alt=media",
-                        "맥스웰하우스 오리지널 캔커피 240ml", ExpiryType.BEST_BEFORE, 180, 55, 55, 115),
-
-                new Seed("8801140777777", "조지아 크래프트 스위트 아메리카노 470ml", Unit.ML, "3200", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fgeorgia_craft_470ml.png?alt=media",
-                        "조지아 크래프트 스위트 아메리카노 470ml PET", ExpiryType.BEST_BEFORE, 180, 65, 65, 200),
-
-                new Seed("8801140888888", "TOP 스위트 아메리카노 275ml", Unit.ML, "2700", StorageMethod.ROOM_TEMP, "01010104",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Ftop_sweet_275ml.png?alt=media",
-                        "맥심 TOP 스위트 아메리카노 275ml 캔커피", ExpiryType.BEST_BEFORE, 180, 55, 55, 120),
-
-                new Seed("8801140999999", "롯데 밀키스 340ml", Unit.ML, "1800", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fmilkis_340ml.png?alt=media",
-                        "롯데 밀키스 340ml 캔음료", ExpiryType.BEST_BEFORE, 180, 60, 60, 120),
-
-                new Seed("8801150000000", "델몬트 오렌지주스 500ml", Unit.ML, "2500", StorageMethod.ROOM_TEMP, "01010105",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fdelmonte_orange_500ml.png?alt=media",
-                        "델몬트 오렌지주스 500ml", ExpiryType.BEST_BEFORE, 180, 65, 65, 200),
-
-                new Seed("8801150111111", "델몬트 포도주스 500ml", Unit.ML, "2500", StorageMethod.ROOM_TEMP, "01010105",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fdelmonte_grape_500ml.png?alt=media",
-                        "델몬트 포도주스 500ml", ExpiryType.BEST_BEFORE, 180, 65, 65, 200),
-
-                new Seed("8801150222222", "스프라이트 제로 355ml", Unit.ML, "1700", StorageMethod.ROOM_TEMP, "01010102",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fsprite_zero_355ml.png?alt=media",
-                        "스프라이트 제로 355ml 캔음료", ExpiryType.BEST_BEFORE, 180, 65, 65, 120),
-
-                new Seed("8801150333333", "빙그레 바나나맛 드링크 240ml", Unit.ML, "2100", StorageMethod.COLD, "01020203",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbanana_drink_240ml.png?alt=media",
-                        "빙그레 바나나맛 드링크 240ml 병음료", ExpiryType.USE_BY, 7, 60, 60, 115),
-
-                new Seed("8801150444444", "빙그레 요구르트 오리지널 150ml", Unit.ML, "1900", StorageMethod.COLD, "01020202",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_yogurt_150ml.png?alt=media",
-                        "빙그레 요구르트 오리지널 150ml", ExpiryType.USE_BY, 7, 50, 50, 110),
-
-                new Seed("8801150555555", "빙그레 요구르트 딸기 150ml", Unit.ML, "1900", StorageMethod.COLD, "01020202",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_yogurt_strawberry_150ml.png?alt=media",
-                        "빙그레 요구르트 딸기맛 150ml", ExpiryType.USE_BY, 7, 50, 50, 110),
-
-                new Seed("8801150666666", "빙그레 요구르트 복숭아 150ml", Unit.ML, "1900", StorageMethod.COLD, "01020202",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fbinggrae_yogurt_peach_150ml.png?alt=media",
-                        "빙그레 요구르트 복숭아맛 150ml", ExpiryType.USE_BY, 7, 50, 50, 110),
-
-                new Seed("8801150777777", "빙그레 요플레 오리지널 딸기 85g", Unit.EA, "1900", StorageMethod.COLD, "01020204",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fyoplait_strawberry_85g.png?alt=media",
-                        "요플레 딸기맛 요구르트 85g 컵", ExpiryType.USE_BY, 7, 75, 75, 70),
-
-                new Seed("8801150888888", "빙그레 요플레 플레인 85g", Unit.EA, "1900", StorageMethod.COLD, "01020204",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fyoplait_plain_85g.png?alt=media",
-                        "요플레 플레인 85g 컵요구르트", ExpiryType.USE_BY, 7, 75, 75, 70),
-
-                new Seed("8801150999999", "빙그레 요플레 복숭아 85g", Unit.EA, "1900", StorageMethod.COLD, "01020204",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fyoplait_peach_85g.png?alt=media",
-                        "요플레 복숭아맛 요구르트 85g", ExpiryType.USE_BY, 7, 75, 75, 70),
-
-                new Seed("8801160000000", "서울우유 요구르트 포도 150ml", Unit.ML, "1900", StorageMethod.COLD, "01020205",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fseoul_yogurt_grape_150ml.png?alt=media",
-                        "서울우유 포도맛 요구르트 150ml", ExpiryType.USE_BY, 7, 50, 50, 110),
-
-                new Seed("8801160111111", "서울우유 요구르트 사과 150ml", Unit.ML, "1900", StorageMethod.COLD, "01020205",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fseoul_yogurt_apple_150ml.png?alt=media",
-                        "서울우유 사과맛 요구르트 150ml", ExpiryType.USE_BY, 7, 50, 50, 110),
-
-                new Seed("8801160222222", "서울우유 요구르트 오리지널 150ml", Unit.ML, "1900", StorageMethod.COLD, "01020205",
-                        "https://firebasestorage.googleapis.com/v0/b/storeflow.appspot.com/o/img%2Fseoul_yogurt_original_150ml.png?alt=media",
-                        "서울우유 요구르트 오리지널 150ml", ExpiryType.USE_BY, 7, 50, 50, 110)
-
+                new Seed("8801115115809","서울우유 저지방 우유 200ml",Unit.EA,"1600",StorageMethod.COLD,"01020101","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd4e91179-7014-4295-be67-a8f4d0d6ff36%2Fd4e91179-7014-4295-be67-a8f4d0d6ff36_front_angle_1000.jpg?alt=media&token=8148e663-1066-43f5-8452-dcf4d19b4434","",null,null,55,35,112),
+                new Seed("8809929360583","레 제주 더 밀크 유기농 A2 플러스 180mL",Unit.EA,"2000",StorageMethod.COLD,"01020102","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F44c8a8a9-6da3-4c6a-8ac9-09a9e1c525ed%2F44c8a8a9-6da3-4c6a-8ac9-09a9e1c525ed_front_angle_1000.jpg?alt=media&token=b6d66357-9d7a-43df-9e79-1c2eedcd28fd","",null,null,53,53,115),
+                new Seed("8801128244077","hy 야쿠르트XO 120ml",Unit.EA,"2500",StorageMethod.COLD,"01020201","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F71983627-25cb-4109-8eaf-05a0b2b2a227%2F71983627-25cb-4109-8eaf-05a0b2b2a227_front_angle_1000.jpg?alt=media&token=7df426a0-7055-4926-9d92-88cfeebdc839","",null,null,45,45,10),
+                new Seed("3155250001592","브리델 버터 200g",Unit.EA,"4500",StorageMethod.COLD,"01020302","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F6b34c8b7-8147-4668-99aa-48f3aeec6bc6%2F6b34c8b7-8147-4668-99aa-48f3aeec6bc6_front_angle_1000.jpg?alt=media&token=13ec4480-6122-4305-864a-4f234287ecba","",null,null,108,60,30),
+                new Seed("8801115641001","서울우유 실쏙 체다슬라이스 치즈 324g (18g x 18매입)",Unit.EA,"3000",StorageMethod.COLD,"01020303","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fac855bcb-0ba5-4f32-980d-7840b17e2df0%2Fac855bcb-0ba5-4f32-980d-7840b17e2df0_front_angle_1000.jpg?alt=media&token=5b317c69-ac22-4f34-83b9-eb1fcca33c89","",null,null,140,50,120),
+                new Seed("8809456641346","굿프랜즈 고추튀김 1kg",Unit.EA,"30000",StorageMethod.FROZEN,"01080107","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Ff171b372-abc3-4874-81c3-71615409bf46%2Ff171b372-abc3-4874-81c3-71615409bf46_front_angle_1000.jpg?alt=media&token=bcdb5f45-33f9-473c-a826-d79dba353ed8","",null,null,265,80,380),
+                new Seed("8801114161791","풀무원 홀아이스 3kg",Unit.EA,"2000",StorageMethod.FROZEN,"01080114","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F8833c9f6-ae38-4536-ebcb-fc5b36e98d70%2F8833c9f6-ae38-4536-ebcb-fc5b36e98d70_front_angle_1000.jpg?alt=media&token=1c045c32-615d-46e9-86f8-200d1615588f","",null,null,3000,4700,100),
+                new Seed("8802259023357","LOTTE 설레임 밀크쉐이크 저당 160ml",Unit.EA,"1500",StorageMethod.FROZEN,"01080301","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fdcfd33d8-7c9f-4006-8fcc-5f9291a65e67%2Fdcfd33d8-7c9f-4006-8fcc-5f9291a65e67_front_angle_1000.jpg?alt=media&token=1496ab42-6b59-40dc-87d1-708d2bf3cbb6","",null,null,80,33,160),
+                new Seed("8802259024514","LOTTE mini 스크류바 300ml (25ml x 12개)",Unit.EA,"4000",StorageMethod.FROZEN,"01080302","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F208a91be-4640-4b31-b7dd-3c0d2a53390a%2F208a91be-4640-4b31-b7dd-3c0d2a53390a_front_angle_1000.jpg?alt=media&token=11f63cd5-9aeb-4b9e-bbf0-1bbe04f7f68f","",null,null,212,47,167),
+                new Seed("8802259024781","LOTTE 조이 그릭요거트 땅콩버터 애플 220ml",Unit.EA,"4000",StorageMethod.FROZEN,"01080305","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F3ff18719-3641-4d38-bd18-5e6f7e57f38a%2F3ff18719-3641-4d38-bd18-5e6f7e57f38a_front_angle_1000.jpg?alt=media&token=69be4c26-602a-48ed-9d98-3e16f14de9a6","",null,null,60,100,92),
+                new Seed("8801005000772","T Asia KITCHEN 티아시아 커리 비프 마살라 170g",Unit.EA,"3000",StorageMethod.ROOM_TEMP,"01120101","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F5ec4ff2c-b9d6-483f-a5e4-f0a7ce490f71%2F5ec4ff2c-b9d6-483f-a5e4-f0a7ce490f71_front_angle_1000.jpg?alt=media&token=0e8f4691-e345-4185-b713-c39c7ea7be62","",null,null,130,40,180),
+                new Seed("8809495078011","한끼통살 REAL 백마녀스프 300g",Unit.EA,"2500",StorageMethod.ROOM_TEMP,"01120103","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F06d4448a-d348-4c46-83f0-67ed7535e877%2F06d4448a-d348-4c46-83f0-67ed7535e877_front_angle_1000.jpg?alt=media&token=a8385106-ff31-4978-ab1d-95c3764f01d1","",null,null,135,35,175),
+                new Seed("8809585581445","굿프랜즈 맛있는 야채송송볶음밥 300g",Unit.EA,"1700",StorageMethod.ROOM_TEMP,"01120104","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fc1d95d13-d80a-4663-865a-f76e902c3651%2Fc1d95d13-d80a-4663-865a-f76e902c3651_front_angle_1000.jpg?alt=media&token=9687fd78-028a-443f-a83e-94b5a04184bb","",null,null,180,30,230),
+                new Seed("8803694140623","도드람 한돈 안심 장조림 1kg (200g x 5개입)",Unit.EA,"3000",StorageMethod.ROOM_TEMP,"01120105","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F565b242a-3446-4dea-9952-91c28adf6f3e%2F565b242a-3446-4dea-9952-91c28adf6f3e_front_angle_1000.jpg?alt=media&token=18f9e8fd-c842-4595-ae3c-d6d1390ebd76","",null,null,255,95,280),
+                new Seed("8809544616232","설성목장 한우 소머리 설렁탕 500g",Unit.EA,"5000",StorageMethod.ROOM_TEMP,"01120106","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F1b5bbf13-e8ca-4710-8f6a-4584cbe6fc92%2F1b5bbf13-e8ca-4710-8f6a-4584cbe6fc92_front_angle_1000.jpg?alt=media&token=d11ef5f3-9dee-4dda-9228-1f3d65f9f9fa","",null,null,177,63,240),
+                new Seed("8809926821889","설성목장KIDS 한우 어린이 사골 미역국 200g",Unit.EA,"3000",StorageMethod.ROOM_TEMP,"01120107","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fa6fb970d-1c89-4230-93e1-ad11b4d22701%2Fa6fb970d-1c89-4230-93e1-ad11b4d22701_front_angle_1000.jpg?alt=media&token=af4f42a0-8027-4cf2-b257-222e053053fb","",null,null,115,35,180),
+                new Seed("8801114176924","풀무원 참치마요김밥 220g",Unit.EA,"2500",StorageMethod.COLD,"01120201","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fdf6d6c5e-ace7-4a70-86e4-86e6972afc06%2Fdf6d6c5e-ace7-4a70-86e4-86e6972afc06_front_angle_1000.jpg?alt=media&token=89b3ef0c-dd61-4576-a525-388a0cb47fc8","",null,null,273,53,90),
+                new Seed("8809990198504","맛있닭 다이어트 도시락 새우곤약볶음밥 & 닭가슴살 동그랑땡 210g",Unit.EA,"3000",StorageMethod.COLD,"01120202","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fde0c4ece-437c-438f-86d8-153e4e76d98e%2Fde0c4ece-437c-438f-86d8-153e4e76d98e_front_angle_1000.jpg?alt=media&token=e93aec80-f754-4659-836a-f311fb370980","",null,null,210,160,35),
+                new Seed("8809776951811","소고기 메밀면 샐러드 235g",Unit.EA,"2500",StorageMethod.COLD,"01120204","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd4c4d40b-a172-4147-8e72-a1463c761e04%2Fd4c4d40b-a172-4147-8e72-a1463c761e04_front_angle_1000.jpg?alt=media&token=1c84cf59-82da-446d-a7c3-6e5cb600e92d","",null,null,85,850,145),
+                new Seed("8801117664008","Market O NATURE 오!그래놀라 고래밥 초코바나나 300g",Unit.EA,"1200",StorageMethod.ROOM_TEMP,"01120205","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F0eb76776-5280-40c5-b105-d632c0718b0b%2F0eb76776-5280-40c5-b105-d632c0718b0b_front_angle_1000.jpg?alt=media&token=9a46659c-421a-413e-9bce-b87f91055600","",null,null,210,70,296),
+                new Seed("8809456642756","굿프랜즈 푸짐한 한끼 왕교자 1.05kg",Unit.EA,"3500",StorageMethod.FROZEN,"01120301","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F076374ff-04b3-4f6f-a36e-fb9db8d4ff6e%2F076374ff-04b3-4f6f-a36e-fb9db8d4ff6e_front_angle_1000.jpg?alt=media&token=029d77fb-934d-48d9-bf58-aac25c97bb93","",null,null,265,30,36),
+                new Seed("8801114178768","풀무원 8치즈 블렌딩 스윗허니피자 330g",Unit.EA,"4500",StorageMethod.FROZEN,"01120302","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fdb6db417-2fcb-41db-b9a3-c6bb9c3b6575%2Fdb6db417-2fcb-41db-b9a3-c6bb9c3b6575_front_angle_1000.jpg?alt=media&token=55f69755-d005-4718-8944-49dc46111a5c","",null,null,286,37,281),
+                new Seed("8809778497508","하림 푸디버디 치킨카레 볶음밥 360g (180g x 2입)",Unit.EA,"5000",StorageMethod.FROZEN,"01120305","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F66c22b9f-2386-43f1-bd0c-21763e2c2189%2F66c22b9f-2386-43f1-bd0c-21763e2c2189_front_angle_1000.jpg?alt=media&token=0dbf97c8-62ab-414c-96a0-7e7230c38b1c","",null,null,137,50,180),
+                new Seed("8809778498253","하림 맛나면 112g",Unit.EA,"4000",StorageMethod.ROOM_TEMP,"01120401","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F2b188f81-00c7-4dcd-bcf5-d7610d8711bb%2F2b188f81-00c7-4dcd-bcf5-d7610d8711bb_front_angle_1000.jpg?alt=media&token=dedc2f5f-daa4-4dc6-9100-136c8f9c7bbd","",null,null,165,35,200),
+                new Seed("8801073216624","삼양 뿌팟퐁커리 불닭볶음면 큰컵 105g",Unit.EA,"1200",StorageMethod.ROOM_TEMP,"01120402","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F419756cd-b202-4162-a1d7-0d555d59a814%2F419756cd-b202-4162-a1d7-0d555d59a814_front_angle_1000.jpg?alt=media&token=41f7182e-865f-4837-afc0-e30c25a010ed","",null,null,142,142,91),
+                new Seed("8801019613159","해태 맛동산 2번들 400g (200g x 2입)",Unit.EA,"4000",StorageMethod.ROOM_TEMP,"01160201","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F6537d54d-be7c-49c2-959f-996d2a6462d2%2F6537d54d-be7c-49c2-959f-996d2a6462d2_front_angle_1000.jpg?alt=media&token=b22ae410-d8a0-46c3-854e-11f57325003e","",null,null,142,130,250),
+                new Seed("8801117584016","오리온 초코파이 하우스 망고 384g (32g x 12개)",Unit.EA,"5000",StorageMethod.ROOM_TEMP,"01160202","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fe8dacd44-ae1c-4c5c-a7d2-ca9f4b51eb78%2Fe8dacd44-ae1c-4c5c-a7d2-ca9f4b51eb78_front_angle_1000.jpg?alt=media&token=e6b1f8aa-a0bd-4216-89b1-eda70f7211f8","",null,null,230,55,207),
+                new Seed("8801725002643","서주 허쉬 헤이즐넛 와플 8봉 146g",Unit.EA,"6000",StorageMethod.ROOM_TEMP,"01160203","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F63833868-bc4a-4f18-b56a-ba37d4f90e79%2F63833868-bc4a-4f18-b56a-ba37d4f90e79_front_angle_1000.jpg?alt=media&token=242c2bb5-31ee-49ac-90ed-485fc91e3f15","",null,null,280,270,170),
+                new Seed("8809486993118","MUZIK TIGER 구르미캔디 30g",Unit.EA,"20000",StorageMethod.ROOM_TEMP,"01160301","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fb0f1d9c9-5c92-409b-a371-a39e0845c2cf%2Fb0f1d9c9-5c92-409b-a371-a39e0845c2cf_front_angle_1000.jpg?alt=media&token=0f329c07-0f6d-40f0-93f0-6fd578621754","",null,null,125,45,200),
+                new Seed("8809971931106","점보 동결건조 지구모양젤리 15g",Unit.EA,"1200",StorageMethod.ROOM_TEMP,"01160302","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F9705ccca-fa51-4eff-be75-f77a851905d9%2F9705ccca-fa51-4eff-be75-f77a851905d9_front_angle_1000.jpg?alt=media&token=44431997-b120-4f62-a421-17043fecb9a6","",null,null,105,45,170),
+                new Seed("8809482998971","BANDAI NAMCO 커비 프렌즈1 1.5 g",Unit.EA,"4500",StorageMethod.ROOM_TEMP,"01160303","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F1c7e594f-b7e8-41a4-b107-fe84b61cf539%2F1c7e594f-b7e8-41a4-b107-fe84b61cf539_front_angle_1000.jpg?alt=media&token=b58b8d49-a795-40fe-8fb1-162e44da134b","",null,null,76,65,91),
+                new Seed("8801019209253","해태 자유시간 밀크엔조이 Mini 390g",Unit.EA,"4000",StorageMethod.ROOM_TEMP,"01160304","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fcccb03f6-0680-464a-93af-99b4757ae568%2Fcccb03f6-0680-464a-93af-99b4757ae568_front_angle_1000.jpg?alt=media&token=725909d0-6ab1-46f7-9c95-24b95acd1cbd","",null,null,355,65,222),
+                new Seed("8801094000264","코카 콜라 제로 900ml",Unit.EA,"3800",StorageMethod.COLD,"01170401","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Ffe77cd81-afc7-492f-acee-d5355330e274%2Ffe77cd81-afc7-492f-acee-d5355330e274_front_angle_1000.jpg?alt=media&token=e69ae1d4-cb2f-4a34-9014-cb909fe0619a","",null,null,75,75,260),
+                new Seed("8801056245948","LOTTE 칠성사이다 490ml",Unit.EA,"3000",StorageMethod.COLD,"01170402","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F0f7538bc-b599-4a40-aa04-22b8f6b67b14%2F0f7538bc-b599-4a40-aa04-22b8f6b67b14_front_angle_1000.jpg?alt=media&token=0a737f76-bde3-4411-88d0-5de83dd1205b","",null,null,68,68,170),
+                new Seed("8801056249113","탐스 제로 파인애플 210ml",Unit.EA,"2500",StorageMethod.COLD,"01170403","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F2ac26734-2a6a-4309-8020-bde7d563dec4%2F2ac26734-2a6a-4309-8020-bde7d563dec4_front_angle_1000.jpg?alt=media&token=e6c6e5e4-002d-43e0-8a9b-2cc4864a39f4","",null,null,52,52,115),
+                new Seed("8801043030465","츄파춥스 사우어코코 레몬 240mL",Unit.EA,"3000",StorageMethod.COLD,"01170406","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F719ee7c7-0dc6-41d3-801d-1777ef73e912%2F719ee7c7-0dc6-41d3-801d-1777ef73e912_front_angle_1000.jpg?alt=media&token=794ffb8f-86af-459b-83eb-ffec70c0c333","",null,null,58,58,152),
+                new Seed("8801114174555","Pulmuone 아임리얼 100 사과 730mL",Unit.EA,"4000",StorageMethod.COLD,"01170501","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F2907860e-10f9-4953-bf40-5a9210f2073c%2F2907860e-10f9-4953-bf40-5a9210f2073c_front_angle_1000.jpg?alt=media&token=26d16c37-9b11-472a-a81b-6867d2e7fb93","",null,null,70,61,192),
+                new Seed("8801115339243","서울우유 프루티 홈 토마토 1000mL",Unit.EA,"5000",StorageMethod.COLD,"01170502","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F9de8b8a0-7e6e-40ba-94f0-f3c5c201c7d2%2F9de8b8a0-7e6e-40ba-94f0-f3c5c201c7d2_front_angle_1000.jpg?alt=media&token=88480d72-5b27-4e8e-a1db-b9df547845ac","",null,null,70,70,237),
+                new Seed("8801114177907","Pulmuone 아임리얼 100 고농축 토마토 120mL x 6입",Unit.EA,"4000",StorageMethod.COLD,"01170503","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F9ab49f2d-9719-40ba-9483-359867035c7e%2F9ab49f2d-9719-40ba-9483-359867035c7e_front_angle_1000.jpg?alt=media&token=6a77e2a3-ed25-4644-891a-b23108e57cf6","",null,null,153,80,73),
+                new Seed("8801155745165","Dongwon 소와나무 쿨피스 Original 파인애플 2850mL (190mL x 15개입)",Unit.EA,"5000",StorageMethod.COLD,"01170504","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd76ca724-71ef-4309-a71e-e3702fa099c8%2Fd76ca724-71ef-4309-a71e-e3702fa099c8_front_angle_1000.jpg?alt=media&token=d3aa7a5e-b8b9-451d-bf33-e37f8597b22a","",null,null,160,210,130),
+                new Seed("8800282210010","디포레 먹는샘물 330mL x 20개입",Unit.EA,"5000",StorageMethod.COLD,"01170601","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F78c2b46f-b4ec-4714-be83-5371e4be863b%2F78c2b46f-b4ec-4714-be83-5371e4be863b_front_angle_1000.jpg?alt=media&token=96506564-5ec8-4eff-b896-f8301e484f4a","",null,null,330,255,145),
+                new Seed("8809309398823","딥스골드 2L",Unit.EA,"6000",StorageMethod.COLD,"01170602","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fc2d0a676-8d78-495b-a0e1-aa9ffa4ed8c2%2Fc2d0a676-8d78-495b-a0e1-aa9ffa4ed8c2_front_angle_1000.jpg?alt=media&token=612a7d32-98ac-411f-8aa1-078441cfea66","",null,null,100,100,315),
+                new Seed("3068320127545","에비앙 스파클링 750ml",Unit.EA,"5000",StorageMethod.COLD,"01170603","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F434cdda5-14b5-478b-824d-93d82ecab2e9%2F434cdda5-14b5-478b-824d-93d82ecab2e9_front_angle_1000.jpg?alt=media&token=7bb60214-fc92-4b75-a1a8-66db8d89eabe","",null,null,80,80,297),
+                new Seed("8801094000288","파워에이드 제로 라임향 600ml",Unit.EA,"2000",StorageMethod.COLD,"01170701","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F4cf79d27-9f3a-4859-8ffc-75ebf7155bb6%2F4cf79d27-9f3a-4859-8ffc-75ebf7155bb6_front_angle_1000.jpg?alt=media&token=9372feaf-13c5-4542-899e-502323202485","",null,null,72,72,222),
+                new Seed("8806004801467","미에로화이바 500mL",Unit.EA,"2500",StorageMethod.COLD,"01170702","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F7e636317-5f56-43eb-b04c-cebbed444e60%2F7e636317-5f56-43eb-b04c-cebbed444e60_front_angle_1000.jpg?alt=media&token=be8f9059-0db8-4d87-8433-4692194eb86a","",null,null,70,70,220),
+                new Seed("8806004000266","현대약품 헬씨올리고 칼슘드링크 100mL",Unit.EA,"6000",StorageMethod.COLD,"01170703","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F5cc521f1-0220-400c-bd52-2f381c24b8fe%2F5cc521f1-0220-400c-bd52-2f381c24b8fe_front_angle_1000.jpg?alt=media&token=4a7708da-c431-49c5-80e6-216d1c8ca84e","",null,null,null,null,null),
+                new Seed("8801115118961","서울우유 속편한 하루인삼 170mL",Unit.EA,"3800",StorageMethod.COLD,"01170706","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fa72cba18-b36c-4dd2-ab10-8d9e4eb6fe7f%2Fa72cba18-b36c-4dd2-ab10-8d9e4eb6fe7f_front_angle_1000.jpg?alt=media&token=fb6e34e4-0ee3-4dd6-a76f-09b36ffadd7b","",null,null,48,48,105),
+                new Seed("8809330477054","마시는 간만세 복숭아향 1000mL (100mL x 10EA)",Unit.EA,"3000",StorageMethod.COLD,"01170707","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F92669ae7-39b2-4367-0016-2efd7127bc17%2F92669ae7-39b2-4367-0016-2efd7127bc17_front_angle_1000.jpg?alt=media&token=da371e65-86d8-43a0-94c2-3ab58e846fb5","",null,null,230,93,112),
+                new Seed("8800261382448","클룹 서울식혜 제로 호박 238ml",Unit.EA,"3000",StorageMethod.COLD,"01170708","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fed625f17-a2d1-4b30-86c8-372be1da93cd%2Fed625f17-a2d1-4b30-86c8-372be1da93cd_front_angle_1000.jpg?alt=media&token=ee545610-fd0f-4830-b5d9-41362e01e37e","",null,null,50,50,132),
+                new Seed("8809964250023","삼육NS 통귀리 아몬드 190mL",Unit.EA,"2500",StorageMethod.COLD,"01170709","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F9623b9b2-3465-4534-849c-f059e9011ce2%2F9623b9b2-3465-4534-849c-f059e9011ce2_front_angle_1000.jpg?alt=media&token=1c66425b-7c3a-4d2b-bcf4-a7f279db0954","",null,null,51,37,110),
+                new Seed("8801753112932","연세대학교 연세두유 뼈를 생각한 고칼슘 두유 플러스 검은콩 4560mL (190mL x 24개)",Unit.EA,"25000",StorageMethod.COLD,"01170710","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd0af6721-47cd-4f6b-a72f-e9a6bd4f6c51%2Fd0af6721-47cd-4f6b-a72f-e9a6bd4f6c51_front_angle_1000.jpg?alt=media&token=d426298c-7ffe-4db6-97c6-b98ecb48a5fd","",null,null,320,160,124),
+                new Seed("8800277750200","meta FRESH 망고향 품은 케이크 390g (65g x 6개)",Unit.EA,"12000",StorageMethod.ROOM_TEMP,"01200104","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fbb44bcab-1908-429c-9d1c-0d409b55ddf9%2Fbb44bcab-1908-429c-9d1c-0d409b55ddf9_front_angle_1000.jpg?alt=media&token=65bd3b15-3f62-4baa-b3f5-65355c3bad79","",null,null,165,125,185),
+                new Seed("8802259022435","LOTTE 명가 찹떡파이 꿀호떡 150g (25g x 6봉)",Unit.EA,"5000",StorageMethod.ROOM_TEMP,"01200105","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fccc92fbe-6fc4-49c8-a605-3e6936ac34d5%2Fccc92fbe-6fc4-49c8-a605-3e6936ac34d5_front_angle_1000.jpg?alt=media&token=e6079aaf-8990-43d7-a0d6-83d83cf97f3e","",null,null,251,32,110),
+                new Seed("8809275200472","APT 16F 소주 360ml",Unit.EA,"6000",StorageMethod.COLD,"01230101","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F02b310e9-2621-483d-b8b4-63a5de4e11c6%2F02b310e9-2621-483d-b8b4-63a5de4e11c6_front_angle_1000.jpg?alt=media&token=3e97b05c-c762-401e-83ef-bef873c8d82a","",null,null,64,64,210),
+                new Seed("6970689221048","뉴 연태 special 250ml",Unit.EA,"8000",StorageMethod.ROOM_TEMP,"01230103","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fdfc2762d-f316-47aa-230e-64a92560aabb%2Fdfc2762d-f316-47aa-230e-64a92560aabb_front_angle_1000.jpg?alt=media&token=82eda7ec-931a-4ffc-8c12-0d431f81fd6f","",null,null,78,44,210),
+                new Seed("8800320510003","아드벡 5년 위 비스티 47.4% 70cl",Unit.EA,"24000",StorageMethod.ROOM_TEMP,"01230104","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fed658afe-2c3e-4237-924f-d38666385692%2Fed658afe-2c3e-4237-924f-d38666385692_front_angle_1000.jpg?alt=media&token=7a16278c-b027-4c1e-aa35-e0706dacef75","",null,null,80,80,29),
+                new Seed("8801028001701","앱솔루트 피치 MIX WITH STICKY MONSTER LAB SHAKER AND JIGGER SET 700mL",Unit.EA,"40000",StorageMethod.ROOM_TEMP,"01230106","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fee2f7c93-f3c8-4f8f-83d5-a3a5b6450fed%2Fee2f7c93-f3c8-4f8f-83d5-a3a5b6450fed_front_angle_1000.jpg?alt=media&token=279c1ab8-cd85-4124-a90d-b433d76e5873","",null,null,240,110,240),
+                new Seed("080432402191","올메카 실버 700mL",Unit.EA,"60000",StorageMethod.ROOM_TEMP,"01230107","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd8a84c1f-f1ef-4f8a-8e67-6f087d1fd43c%2Fd8a84c1f-f1ef-4f8a-8e67-6f087d1fd43c_front_angle_1000.jpg?alt=media&token=e350371b-cf13-471c-86f8-4c577ccc8185","",null,null,75,75,245),
+                new Seed("4901004057044","아사히 수퍼드라이 생맥주캔 340ml",Unit.EA,"4500",StorageMethod.COLD,"01230201","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F8a34d354-b17b-4f83-ffc3-32ae2dda4404%2F8a34d354-b17b-4f83-ffc3-32ae2dda4404_front_angle_1000.jpg?alt=media&token=94a4c7b7-f9b9-4aba-bb82-3da505bd5d28","",null,null,66,66,123),
+                new Seed("8809972310030","교동도의 밤 11% 500ml",Unit.EA,"60000",StorageMethod.COLD,"01230203","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F68780fb9-6fb5-42da-f7cb-0a1a5613c6d9%2F68780fb9-6fb5-42da-f7cb-0a1a5613c6d9_front_angle_1000.jpg?alt=media&token=5664308a-89da-4c03-a8ff-cbf03f54e1ee","",null,null,65,65,295),
+                new Seed("8809097170045","G.H.Mumm 멈 그랑 꼬르동 피크닉 테이블 패키지 (멈 그랑 꼬르동 750mL 4EA + 멈 피크닉 테이블 1EA + 멈 플라스틱 잔 4PCS)",Unit.EA,"120000",StorageMethod.COLD,"01230206","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F8b3f73ca-9e10-4fd9-a3f2-21f853db6b2e%2F8b3f73ca-9e10-4fd9-a3f2-21f853db6b2e_front_angle_1000.jpg?alt=media&token=cbd611b1-f68f-4a17-9d16-ca74e5c6f5d7","",null,null,430,184,40),
+                new Seed("8801030955054","마주앙 샤도네이 2021 750mL",Unit.EA,"30000",StorageMethod.COLD,"01230207","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F3baf15fd-7685-4ca5-ba75-342973a2921b%2F3baf15fd-7685-4ca5-ba75-342973a2921b_front_angle_1000.jpg?alt=media&token=43e59365-9bca-41cb-8f73-407881d82d23","",null,null,75,75,303),
+                new Seed("8809516450086","여포와인농장 여포의 꿈 레드 스위트 와인 750ml",Unit.EA,"45000",StorageMethod.ROOM_TEMP,"01230208","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F5d4200fa-268c-4c4a-96d1-32b2bc658ea1%2F5d4200fa-268c-4c4a-96d1-32b2bc658ea1_front_angle_1000.jpg?alt=media&token=f09135ac-1573-4e32-8371-0357f045bd24","",null,null,72,72,310),
+                new Seed("080480006662","생 제르맹 (ST.Germain) 375ml",Unit.EA,"45000",StorageMethod.ROOM_TEMP,"01230303","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F23ce0478-dbfc-4dab-ac6b-b953256c05ff%2F23ce0478-dbfc-4dab-ac6b-b953256c05ff_front_angle_1000.jpg?alt=media&token=22509c55-1827-40d7-9824-b2796250a87e","",null,null,70,62,262),
+                new Seed("8801028000216","페르노리카코리아 로얄살루트 21년 럭셔리 기프트팩 1400mL",Unit.EA,"360000",StorageMethod.ROOM_TEMP,"01880204","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F5434361d-7091-41ec-46fc-5891a73ba0f8%2F5434361d-7091-41ec-46fc-5891a73ba0f8_front_angle_1000.jpg?alt=media&token=1526734e-fd92-4acd-aab8-3a99652c2692","",null,null,null,null,null),
+                new Seed("8805396903551","르번 새콤달콤 캐치!티니핑 피크닉2단 도시락가방 세트",Unit.EA,"45000",StorageMethod.COLD,"03110305","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F9fb38bd2-031f-4b97-9bb7-a22fd0981d41%2F9fb38bd2-031f-4b97-9bb7-a22fd0981d41_front_angle_1000.jpg?alt=media&token=8504c5d1-206f-48a6-8a8a-05b263e4c126","",null,null,150,110,110)
                 );
 
         int inserted = 0, skipped = 0, missingCat = 0;
