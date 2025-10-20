@@ -1,5 +1,7 @@
 package com.youthcase.orderflow.po.service;
 
+import com.youthcase.orderflow.auth.domain.User;
+import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
@@ -8,6 +10,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,14 +18,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class POHeaderServiceImpl implements POHeaderService {
     private final POHeaderRepository poHeaderRepository;
+    private final UserRepository userRepository;
 
 
-    /** PO 생성 */
+    /** '담기' 클릭시 POHeader 추가 */
     @Override
     @Transactional
     public Long createNewPO() {
         POHeader poHeader = new POHeader();
         poHeader.setStatus(POStatus.PR); // 'PR' = 초안 상태
+        poHeader.setTotalAmount(0L);                      // 2️⃣ 기본 금액
+        poHeader.setActionDate(LocalDate.now());          // 3️⃣ 오늘 날짜
+
+        // 5️⃣ 테스트용 유저 (ID=1) 실제 로그인 기능이 없으면 임시 유저를 지정
+        User testUser = userRepository.findById("user01")
+                .orElseThrow(() -> new IllegalArgumentException("테스트 유저가 없습니다."));
+        poHeader.setUser(testUser);
+
         poHeaderRepository.save(poHeader);
         return poHeader.getPoId();
     }

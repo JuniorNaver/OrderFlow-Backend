@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.dto;
 
+import com.youthcase.orderflow.master.price.domain.Price;
 import com.youthcase.orderflow.po.domain.POStatus;
 import lombok.*;
 
@@ -15,7 +16,7 @@ public class POItemResponseDTO {
     private String productName;
     private String gtin;
     private LocalDate expectedArrival;
-    private Long unitPrice;
+    private Price purchasePrice;
     private Long orderQty;
     private Long total;
     private POStatus status;

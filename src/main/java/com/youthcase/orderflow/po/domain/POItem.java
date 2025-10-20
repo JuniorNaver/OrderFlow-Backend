@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.domain;
 
+import com.youthcase.orderflow.master.price.domain.Price;
 import com.youthcase.orderflow.master.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.*;
@@ -31,8 +32,9 @@ public class POItem {
     private LocalDate expectedArrival;
 
     // 매입 단가
-    @Column(name = "UNIT_PRICE", nullable = false)
-    private Long unitPrice;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PURCHASE_PRICE", nullable = false)
+    private Price price;
 
     // 발주 수량
     @Column(name = "ORDER_QTY", nullable = false)

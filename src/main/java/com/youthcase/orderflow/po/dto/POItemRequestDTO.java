@@ -10,4 +10,5 @@ import lombok.*;
 public class POItemRequestDTO {
     private Long itemNo;
     private Long orderQty;
+    private Long unitPrice;
 }
