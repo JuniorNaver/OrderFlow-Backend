@@ -49,6 +49,7 @@ public interface STKService {
     List<STK> markNearExpiryStock(LocalDate targetDate);
     List<STK> searchByProductName(String name);
     List<STK> findRelocationRequiredStocks();
+    List<STK> findExpiredStocks();
     STK findByGtin(String gtin);
 
 }
