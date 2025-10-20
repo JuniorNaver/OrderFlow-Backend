@@ -128,5 +128,13 @@ public class STKController {
                 .map(StockResponse::fromEntity)
                 .toList();
         return ResponseEntity.ok(expiredStocks);
+    @GetMapping("/barcode/{gtin}")
+    public ResponseEntity<StockResponse> getStockByBarcode(@PathVariable String gtin) {
+        try {
+            STK stock = stkService.findByGtin(gtin);
+            return ResponseEntity.ok(StockResponse.fromEntity(stock));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }

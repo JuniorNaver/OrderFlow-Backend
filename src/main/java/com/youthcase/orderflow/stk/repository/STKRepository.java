@@ -51,6 +51,10 @@ public interface STKRepository extends JpaRepository<STK, Long> {
 
     Optional<STK> findTopByProduct_Gtin(String gtin);
 
+    // 💡 또 다른 예시: 위치 코드에 'R' (Relocation, 임시 보관소 등)이 포함된 재고를 제외하는 경우
+    // List<STK> findByLocationNotContaining(String code);
+
+    Optional<STK> findByProduct_Gtin(String gtin);
     /**
      * 특정 창고/지점의 모든 활성 재고(STK)를 조회하고, 제품(Product)의 GTIN과 Lot의 유통기한(EXP_DATE) 순으로 정렬합니다.
      * 이를 통해 FIFO 위배 검사를 위한 데이터를 준비합니다.

@@ -169,4 +169,10 @@ public class STKServiceImpl implements STKService {
             }
         }
     }
+
+    @Override
+    public STK findByGtin(String gtin) {
+        return stkRepository.findByProduct_Gtin(gtin)
+                .orElseThrow(() -> new NoSuchElementException("상품을 찾을 수 없습니다."));
+    }
 }

@@ -50,5 +50,6 @@ public interface STKService {
     List<STK> searchByProductName(String name);
     List<STK> findRelocationRequiredStocks();
     List<STK> findExpiredStocks();
+    STK findByGtin(String gtin);
 
 }

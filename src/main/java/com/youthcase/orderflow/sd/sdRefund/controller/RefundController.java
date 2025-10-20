@@ -83,29 +83,42 @@ public class RefundController {
          * - 반드시 paymentId를 받아 PaymentHeader를 연결한 RefundHeader를 생성
          * - RefundProcessor(Strategy) 통해 결제수단별 환불 실행
          */
-            @PostMapping
-            @Transactional
-            public ResponseEntity<RefundResponse> refund(@RequestBody RefundRequest request) {
-                log.info("💳 환불 요청 시작: paymentId={}, amount={}, reason={}",
-                        request.getPaymentId(), request.getCancelAmount(), request.getReason());
+        @PostMapping
+        @Transactional
+        public ResponseEntity<RefundResponse> refund(@RequestBody RefundRequest request) {
+            log.info("💳 환불 요청 시작: paymentId={}, amount={}, reason={}",
+                    request.getPaymentId(), request.getCancelAmount(), request.getReason());
 
-                var paymentHeader = paymentHeaderRepository.findById(request.getPaymentId())
-                        .orElseThrow(() -> new IllegalArgumentException("결제 내역이 존재하지 않습니다."));
+            var paymentHeader = paymentHeaderRepository.findById(request.getPaymentId())
+                    .orElseThrow(() -> new IllegalArgumentException("결제 내역이 존재하지 않습니다."));
 
-                RefundHeader header = RefundHeader.builder()
-                        .paymentHeader(paymentHeader) // ✅ FK 필수 세팅
-                        .refundAmount(BigDecimal.valueOf(request.getCancelAmount()))
-                        .reason(request.getReason())
-                        .refundStatus(RefundStatus.REQUESTED)
-                        .build();
-
-                refundHeaderRepository.save(header);
-
-                RefundResponse response = refundProcessor.processRefund(header);
-
-                log.info("✅ 환불 처리 완료: refundId={}, status={}", response.getRefundId(), response.getRefundStatus());
-                return ResponseEntity.ok(response);
+            // ✅ [중복 환불 방지 로직 추가]
+            boolean alreadyRefunded = refundHeaderRepository.existsByPaymentHeader(paymentHeader);
+            if (alreadyRefunded) {
+                log.warn("⚠️ 이미 환불된 결제건입니다. paymentId={}", paymentHeader.getPaymentId());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(RefundResponse.builder()
+                                .refundStatus(RefundStatus.REJECTED)
+                                .reason("이미 환불된 결제건입니다.")
+                                .build());
             }
+
+            // ✅ 환불 생성
+            RefundHeader header = RefundHeader.builder()
+                    .paymentHeader(paymentHeader)
+                    .refundAmount(BigDecimal.valueOf(request.getCancelAmount()))
+                    .reason(request.getReason())
+                    .refundStatus(RefundStatus.REQUESTED)
+                    .build();
+
+            refundHeaderRepository.save(header);
+
+            // ✅ 실제 환불 처리 (Iamport/Card/Cash Strategy)
+            RefundResponse response = refundProcessor.processRefund(header);
+
+            log.info("✅ 환불 처리 완료: refundId={}, status={}", response.getRefundId(), response.getRefundStatus());
+            return ResponseEntity.ok(response);
+        }
 
             // ✅ 특정 환불건 상세 조회
             @GetMapping("/{refundId}")
