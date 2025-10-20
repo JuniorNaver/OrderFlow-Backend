@@ -1,5 +1,9 @@
 package com.youthcase.orderflow.po.service;
 
+import com.youthcase.orderflow.master.price.domain.Price;
+import com.youthcase.orderflow.master.price.repository.PriceRepository;
+import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
 import com.youthcase.orderflow.po.domain.POStatus;
@@ -12,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -21,8 +26,59 @@ public class POItemServiceImpl implements POItemService {
 
     private final POHeaderRepository poHeaderRepository;
     private final POItemRepository poItemRepository;
+    private final ProductRepository productRepository;
+    private final PriceRepository priceRepository;
 
-    /** 장바구니 */
+    /** '담기' 클릭시 POItem에 데이터 생성 */
+    @Override
+    public POItemResponseDTO addPOItem(Long poId, POItemRequestDTO dto, String gtin) {
+
+        // 1️⃣ 헤더 찾기
+        POHeader poHeader = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+
+        // 2️⃣ GTIN 으로 상품 조회
+        Product product = productRepository.findByGtin(gtin)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        // 3️⃣ 가격 조회 (Product에 매핑된 Price)
+        Price price = priceRepository.findByProduct_Gtin(gtin)
+                .orElseThrow(() -> new IllegalArgumentException("Price not found"));
+
+        // 4️⃣ 총액 계산
+        Long total = price.getPurchasePrice() * dto.getOrderQty();
+
+        // 5️⃣ POItem 엔티티 생성
+        POItem poItem = POItem.builder()
+                .itemNo(dto.getItemNo())
+                .poHeader(poHeader)
+                .gtin(product)
+                .price(price) // ✅ Price 엔티티 전체 주입
+                .orderQty(dto.getOrderQty())
+                .total(total)
+                .expectedArrival(LocalDate.now().plusDays(3))
+                .status(POStatus.PR)
+                .build();
+
+        // 6️⃣ 저장
+        POItem saved = poItemRepository.save(poItem);
+
+        // 7️⃣ 응답 DTO 반환
+        return POItemResponseDTO.builder()
+                .itemNo(saved.getItemNo())
+                .gtin(saved.getGtin().getGtin())
+                .productName(saved.getGtin().getProductName())
+                .orderQty(saved.getOrderQty())
+                .purchasePrice(saved.getPrice()) // ✅ 단가 접근
+                .total(saved.getTotal())
+                .status(saved.getStatus())
+                .build();
+    }
+
+
+
+
+    /** 장바구니 호출　*/
     @Override
     public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
         return poItemRepository.findByPoHeader_PoIdAndStatus(poId, status)
@@ -55,7 +111,7 @@ public class POItemServiceImpl implements POItemService {
                 .productName(item.getGtin().getProductName()) // 상품명을 가져오는 방법. gtin = Product { gtin = "8801234567890", productName = "햇반 100g" }
                 .gtin(item.getGtin().getGtin())   // ✅ 필드명 DTO 기준으로 통일
                 .expectedArrival(item.getExpectedArrival())
-                .unitPrice(item.getUnitPrice())
+                .purchasePrice(item.getPrice())
                 .orderQty(item.getOrderQty())
                 .total(item.getTotal())
                 .status(item.getStatus())
@@ -108,7 +164,7 @@ public class POItemServiceImpl implements POItemService {
         return items.stream()
                 .map(item -> POItemResponseDTO.builder()
                         .itemNo(item.getItemNo())
-                        .unitPrice(item.getUnitPrice())
+                        .purchasePrice(item.getPrice())
                         .orderQty(item.getOrderQty())
                         .gtin(item.getGtin().getGtin())
                         .build())
