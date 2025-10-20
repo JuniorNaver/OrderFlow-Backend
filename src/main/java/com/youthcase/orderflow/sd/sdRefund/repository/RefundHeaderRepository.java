@@ -20,6 +20,8 @@ public interface RefundHeaderRepository extends JpaRepository<RefundHeader, Long
     // 3️⃣ 환불 요청일 기준 기간 조회 (정산용)
     List<RefundHeader> findByRequestedTimeBetween(LocalDateTime start, LocalDateTime end);
 
+    boolean existsByPaymentHeader(com.youthcase.orderflow.sd.sdPayment.domain.PaymentHeader paymentHeader);
+
     // 4️⃣ 관리자 승인 대기 건 (선택)
     @Query("""
         SELECT DISTINCT r

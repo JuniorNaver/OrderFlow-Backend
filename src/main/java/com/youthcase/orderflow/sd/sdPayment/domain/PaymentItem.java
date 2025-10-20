@@ -45,6 +45,7 @@ public class PaymentItem {
     @Column(name = "IMP_UID", length = 50)
     private String impUid; // 아임포트용
 
+
     // ✅ N:1 매핑 (결제 헤더)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PAYMENT_ID", nullable = false)
@@ -58,4 +59,6 @@ public class PaymentItem {
     // ✅ 환불 내역
     @OneToMany(mappedBy = "paymentItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RefundItem> refundItems = new ArrayList<>();
+
+
 }
