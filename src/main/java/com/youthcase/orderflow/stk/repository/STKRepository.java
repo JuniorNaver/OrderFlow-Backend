@@ -6,21 +6,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate; // ⭐️ java.time.LocalDate 타입으로 변경
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface STKRepository extends JpaRepository<STK, Long> {
 
-    // 1. 전체 재고의 수량(quantity) 합계를 구하는 메서드 (이전에 Service에서 요청한 메서드 추가)
+    // 1. 전체 재고의 수량(quantity) 합계를 구하는 메서드
     @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.status NOT IN ('DISPOSED', 'INACTIVE')")
-    Long sumActiveQuantity(); // ⭐️ COALESCE로 null 대신 0 반환, 이름 변경
+    Long sumActiveQuantity();
 
     // 2. 유통기한 만료 재고 조회
     @Query("SELECT s FROM STK s JOIN s.lot l " +
             "WHERE s.status = 'ACTIVE' AND l.expDate < :targetDate")
-    List<STK> findExpiredActiveStockBefore(@Param("targetDate") LocalDate targetDate); // ⭐️ 타입 변경
+    List<STK> findExpiredActiveStockBefore(@Param("targetDate") LocalDate targetDate);
 
     // 3. 유통기한 임박 재고 조회
     /**
@@ -30,7 +30,6 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     @Query("SELECT s FROM STK s JOIN s.lot l " +
             "WHERE s.status = 'ACTIVE' AND l.expDate <= :limitDate AND l.expDate >= CURRENT_DATE")
     List<STK> findNearExpiryActiveStock(@Param("limitDate") LocalDate limitDate);
-    // ⭐️ @Param("targetDate") 제거 및 쿼리에서 CURRENT_DATE(오늘) 사용
 
     // 4. 특정 상품의 재고를 유통기한 오름차순으로 조회 (수량 > 0)
     List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, int quantity);
@@ -42,12 +41,11 @@ public interface STKRepository extends JpaRepository<STK, Long> {
             "JOIN FETCH s.product p " +
             "JOIN FETCH s.lot l " +
             "JOIN FETCH s.warehouse w " +
-            "LEFT JOIN FETCH s.goodsReceipt gr") // goodsReceipt은 Optional이므로 LEFT JOIN
+            "LEFT JOIN FETCH s.goodsReceipt gr")
     List<STK> findAllWithDetails();
 
     /**
      * 위치 변경이 필요한 재고를 조회하는 쿼리 메서드 (예시)
-     * ⭐️ STK 엔티티에 'isRelocationNeeded' 필드가 Boolean 타입으로 존재한다고 가정
      */
     List<STK> findByIsRelocationNeededTrue();
 
@@ -57,4 +55,14 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // List<STK> findByLocationNotContaining(String code);
 
     Optional<STK> findByProduct_Gtin(String gtin);
+    /**
+     * 특정 창고/지점의 모든 활성 재고(STK)를 조회하고, 제품(Product)의 GTIN과 Lot의 유통기한(EXP_DATE) 순으로 정렬합니다.
+     * 이를 통해 FIFO 위배 검사를 위한 데이터를 준비합니다.
+     */
+    @Query("SELECT s FROM STK s " +
+            "JOIN FETCH s.lot l " +
+            "JOIN FETCH s.product p " +
+            "WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 " +
+            "ORDER BY p.gtin ASC, l.expDate ASC")
+    List<STK> findActiveStocksForFifoCheck(@Param("warehouseId") Long warehouseId);
 }
