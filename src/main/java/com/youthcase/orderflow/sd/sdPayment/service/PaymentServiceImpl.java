@@ -39,10 +39,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentResult createPayment(PaymentRequest request) {
         try {
-            // ✅ 주문 조회
+            // ✅ 1. 주문 조회
             SalesHeader salesHeader = salesHeaderRepository.findById(request.getOrderId())
                     .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
-            // ✅ PaymentHeader 생성
+
+            // ✅ 2. PaymentHeader 생성
             PaymentHeader header = new PaymentHeader();
             header.setSalesHeader(salesHeader);
             header.setTotalAmount(
@@ -52,7 +53,8 @@ public class PaymentServiceImpl implements PaymentService {
             );
             header.setPaymentStatus(PaymentStatus.APPROVED);
             paymentHeaderRepository.save(header);
-            // ✅ 결제 처리 (혼합결제 vs 단일결제)
+
+            // ✅ 3. 결제 처리 (혼합결제 vs 단일결제)
             if (request.getSplits() != null && !request.getSplits().isEmpty()) {
                 for (PaymentSplit split : request.getSplits()) {
                     processOnePayment(request, split.getMethod(), split.getAmount(), header, request.getOrderId());
@@ -60,23 +62,26 @@ public class PaymentServiceImpl implements PaymentService {
             } else {
                 processOnePayment(request, request.getPaymentMethod(), request.getAmount(), header, request.getOrderId());
             }
+
             log.info("✅ 결제 완료 - orderId={}, totalAmount={}", request.getOrderId(), header.getTotalAmount());
 
-            // ✅ 영수증 생성 추가
-            Store store = salesHeader.getStore(); // Store 가져오기
-            receiptService.createReceipt(
-                    salesHeader,
-                    header,
-                    (RefundHeader) null,  // 환불 아닐 경우 null
-                    store
-            );
-
-            log.info("🧾 영수증 생성 완료 - salesId={}, paymentId={}",
-                    salesHeader.getOrderNo(), header.getPaymentId());
+            // ✅ 4. 영수증 생성 (분할결제 포함)
+            if (header.getPaymentItems() != null && !header.getPaymentItems().isEmpty()) {
+                Store store = salesHeader.getStore();
+                receiptService.createReceipt(
+                        salesHeader,
+                        header,
+                        null,
+                        store
+                );
+                log.info("🧾 영수증 생성 완료 - orderNo={}, paymentId={}",
+                        salesHeader.getOrderNo(), header.getPaymentId());
+            } else {
+                log.warn("⚠️ 결제 항목이 없어 영수증을 생성하지 않음 - orderId={}", request.getOrderId());
+            }
 
             return PaymentResult.builder()
                     .success(true)
-                    .message("결제 완료")
                     .message("결제 완료 및 영수증 생성됨")
                     .orderId(request.getOrderId())
                     .paidAmount(header.getTotalAmount())
@@ -91,6 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .build();
         }
     }
+
 
     /**
      * ✅ 개별 결제 수행 메서드 (카드/현금/간편결제)

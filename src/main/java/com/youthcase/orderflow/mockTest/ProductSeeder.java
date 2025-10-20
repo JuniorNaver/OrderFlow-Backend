@@ -4,8 +4,8 @@ import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.product.domain.StorageMethod;
 import com.youthcase.orderflow.master.product.domain.Unit;
-import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
+import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -15,32 +15,32 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Component
-@Profile({"dev", "local"})      // 운영 배포 제외
-@Order(2)                       // CategorySeeder 이후 실행
+@Profile({"dev","local"})          // 운영 제외
+@Order(2)                          // CategorySeeder가 @Order(1)이라 가정
 @RequiredArgsConstructor
 public class ProductSeeder implements CommandLineRunner {
 
-    private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     private record Seed(
             String gtin, String name,
-            Unit unit, String price,
+            Unit unit, String price,          // BigDecimal은 문자열로 받아서 정확도 보장
             StorageMethod sm, String kanCode,
-            String imageUrl, String desc,
-            ExpiryType expiry, Integer shelfLife,
-            Integer w, Integer d, Integer h
-    ) {
-    }
+            String imageUrl, String description,
+            Integer shelfLifeDays,
+            Integer w, Integer d, Integer h,
+            Boolean orderable
+    ) {}
 
     @Override
     @Transactional
     public void run(String... args) {
+        // 필요한 만큼만 시작: 실온/라면, 냉장/우유, 냉동/만두
         List<Seed> seeds = List.of(
                 new Seed("8801115115809","서울우유 저지방 우유 200ml",Unit.EA,"1600",StorageMethod.COLD,"01020101","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2Fd4e91179-7014-4295-be67-a8f4d0d6ff36%2Fd4e91179-7014-4295-be67-a8f4d0d6ff36_front_angle_1000.jpg?alt=media&token=8148e663-1066-43f5-8452-dcf4d19b4434","",null,null,55,35,112),
                 new Seed("8809929360583","레 제주 더 밀크 유기농 A2 플러스 180mL",Unit.EA,"2000",StorageMethod.COLD,"01020102","https://firebasestorage.googleapis.com/v0/b/steady-copilot-206205.appspot.com/o/goods%2F44c8a8a9-6da3-4c6a-8ac9-09a9e1c525ed%2F44c8a8a9-6da3-4c6a-8ac9-09a9e1c525ed_front_angle_1000.jpg?alt=media&token=b6d66357-9d7a-43df-9e79-1c2eedcd28fd","",null,null,53,53,115),
@@ -111,48 +111,39 @@ public class ProductSeeder implements CommandLineRunner {
                 );
 
         int inserted = 0, skipped = 0, missingCat = 0;
-        List<String> skippedKANList = new ArrayList<>();
-        List<String> insertedGTIN = new ArrayList<>();
 
         for (Seed s : seeds) {
             if (productRepository.findByGtin(s.gtin()).isPresent()) {
-                skipped++;
-                continue;
+                skipped++; continue;
             }
-
             var cat = categoryRepository.findByKanCode(s.kanCode()).orElse(null);
-            if (cat == null) {
-                log.warn("⚠️ Skip: category not found for KAN={}", s.kanCode());
-                skippedKANList.add(s.kanCode());
-                missingCat++;
-                continue;
+            if (cat == null) {                   // KAN 누락 시 건너뛰기
+                log.warn("Skip: category not found for KAN={}", s.kanCode());
+                missingCat++; continue;
             }
 
             var p = Product.builder()
                     .gtin(s.gtin())
                     .productName(s.name())
-                    .unit(s.unit())
-                    .price(new BigDecimal(s.price()))
+                    .unit(s.unit())                          // Unit nullable이면 생략 가능
+                    .price(new BigDecimal(s.price()))        // 엔티티에서 2자리로 정규화됨
                     .storageMethod(s.sm())
                     .category(cat)
                     .imageUrl(s.imageUrl())
-                    .description(s.desc())
+                    .description(s.description())
                     .orderable(Boolean.TRUE)
-                    .expiryType(s.expiry())
-                    .shelfLifeDays(s.shelfLife())
-                    .widthMm(s.w())
-                    .depthMm(s.d())
-                    .heightMm(s.h())
+                    .expiryType(ExpiryType.NONE)
                     .build();
 
+            // 선택: 치수/유통기한 예시
+            // p.setShelfLifeDays(365);
+            // p.setDimensionsMm(120, 40, 180);
+
             productRepository.save(p);
-            insertedGTIN.add(s.gtin());
             inserted++;
         }
 
-        log.info("✅ ProductSeeder completed. inserted={}, skipped(exists)={}, missingCategory={}",
+        log.info("ProductSeeder done. inserted={}, skipped(exists)={}, missingCategory={}",
                 inserted, skipped, missingCat);
-        log.info("missingCategoryList={}", skippedKANList.toString());
-        log.info("insertedGTIN={}", insertedGTIN.toString());
     }
 }
