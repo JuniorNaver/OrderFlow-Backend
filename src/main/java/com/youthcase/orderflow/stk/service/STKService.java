@@ -54,6 +54,8 @@ public interface STKService {
     List<STK> findRelocationRequiredStocks();
     List<STK> findExpiredStocks();
     STK findByGtin(String gtin);
+
+    STK findFirstAvailableByGtin(String gtin);
     // 폐기 요청을 받아 재고를 처리하는 메서드 추가
     List<STK> executeDisposal(DisposalRequest request);
     List<STK> findStocksRequiringAdjustment();

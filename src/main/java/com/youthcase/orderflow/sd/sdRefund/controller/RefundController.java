@@ -141,7 +141,7 @@ public class RefundController {
         // ✅ 영수증 번호로 환불 대상 조회
         @GetMapping("/receipt/{receiptNo}")
         public ResponseEntity<?> getRefundTarget(@PathVariable String receiptNo) {
-            var receipt = receiptRepository.findByReceiptNo(receiptNo)
+            var receipt = receiptRepository.findWithDetailsByReceiptNo(receiptNo)
                     .orElseThrow(() -> new IllegalArgumentException("해당 영수증을 찾을 수 없습니다."));
             var dto = ReceiptResponse.fromEntity(receipt);
             log.info("✅ 환불 대상 조회 완료 - {}", receiptNo);

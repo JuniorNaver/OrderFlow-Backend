@@ -21,17 +21,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SDServiceImpl implements SDService {
+
     private final SalesHeaderRepository salesHeaderRepository;
     private final SalesItemRepository salesItemRepository;
     private final ProductRepository productRepository;
@@ -39,24 +41,28 @@ public class SDServiceImpl implements SDService {
     private final PaymentHeaderRepository paymentHeaderRepository;
     private final StoreRepository storeRepository;
 
-
-    //salesHeader 주문 생성
+    // ✅ 주문 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public SalesHeader createOrder() {
+    public SalesHeader createOrder(String storeId) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new RuntimeException("점포 정보를 찾을 수 없습니다: " + storeId));
+
+        // ✅ 오늘 날짜
         String datePrefix = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        // ✅ 오늘 날짜로 시작하는 마지막 주문번호 조회
         String lastOrderNo = salesHeaderRepository.findLastOrderNoByDate(datePrefix);
+
+        // ✅ 시퀀스 증가 로직
         int nextSeq = 1;
-        if (lastOrderNo != null && lastOrderNo.length() > 9) {
-            String seqStr = lastOrderNo.substring(9); // "20251012-005" → "005"
+        if (lastOrderNo != null && lastOrderNo.length() >= 13) { // 예: 20251020-0012
+            String seqStr = lastOrderNo.substring(9); // "0012"
             nextSeq = Integer.parseInt(seqStr) + 1;
         }
 
-        String newOrderNo = String.format("%s-%03d", datePrefix, nextSeq);
-
-        Store store = storeRepository.findById("S001")
-                .orElseThrow(() -> new RuntimeException("점포 정보를 찾을 수 없습니다."));
-
+        // ✅ 새 주문번호 생성 (4자리 패딩)
+        String newOrderNo = String.format("%s-%04d", datePrefix, nextSeq);
 
         SalesHeader header = new SalesHeader();
         header.setOrderNo(newOrderNo);
@@ -65,127 +71,154 @@ public class SDServiceImpl implements SDService {
         header.setTotalAmount(BigDecimal.ZERO);
         header.setStore(store);
 
-        // ✅ 즉시 flush → DB에 바로 insert
         SalesHeader saved = salesHeaderRepository.saveAndFlush(header);
-        log.info("✅ [createOrder] 주문 생성 완료: ID={}, NO={}", saved.getOrderId(), saved.getOrderNo());
+        log.info("✅ [createOrder] 주문 생성 완료: orderNo={}, storeId={}", saved.getOrderNo(), storeId);
         return saved;
     }
-    //상품추가
+
+
+    // ✅ 상품 추가
     @Override
     @Transactional
     public SalesItemDTO addItemToOrder(AddItemRequest request) {
         SalesHeader header = salesHeaderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
+
         Product product = productRepository.findByGtin(request.getGtin())
                 .orElseThrow(() -> new RuntimeException("상품 없음"));
+
         STK stk = stkRepository
                 .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(request.getGtin(), 0)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고가 없습니다."));
+
         SalesItem item = new SalesItem();
-        item.setSalesHeader(header);
         item.setProduct(product);
         item.setStk(stk);
         item.setSalesQuantity(request.getQuantity());
         item.setSdPrice(request.getPrice());
-        BigDecimal subtotal = request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
-        item.setSubtotal(subtotal);
-        if (header.getTotalAmount() == null) {
+        item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+
+        // ✅ 핵심: Header에 아이템을 추가하여 양방향 관계 유지
+        header.addSalesItem(item);
+
+        // ✅ 총액 갱신
+        if (header.getTotalAmount() == null)
             header.setTotalAmount(BigDecimal.ZERO);
-        }
-        header.setTotalAmount(header.getTotalAmount().add(subtotal));
+        header.setTotalAmount(header.getTotalAmount().add(item.getSubtotal()));
 
-        salesItemRepository.save(item);
-        salesHeaderRepository.saveAndFlush(header);
+        salesHeaderRepository.saveAndFlush(header); // cascade 덕분에 item 자동 저장됨
 
-        // ✅ 엔티티를 DTO로 변환해서 반환
+        log.info("🧾 상품 추가 완료 - orderNo={}, 상품={}, 수량={}, 금액={}",
+                header.getOrderNo(), product.getProductName(), item.getSalesQuantity(), item.getSubtotal());
+
         return SalesItemDTO.from(item);
     }
-    //salesHeader 바코드로 아이템 추가 + 재고수정 (react+vite 연동)
+
+    // ✅ 주문 확정
     @Override
     @Transactional
     public void confirmOrder(ConfirmOrderRequest request) {
         SalesHeader header = salesHeaderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
-        // ✅ 프론트에서 이미 재고 차감, SalesItem 추가 완료된 상태이므로
-        // 서버에서는 단순히 상태만 "COMPLETED" 로 변경하면 됨
+
+        // ✅ 주문 상태 갱신
         header.setSalesStatus(SalesStatus.COMPLETED);
         header.setSalesDate(LocalDateTime.now());
-        // ✅ 총금액이 프론트 계산 결과로 넘어올 경우 반영
+
         if (request.getTotalAmount() != null) {
             header.setTotalAmount(request.getTotalAmount());
         }
+
+        // ✅ 아이템 목록 추가 (요청에 포함된 경우)
+        if (request.getItems() != null && !request.getItems().isEmpty()) {
+            for (ConfirmOrderRequest.ItemDTO dto : request.getItems()) {
+                Product product = productRepository.findById(dto.getGtin())
+                        .orElseThrow(() -> new RuntimeException("상품 없음: " + dto.getGtin()));
+
+                SalesItem item = new SalesItem();
+                item.setSalesHeader(header);
+                item.setProduct(product);
+                item.setSalesQuantity(dto.getQuantity());
+                item.setSdPrice(dto.getPrice());
+                item.setSubtotal(dto.getPrice().multiply(BigDecimal.valueOf(dto.getQuantity())));
+
+                salesItemRepository.save(item);
+            }
+        }
+
         salesHeaderRepository.save(header);
     }
-    //salesHeader 주문에 속한 아이템 목록 조회, 보류도
+
+    // ✅ 주문 아이템 조회
     @Override
     public List<SalesItemDTO> getItemsByOrderId(Long orderId) {
         return salesItemRepository.findItemsByHeaderId(orderId);
     }
-    //salesHeader 주문완료
+
+    // ✅ 주문 완료 처리
     @Override
     @Transactional
     public void completeOrder(Long orderId) {
-        // 1️⃣ 주문 조회
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
-        // 2️⃣ 결제 상태 확인 (PaymentHeader에서 가져옴)
-        PaymentHeader paymentHeader = paymentHeaderRepository.findFirstBySalesHeader_OrderIdOrderByPaymentIdDesc(orderId)
+
+        PaymentHeader paymentHeader = paymentHeaderRepository
+                .findFirstBySalesHeader_OrderIdOrderByPaymentIdDesc(orderId)
                 .orElseThrow(() -> new RuntimeException("결제 내역 없음"));
-        // 3️⃣ 결제 완료 여부 검증
+
         if (paymentHeader.getPaymentStatus() != PaymentStatus.APPROVED) {
             throw new IllegalStateException("💰 결제가 모두 완료되지 않았습니다.");
         }
 
-        // ✅ 4️⃣ 총액 다시 계산 (SalesItem 기준)
         BigDecimal totalAmount = salesItemRepository.findItemsByHeaderId(orderId)
                 .stream()
                 .map(SalesItemDTO::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         header.setTotalAmount(totalAmount);
-
-        // 5️⃣ 주문 상태 변경
         header.setSalesStatus(SalesStatus.COMPLETED);
         header.setSalesDate(LocalDateTime.now());
 
         salesHeaderRepository.save(header);
-
-        log.info("✅ 주문 {} 결제 완료 및 판매 확정됨 (총액: ₩{})",
-                orderId, totalAmount);
+        log.info("✅ 주문 {} 결제 완료 및 판매 확정됨 (총액: ₩{})", orderId, totalAmount);
     }
 
-
-    //보류처리
+    // ✅ 보류 처리
     @Override
     @Transactional
     public void holdOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
-        //상태 검증: 진행중 상태에서만 보류 가능
+
         if (!SalesStatus.PENDING.equals(header.getSalesStatus())) {
             throw new RuntimeException("진행 중인 주문만 보류할 수 있습니다.");
         }
+
         header.setSalesStatus(SalesStatus.HOLD);
         salesHeaderRepository.save(header);
     }
-    //보류 목록 불러오기
+
+    // ✅ 보류 목록 조회
     @Override
     public List<SalesHeaderDTO> getHoldOrders() {
         return salesHeaderRepository.findHoldOrders();
     }
-    //보류된 주문 다시 열기(가변패턴)
+
+    // ✅ 보류 주문 다시 열기
     @Override
     @Transactional
     public SalesHeaderDTO resumeOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("보류 주문 없음"));
-        if(!SalesStatus.HOLD.equals(header.getSalesStatus())) {
+
+        if (!SalesStatus.HOLD.equals(header.getSalesStatus())) {
             throw new RuntimeException("보류 상태가 아닌 주문은 다시 열 수 없습니다.");
         }
+
         header.setSalesStatus(SalesStatus.PENDING);
-        // DTO 만들고
+
         SalesHeaderDTO dto = new SalesHeaderDTO(
                 header.getOrderId(),
                 header.getOrderNo(),
@@ -193,71 +226,62 @@ public class SDServiceImpl implements SDService {
                 header.getTotalAmount(),
                 header.getSalesStatus()
         );
-        // 나중에 아이템 붙이기
+
         List<SalesItemDTO> items = salesItemRepository.findItemsByHeaderId(orderId);
         dto.setSalesItems(items);
         return dto;
     }
 
+    // ✅ 주문 저장/업데이트
     @Override
     @Transactional
     public void saveOrUpdateOrder(Long orderId, List<SalesItemDTO> items, SalesStatus status) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("주문 없음"));
 
-        // ✅ 기존 아이템 완전 삭제 (지연 로딩 이슈 없이)
         salesItemRepository.deleteBySalesHeader(header);
 
-        // ✅ 새 아이템 추가
-        List<SalesItem> newItems = items.stream().map(dto -> {
+        for (SalesItemDTO dto : items) {
+            Product product = productRepository.findByProductName(dto.getProductName())
+                    .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
+
+            STK stk = stkRepository.findTopByProduct_Gtin(product.getGtin()).orElse(null);
+
             SalesItem item = new SalesItem();
-            item.setSalesHeader(header);
+            item.setProduct(product);
+            item.setStk(stk);
             item.setSalesQuantity(dto.getSalesQuantity());
             item.setSdPrice(dto.getSdPrice());
             item.setSubtotal(dto.getSdPrice().multiply(BigDecimal.valueOf(dto.getSalesQuantity())));
 
-            Product product = productRepository.findByProductName(dto.getProductName())
-                    .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
-            item.setProduct(product);
+            // ✅ 핵심: 양방향 연결
+            header.addSalesItem(item);
+        }
 
-            STK stk = stkRepository.findTopByProduct_Gtin(product.getGtin()).orElse(null);
-            item.setStk(stk);
-
-            return item;
-        }).toList();
-
-        salesItemRepository.saveAll(newItems);
-
-        // ✅ 총액 재계산
-        BigDecimal total = newItems.stream()
+        BigDecimal total = items.stream()
                 .map(i -> i.getSdPrice().multiply(BigDecimal.valueOf(i.getSalesQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        header.setTotalAmount(total);
 
-        // ✅ 상태 및 날짜 업데이트
+        header.setTotalAmount(total);
         header.setSalesStatus(status);
         header.setSalesDate(LocalDateTime.now());
-        salesHeaderRepository.save(header);
 
+        salesHeaderRepository.save(header);
         log.info("💾 주문 {} 저장 완료 (상태: {}, 총액: ₩{})", orderId, status, total);
     }
 
-    //보류 주문 취소
+    // ✅ 보류 주문 취소
     @Override
     @Transactional
     public void cancelOrder(Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("보류 주문 없음"));
+
         if (!SalesStatus.HOLD.equals(header.getSalesStatus())) {
             throw new RuntimeException("보류 상태가 아닌 주문은 취소 불가");
         }
+
         header.setSalesStatus(SalesStatus.CANCELLED);
-        // 만약 보류 주문 취소 시 재고를 복구해야 한다면 여기서 재고 복구 처리
-        // for (SalesItem item : header.getItems()) {
-        //     STK stk = stkRepository.findByProductAndLot(...);
-        //     stk.setQuantity(stk.getQuantity() + item.getSalesQuantity());
-        //     stkRepository.save(stk);
-        // }
         salesHeaderRepository.save(header);
     }
 }

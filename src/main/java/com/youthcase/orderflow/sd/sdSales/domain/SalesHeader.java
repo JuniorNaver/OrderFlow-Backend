@@ -7,8 +7,13 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
+import java.util.HashSet;
+import java.util.Set;
+
 @Setter
 @Getter
 @Entity
@@ -40,18 +45,32 @@ public class SalesHeader {
     @Enumerated(EnumType.STRING)
     private SalesStatus salesStatus;
 
-    // 1:N 매핑 (헤더 ↔ 아이템)
+    /** ✅ 수정 포인트 #1: Set + SUBSELECT */
     @Builder.Default
-    @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SalesItem> salesItems = new ArrayList<>();
+    @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<SalesItem> salesItems = new HashSet<>();
 
-    @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true)
+    /** ✅ 수정 포인트 #2: Set + SUBSELECT */
+    @OneToMany(mappedBy = "salesHeader", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<PaymentHeader> paymentHeaders = new ArrayList<>();
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<PaymentHeader> paymentHeaders = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "STORE_ID")
+    @JoinColumn(name = "STORE_ID", nullable = false)
     private Store store;
 
+    // ✅ 양방향 동기화 메서드
+    public void addSalesItem(SalesItem item) {
+        if (item == null) return;
 
+        this.salesItems.add(item);
+        item.setSalesHeader(this);
+
+        // subtotal 자동 계산
+        if (item.getSdPrice() != null && item.getSalesQuantity() > 0) {
+            item.setSubtotal(item.getSdPrice().multiply(BigDecimal.valueOf(item.getSalesQuantity())));
+        }
+    }
 }
