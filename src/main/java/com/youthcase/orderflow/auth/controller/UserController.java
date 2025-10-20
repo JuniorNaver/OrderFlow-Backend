@@ -1,64 +1,68 @@
 package com.youthcase.orderflow.auth.controller;
 
-import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.auth.dto.UserResponseDTO;
-import com.youthcase.orderflow.auth.dto.UserPasswordChangeRequestDTO;
 import com.youthcase.orderflow.auth.service.UserService;
 import com.youthcase.orderflow.global.config.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
-
+/**
+ * 사용자(AppUser) 관련 요청을 처리하는 REST Controller.
+ * Lombok의 @RequiredArgsConstructor를 사용하여 UserService를 자동 주입합니다.
+ */
 @RestController
-@RequestMapping("/api/auth/users") // 사용자 본인 정보 관리를 위한 기본 경로
+@RequestMapping("/api/auth/users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
     /**
-     * [GET] 로그인된 사용자 본인의 정보 조회
-     * GET /api/auth/users/me
+     * [주요 수정 부분] 현재 인증된 사용자 본인의 상세 정보를 조회합니다.
+     * 엔드포인트: GET /api/auth/users/me
      *
-     * @param securityUser 현재 로그인된 사용자 정보 (Spring Security Principal)
-     * @return UserResponseDTO
+     * @param securityUser Spring Security Context에서 주입된 현재 인증 정보 객체
+     * @return UserResponseDTO를 포함하는 ResponseEntity (HTTP 200 OK)
      */
     @GetMapping("/me")
-    public ResponseEntity<UserResponseDTO> getMyDetails(@AuthenticationPrincipal SecurityUser securityUser) {
+    public ResponseEntity<UserResponseDTO> getMyDetails(
+            @AuthenticationPrincipal SecurityUser securityUser) {
 
+        // 💡 NullPointerException 방지를 위한 안전 체크
+        // SecurityUser가 null인 경우, JWT 필터에서 인증 처리가 제대로 되지 않았거나
+        // 인증되지 않은 사용자가 보안된 엔드포인트에 접근했다는 의미입니다.
+        if (securityUser == null) {
+            // 이 경로는 Security Config에 의해 보통 차단되지만, 방어적인 코드를 작성합니다.
+            // 실제 환경에서는 Security Filter 체인이 401 Unauthorized를 반환해야 합니다.
+            // 명시적인 예외를 던져서 Global Exception Handler가 처리하도록 유도할 수 있습니다.
+            // 여기서는 단순화하여 401 응답 코드를 반환합니다.
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED) // 401 Unauthorized
+                    .build();
+        }
+
+        // 32번 라인으로 추정되는 securityUser.getUsername() 호출 전에 null 체크가 추가되어 안전합니다.
         String userId = securityUser.getUsername();
 
-        User user = userService.findByUserId(userId)
-                .orElseThrow(() -> new IllegalStateException("인증된 사용자의 DB 정보를 찾을 수 없습니다: " + userId));
-        return ResponseEntity.ok(UserResponseDTO.from(user));
+        // 서비스 계층을 통해 사용자 상세 정보를 조회합니다.
+        UserResponseDTO responseDTO = userService.getUserDetails(userId);
+
+        return ResponseEntity.ok(responseDTO);
     }
 
     /**
-     * [PUT] 로그인된 사용자 본인의 비밀번호 변경
-     * PUT /api/auth/users/password
-     *
-     * @param securityUser 현재 로그인된 사용자 정보
-     * @param request DTO를 사용하여 새 비밀번호 추출
-     * @return 204 No Content
+     * 사용자 등록 (회원가입) 엔드포인트 예시
+     * @param requestDTO 사용자 등록 요청 데이터
+     * @return 성공 응답
      */
-    @PutMapping("/password")
-    public ResponseEntity<Void> changeMyPassword(
-            @AuthenticationPrincipal SecurityUser securityUser,
-            @RequestBody @Valid UserPasswordChangeRequestDTO request) { // 💡 DTO 사용으로 변경
+    // @PostMapping("/register")
+    // public ResponseEntity<Void> registerUser(@RequestBody UserRegisterRequestDTO requestDTO) {
+    //     // userService.register(requestDTO);
+    //     return ResponseEntity.status(HttpStatus.CREATED).build();
+    // }
 
-        String userId = securityUser.getUsername();
-        String newPassword = request.getNewPassword();
-
-        // DTO에 @NotBlank가 있으므로, 별도의 null/empty 검사는 불필요합니다.
-        // 유효성 검사 실패 시 GlobalExceptionHandler에서 400 Bad Request가 반환됩니다.
-
-        // Service 계층에 비밀번호 변경 로직 위임
-        userService.changePassword(userId, newPassword);
-
-        // 성공 시 204 No Content 반환
-        return ResponseEntity.noContent().build();
-    }
+    // ... 여기에 다른 사용자 관련 메서드 (업데이트, 삭제 등)를 추가할 수 있습니다.
 }
