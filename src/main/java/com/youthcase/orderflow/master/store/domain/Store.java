@@ -75,7 +75,7 @@ public class Store {
     private StoreType storeType;
 
     // ────────────────────────────────
-    // 🔹 위치 정보 (관리자 전용, 점장은 수정 불가)
+    // 🔹 위치 정보 (관리자 초기 등록, 점장 수정 가능)
     // ────────────────────────────────
 
     @Size(max = 200)
@@ -93,18 +93,8 @@ public class Store {
     @Comment("우편번호")
     private String postCode;
 
-    @Digits(integer = 4, fraction = 6)
-    @Column(name = "LONGITUDE", precision = 10, scale = 6)
-    @Comment("경도 (Longitude)")
-    private BigDecimal longitude;
-
-    @Digits(integer = 3, fraction = 6)
-    @Column(name = "LATITUDE", precision = 9, scale = 6)
-    @Comment("위도 (Latitude)")
-    private BigDecimal latitude;
-
     // ────────────────────────────────
-    // 🔹 운영정보 (점장이 수정 가능)
+    // 🔹 운영정보 (초기 등록 때 입력 X, 점장이 수정 가능)
     // ────────────────────────────────
 
     @Size(max = 50)
@@ -141,6 +131,16 @@ public class Store {
     @Column(name = "UPDATED_AT", nullable = false)
     @Comment("수정 일시 (자동 갱신)")
     private LocalDateTime updatedAt;
+
+    @Digits(integer = 4, fraction = 6)
+    @Column(name = "LONGITUDE", precision = 10, scale = 6)
+    @Comment("경도 (Longitude: 주소 등록 시 자동 생성)")
+    private BigDecimal longitude;
+
+    @Digits(integer = 3, fraction = 6)
+    @Column(name = "LATITUDE", precision = 9, scale = 6)
+    @Comment("위도 (Latitude: 주소 등록 시 자동 생성)")
+    private BigDecimal latitude;
 
     // ────────────────────────────────
     // 🔹 기본값 설정

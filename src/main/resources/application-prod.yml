@@ -37,6 +37,16 @@ jwt:
   access-token-expire-time: ${JWT_ACCESS_EXPIRE:3600000}
   refresh-token-expire-time: ${JWT_REFRESH_EXPIRE:1209600000}
 
+## 아임포트 설정
+iamport:
+  api-key: ${IAMPORT_API_KEY}
+  api-secret: ${IAMPORT_API_SECRET}
+
+## ✅ 카카오 주소검색 API 설정 (운영 환경)
+kakao:
+  api:
+    key: ${KAKAO_API_KEY}   # 운영 서버 환경 변수 또는 .env에서 주입됨
+
 ## logging 설정 (운영 환경에서는 INFO 수준)
 logging:
   level:

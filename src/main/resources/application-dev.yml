@@ -13,7 +13,7 @@ spring:
     hibernate:
       ddl-auto: create          # 개발 환경에서는 테이블 자동 생성/업데이트 허용
     show-sql: true              # SQL 로그 출력
-    open-in-view: true          # Lazy 로딩을 View 단까지 허용 (Controller → Service → View 구조일 때만)
+    open-in-view: true          # Lazy 로딩 허용 (Controller → Service → View 구조일 때만)
     properties:
       hibernate:
         format_sql: true        # SQL 보기 좋게 포맷
@@ -36,14 +36,19 @@ jwt:
   access-token-expire-time:  ${JWT_ACCESS_EXPIRE:3600000}     # 1시간 (밀리초 단위)
   refresh-token-expire-time: ${JWT_REFRESH_EXPIRE:1209600000} # 14일 (밀리초 단위)
 
-## logging 설정
-logging:
-  level:
-    org.hibernate.SQL: debug                  # SQL 출력
-    org.hibernate.type.descriptor.sql: trace  # 파라미터 값까지 출력
-    org.springframework.security.web: info    # TRACE → INFO로 낮춤
-
-##아임포트 설정
+## 아임포트 설정
 iamport:
   api-key: ${IAMPORT_API_KEY}       # 환경변수 또는 Secret에 보관
   api-secret: ${IAMPORT_API_SECRET}
+
+## ✅ 카카오 주소검색 API 설정
+kakao:
+  api:
+    key: ${KAKAO_API_KEY}   # .env 파일에서 주입됨
+
+## logging 설정
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
+    org.springframework.security.web: info
