@@ -65,7 +65,7 @@ public class POItemServiceImpl implements POItemService {
 
         // 7️⃣ 응답 DTO 반환
         return POItemResponseDTO.builder()
-                .itemNo(saved.getItemNo())
+                //.itemNo(saved.getItemNo())
                 .gtin(saved.getGtin().getGtin())
                 .productName(saved.getGtin().getProductName())
                 .orderQty(saved.getOrderQty())
