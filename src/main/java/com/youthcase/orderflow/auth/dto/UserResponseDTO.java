@@ -1,43 +1,43 @@
 package com.youthcase.orderflow.auth.dto;
 
 import com.youthcase.orderflow.auth.domain.User;
-import com.youthcase.orderflow.auth.domain.Role;
+import com.youthcase.orderflow.auth.domain.Role; // Role 엔티티 import 가정
 import lombok.Builder;
 import lombok.Getter;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * 로그인된 사용자 본인 정보를 클라이언트에 안전하게 반환하기 위한 응답 DTO입니다.
- * 비밀번호 등 민감한 정보는 제외됩니다.
+ * 사용자 상세 정보를 클라이언트에게 전달하기 위한 Data Transfer Object (DTO).
  */
 @Getter
 @Builder
 public class UserResponseDTO {
-
-    private final String userId;
-    private final String name;
-    private final String email;
-    private final Set<String> roles; // 사용자의 역할 목록 (ROLE_ADMIN, ROLE_MANAGER 등)
-    private final LocalDateTime createdAt;
+    private String userId;
+    private String email;
+    private String name;
+    private String workspace;
+    private LocalDateTime createdAt;
+    private Set<String> roles; // 사용자 역할을 담을 필드
 
     /**
      * User 엔티티를 UserResponseDTO로 변환하는 정적 팩토리 메서드.
-     * @param user 변환할 User 엔티티
+     * @param user 조회된 User 엔티티 (Fetch Join되어 Role 컬렉션이 로딩되어 있어야 함)
      * @return UserResponseDTO 객체
      */
     public static UserResponseDTO from(User user) {
-        Set<String> roleNames = user.getRoles().stream()
-                .map(Role::getRoleId) // Role 엔티티에 getRoleId()가 있다고 가정
-                .collect(Collectors.toSet());
-
         return UserResponseDTO.builder()
                 .userId(user.getUserId())
-                .name(user.getName())
                 .email(user.getEmail())
-                .roles(roleNames)
-                .createdAt(user.getCreatedAt()) // User 엔티티에 createdAt 필드가 있다고 가정
+                .name(user.getName())
+                .workspace(user.getWorkspace())
+                .createdAt(user.getCreatedAt())
+                // 💡 해결: Role::getName 대신 Role 엔티티의 실제 Getter인 Role::getRoleId 사용
+                .roles(user.getRoles().stream()
+                        .map(Role::getRoleId) // 👈 컴파일 오류 해결 지점
+                        .collect(Collectors.toSet()))
                 .build();
     }
 }
