@@ -46,7 +46,7 @@ public class Product {
     @JoinColumn(name = "KAN_CODE", nullable = false, referencedColumnName = "KAN_CODE")
     private Category category;
 
-    @Column(name="IMAGE_URL", length=230)
+    @Column(name="IMAGE_URL", length=500)
     private String imageUrl;
 
     @Column(name="DESCRIPTION", length=2000)
