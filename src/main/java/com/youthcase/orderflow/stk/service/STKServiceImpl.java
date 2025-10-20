@@ -216,6 +216,15 @@ public class STKServiceImpl implements STKService {
     }
 
     @Override
+    public STK findFirstAvailableByGtin(String gtin) {
+        return stkRepository
+                .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("해당 상품의 재고가 없습니다."));
+    }
+
+    @Override
     @Transactional
     public List<STK> executeDisposal(DisposalRequest request) {
         // 처리된 STK 객체를 담을 리스트

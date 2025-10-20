@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface SDService{
     // 기본 판매로직
     // 주문(헤더) 생성
-    SalesHeader createOrder();
+    SalesHeader createOrder(String storeId);
     //상품 추가
     SalesItemDTO addItemToOrder(AddItemRequest request);
     // 바코드+재고
@@ -33,5 +33,6 @@ public interface SDService{
     public SalesHeaderDTO resumeOrder(Long orderId);
 
     void saveOrUpdateOrder(Long orderId, List<SalesItemDTO> items, SalesStatus status);
+
 
 }

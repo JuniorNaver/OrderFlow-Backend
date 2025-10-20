@@ -21,17 +21,18 @@ public class SDController {
     private final SalesHeaderRepository salesHeaderRepository;
     // 1. 주문 생성 (판매등록 버튼 클릭시)
     @PostMapping("/create")
-    public ResponseEntity<SalesHeaderDTO> createOrder() {
-        SalesHeader header = sdService.createOrder();
+    public ResponseEntity<SalesHeaderDTO> createOrder(@RequestParam String storeId) {
+        SalesHeader header = sdService.createOrder(storeId);
         SalesHeaderDTO dto = new SalesHeaderDTO(
                 header.getOrderId(),
-                header.getOrderNo(), // ✅ 여기를 추가!
+                header.getOrderNo(),
                 header.getSalesDate(),
                 header.getTotalAmount(),
                 header.getSalesStatus()
         );
         return ResponseEntity.ok(dto);
     }
+
     @GetMapping("/{orderId}")
     public ResponseEntity<SalesHeaderDTO> getOrder(@PathVariable Long orderId) {
         SalesHeader header = salesHeaderRepository.findById(orderId)

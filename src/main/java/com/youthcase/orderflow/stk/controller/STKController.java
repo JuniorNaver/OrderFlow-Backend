@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.stk.controller;
 
+import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.dto.DisposalRequest;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/stk")
@@ -179,4 +181,21 @@ public class STKController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    //판매상품 바코드 조회
+    // 📦 STKController.java
+    @GetMapping("/barcode/{gtin}")
+    public ResponseEntity<StockResponse> getStockByBarcode(@PathVariable String gtin) {
+        try {
+            // ✅ FIFO 기준으로 유통기한 빠른 재고 1건 조회
+            STK stk = stkService.findFirstAvailableByGtin(gtin);
+            return ResponseEntity.ok(StockResponse.fromEntity(stk));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

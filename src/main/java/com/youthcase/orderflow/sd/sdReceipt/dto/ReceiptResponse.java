@@ -9,7 +9,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -37,12 +36,27 @@ public class ReceiptResponse {
     public static ReceiptResponse fromEntity(Receipt r) {
         if (r == null) return null;
 
+        // ✅ SalesHeader가 있으면 모든 PaymentHeader의 PaymentItem을 한꺼번에 모은다
+        List<PaymentItemDTO> paymentItems = r.getSalesHeader() != null
+                ? r.getSalesHeader().getPaymentHeaders().stream()
+                .flatMap(ph -> ph.getPaymentItems().stream())
+                .map(PaymentItemDTO::from)
+                .toList()
+                : List.of();
+
+        // ✅ 총 결제금액 계산 (분할결제 전체 합산)
+        BigDecimal totalAmount = paymentItems.stream()
+                .map(PaymentItemDTO::getPaidAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return ReceiptResponse.builder()
                 .receiptNo(r.getReceiptNo())
                 .issuedAt(r.getIssuedAt())
                 .storeName(r.getStore() != null ? r.getStore().getStoreName() : "매장정보 없음")
-                .storeAddress(r.getStore() != null ? r.getStore().getAddress() : "")
-                .totalAmount(r.getPaymentHeader() != null ? r.getPaymentHeader().getTotalAmount() : BigDecimal.ZERO)
+                .storeAddress(r.getStore() != null
+                        ? (r.getStore().getAddress() + " " + r.getStore().getAddressDetail())
+                        : "")
+                .totalAmount(totalAmount)
                 .refundStatus(r.getRefundHeader() != null ? "REFUNDED" : "NORMAL")
                 .paymentId(r.getPaymentHeader() != null ? r.getPaymentHeader().getPaymentId() : null)
                 .items(r.getSalesHeader() != null
@@ -50,11 +64,7 @@ public class ReceiptResponse {
                         .map(SalesItemDTO::from)
                         .toList()
                         : List.of())
-                .payments(r.getPaymentHeader() != null
-                        ? r.getPaymentHeader().getPaymentItems().stream()
-                        .map(PaymentItemDTO::from)
-                        .collect(Collectors.toList())
-                        : List.of())
+                .payments(paymentItems)
                 .build();
     }
 

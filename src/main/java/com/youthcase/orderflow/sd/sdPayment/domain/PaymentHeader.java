@@ -2,19 +2,23 @@ package com.youthcase.orderflow.sd.sdPayment.domain;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "PAYMENT_HEADER")
 @SequenceGenerator(
@@ -29,25 +33,26 @@ public class PaymentHeader {
     private Long paymentId;
 
     @CreatedDate
-    @Column(name = "REQUESTED_TIME",updatable = false)
+    @Column(name = "REQUESTED_TIME", updatable = false)
     private LocalDateTime requestedTime;
 
     @Column(name = "CANCELED_TIME")
-    private LocalDateTime canceledTime; // 결제 취소 시각
-
+    private LocalDateTime canceledTime;
 
     @Column(name= "TOTAL_AMOUNT", precision = 12, scale = 2)
-    private BigDecimal totalAmount; // 총 결제금액 (NUMBER(12,2))
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "PAYMENT_STATUS", length = 20, nullable = false)
-    private PaymentStatus paymentStatus; // 결제 상태
+    private PaymentStatus paymentStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ORDER_ID", nullable = false, foreignKey = @ForeignKey(name = "FK_PAYMENT_ORDER"))
     private SalesHeader salesHeader;
 
-    // 연관관계 설정 (1:N)
-    @OneToMany(mappedBy = "paymentHeader", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PaymentItem> paymentItems = new ArrayList<>();
+    /** ✅ 수정 포인트: Set + SUBSELECT */
+    @Builder.Default
+    @OneToMany(mappedBy = "paymentHeader", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<PaymentItem> paymentItems = new HashSet<>();
 }
