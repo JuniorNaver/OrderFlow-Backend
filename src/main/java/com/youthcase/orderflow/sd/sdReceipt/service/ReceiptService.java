@@ -34,7 +34,11 @@ public class ReceiptService {
                 .refundHeader(refund)
                 .store(store)
                 .build();
-        return receiptRepository.save(receipt);
+
+        Receipt saved = receiptRepository.save(receipt);
+        log.info("🧾 영수증 저장 완료 - receiptId={}, orderNo={}",
+                saved.getReceiptId(), sales.getOrderNo());
+        return saved;
     }
 
     // ✅ 날짜별 영수증 조회 (FETCH JOIN 적용)
