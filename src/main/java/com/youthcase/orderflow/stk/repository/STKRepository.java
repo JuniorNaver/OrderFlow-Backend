@@ -55,4 +55,6 @@ public interface STKRepository extends JpaRepository<STK, Long> {
 
     // 💡 또 다른 예시: 위치 코드에 'R' (Relocation, 임시 보관소 등)이 포함된 재고를 제외하는 경우
     // List<STK> findByLocationNotContaining(String code);
+
+    Optional<STK> findByProduct_Gtin(String gtin);
 }

@@ -186,4 +186,10 @@ public class STKServiceImpl implements STKService {
         // 💡 또는, 현재 위치 (location)가 비효율적이라고 판단되는 재고를 조회할 수도 있습니다.
         // return stkRepository.findByLocationNotLike("Optimal%");
     }
+
+    @Override
+    public STK findByGtin(String gtin) {
+        return stkRepository.findByProduct_Gtin(gtin)
+                .orElseThrow(() -> new NoSuchElementException("상품을 찾을 수 없습니다."));
+    }
 }
