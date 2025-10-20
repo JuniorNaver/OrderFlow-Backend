@@ -48,5 +48,6 @@ public interface STKService {
     List<STK> disposeExpiredStock(LocalDate targetDate);
     List<STK> markNearExpiryStock(LocalDate targetDate);
     List<STK> searchByProductName(String name);
+    List<STK> findRelocationRequiredStocks();
 
 }

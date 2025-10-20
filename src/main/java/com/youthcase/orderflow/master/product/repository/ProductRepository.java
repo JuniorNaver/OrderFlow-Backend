@@ -97,4 +97,6 @@ order by coalesce(c.smallCategory, c.largeCategory)
 """)
     List<Object[]> findKanByTotalCategoryAndLargeCorner(@Param("total") String total,
                                                         @Param("cornerName") String cornerName);
+
+    Optional<Product> findByProductName(String productName);
 }

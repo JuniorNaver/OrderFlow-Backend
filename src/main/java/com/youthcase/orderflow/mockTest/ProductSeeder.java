@@ -350,6 +350,7 @@ public class ProductSeeder implements CommandLineRunner {
 
         int inserted = 0, skipped = 0, missingCat = 0;
         List<String> skippedKANList = new ArrayList<>();
+        List<String> insertedGTIN = new ArrayList<>();
 
         for (Seed s : seeds) {
             if (productRepository.findByGtin(s.gtin()).isPresent()) {
@@ -383,11 +384,13 @@ public class ProductSeeder implements CommandLineRunner {
                     .build();
 
             productRepository.save(p);
+            insertedGTIN.add(s.gtin());
             inserted++;
         }
 
         log.info("✅ ProductSeeder completed. inserted={}, skipped(exists)={}, missingCategory={}",
                 inserted, skipped, missingCat);
         log.info("missingCategoryList={}", skippedKANList.toString());
+        log.info("insertedGTIN={}", insertedGTIN.toString());
     }
 }

@@ -76,7 +76,13 @@ public class ProductService {
                 dto.storageMethod(),
                 dto.categoryCode(),
                dto.expiryType() == null ? ExpiryType.NONE : dto.expiryType(), // ← 기본값 보정
-               dto.shelfLifeDays()
+               dto.shelfLifeDays(),
+               dto.imageUrl(),
+               dto.description(),
+               dto.orderable(),
+               dto.widthMm(),
+               dto.depthMm(),
+               dto.heightMm()
         );
 
         Product saved = productRepository.save(ProductMapper.toEntity(normalized, category));
@@ -100,7 +106,13 @@ public class ProductService {
                 dto.storageMethod(),
                 dto.categoryCode(),
                 dto.expiryType(),
-                dto.shelfLifeDays()
+                dto.shelfLifeDays(),
+                dto.imageUrl(),
+                dto.description(),
+                dto.orderable(),
+                dto.widthMm(),
+                dto.depthMm(),
+                dto.heightMm()
         );
 
         ProductMapper.updateEntity(entity, normalized, category); // 더티체킹으로 UPDATE

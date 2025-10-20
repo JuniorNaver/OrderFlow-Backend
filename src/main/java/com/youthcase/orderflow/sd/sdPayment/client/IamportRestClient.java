@@ -56,10 +56,17 @@ public class IamportRestClient {
     }
     /** ✅ 결제 내역 조회 */
     public JsonNode getPaymentByImpUid(String impUid) {
+        if (impUid == null || impUid.isBlank()) {
+            throw new IllegalArgumentException("impUid가 비어있습니다. 결제 검증을 수행할 수 없습니다.");
+        }
+
         String token = getAccessToken();
 
+        String url = String.format("/payments/%s", impUid); // ✅ 명시적으로 URL 구성
+        log.info("📡 [Iamport 조회 요청] {}", url);
+
         JsonNode result = webClient.get()
-                .uri("/payments/{impUid}", impUid)
+                .uri(url)
                 .header("Authorization", token)
                 .retrieve()
                 .onStatus(status -> !status.is2xxSuccessful(), clientResponse -> {
@@ -71,6 +78,9 @@ public class IamportRestClient {
 
         if (result == null) {
             log.warn("⚠️ 아임포트 결제 조회 결과가 비어있습니다. impUid={}", impUid);
+        } else {
+            log.info("✅ [Iamport 결제 조회 성공] impUid={}, status={}",
+                    impUid, result.path("response").path("status").asText());
         }
 
         return result;
