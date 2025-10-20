@@ -65,4 +65,19 @@ public interface STKRepository extends JpaRepository<STK, Long> {
             "WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 " +
             "ORDER BY p.gtin ASC, l.expDate ASC")
     List<STK> findActiveStocksForFifoCheck(@Param("warehouseId") Long warehouseId);
+
+    @Query("SELECT s FROM STK s JOIN s.product p JOIN s.lot l " +
+            "WHERE p.gtin = :gtin AND s.quantity > 0 " +
+            "ORDER BY l.expDate ASC")
+    List<STK> findActiveStockLotsByGtin(@Param("gtin") String gtin);
+
+    /**
+     * ⭐️ 추가: Lot ID를 기준으로 활성 재고(quantity > 0)를 조회
+     * Lot 엔티티의 lotId 필드를 참조하는 STK를 찾습니다.
+     * STK 엔티티에 Lot lot; 필드가 있고 Lot 엔티티에 Long lotId; 필드가 있다고 가정합니다.
+     */
+    Optional<STK> findByLot_LotIdAndQuantityGreaterThan(Long lotId, int quantity);
+
+    // 폐기 로직에서 Lot ID로만 찾고 싶은 경우 (수량 체크는 서비스에서 하므로 0보다 큰 재고만 조회하지 않아도 됨)
+    Optional<STK> findByLot_LotId(Long lotId);
 }
