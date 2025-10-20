@@ -88,6 +88,10 @@ public class InventorySeeder implements CommandLineRunner {
         inventoryService.receive("080480006662", 25);
         inventoryService.receive("8801028000216", 50);
         inventoryService.receive("8805396903551", 40);
+        inventoryService.receive("8800321910086", 40);
+        inventoryService.receive("8801046426593", 40);
+        inventoryService.receive("8801441021089", 40);
+        inventoryService.receive("8809949565159", 40);
 
         log.info("InventorySeeder done.");
     }
