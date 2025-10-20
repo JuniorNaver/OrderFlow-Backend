@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ 이 임포트가 추가되었는지 확인
+
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -198,4 +200,25 @@ public class STKController {
         }
     }
 
+    /**
+     * GET /api/stk/list/adjustment : 재고 수량 조정이 필요한 목록을 조회합니다.
+     */
+    @GetMapping("/list/adjustment")
+    public ResponseEntity<List<StockResponse>> getAdjustmentRequiredStocks() {
+        List<StockResponse> adjustmentStocks = stkService.findStocksRequiringAdjustment().stream()
+                .map(StockResponse::fromEntity)
+                .toList();
+        return ResponseEntity.ok(adjustmentStocks);
+    }
+
+    /**
+     * POST /api/stk/adjustment/execute : 선택된 재고 항목의 수량을 조정합니다.
+     */
+    // ⭐️ 재고 조정 실행 API (수정된 랏 ID와 수량만 받아서 처리)
+    @PostMapping("/adjustment/execute")
+    public ResponseEntity<List<StockResponse>> executeStockAdjustment(@RequestBody AdjustmentRequest request) {
+        // [TODO] AdjustmentRequest DTO와 서비스 로직 구현 필요
+        // ...
+        return ResponseEntity.ok().build();
+    }
 }

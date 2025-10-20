@@ -31,11 +31,23 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
 
-## JWT 설정 (운영도 동일하게 .env에서 주입)
+## JWT 설정 (Spring 외부)
 jwt:
-  secret: ${JWT_SECRET}
-  access-token-expire-time: ${JWT_ACCESS_EXPIRE:3600000}
-  refresh-token-expire-time: ${JWT_REFRESH_EXPIRE:1209600000}
+  secret: ${JWT_SECRET}    # Base64 인코딩된 문자열
+  # 💡 키 이름 수정: access-token-expire-time -> access-token-expiration-millis
+  access-token-expiration-millis: ${JWT_ACCESS_EXPIRE:3600000}     # 1시간 (밀리초 단위)
+  # 💡 키 이름 수정: refresh-token-expire-time -> refresh-token-expiration-millis
+  refresh-token-expiration-millis: ${JWT_REFRESH_EXPIRE:1209600000} # 14일 (밀리초 단위)
+
+## 아임포트 설정
+iamport:
+  api-key: ${IAMPORT_API_KEY}
+  api-secret: ${IAMPORT_API_SECRET}
+
+## ✅ 카카오 주소검색 API 설정 (운영 환경)
+kakao:
+  api:
+    key: ${KAKAO_API_KEY}   # 운영 서버 환경 변수 또는 .env에서 주입됨
 
 ## logging 설정 (운영 환경에서는 INFO 수준)
 logging:

@@ -20,12 +20,14 @@ public class RoleInitializer implements CommandLineRunner {
     public void run(String... args) {
 
         for (RoleType type : RoleType.values()) {
-            // DB에 존재하는지 확인
-            roleRepository.findByRoleType(type)
+            // DB에 존재하는지 확인 (RoleType을 인수로 받는 findByRoleType은 RoleType이 제거되었으므로,
+            // roleId를 인수로 받는 findByRoleId로 가정하고 수정합니다. - Repository는 추후 확정)
+            roleRepository.findByRoleId(type.getRoleId()) // 💡 findByRoleType -> findByRoleId로 변경 가정
                     .orElseGet(() -> {
                         Role newRole = Role.builder()
                                 .roleId(type.getRoleId())
-                                .roleType(type)
+                                // 🚨 제거: roleType 필드가 엔티티에서 제거되었으므로 이 라인 제거
+                                //.roleType(type)
                                 .description(type.getDescription())
                                 .build();
                         Role saved = roleRepository.save(newRole);

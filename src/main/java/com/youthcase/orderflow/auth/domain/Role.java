@@ -1,15 +1,14 @@
 package com.youthcase.orderflow.auth.domain;
 
-import com.youthcase.orderflow.auth.domain.enums.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
-import java.util.Set;
+import java.util.Set; // 💡 import 추가
 
 /**
- * 사용자에게 부여되는 역할(Group of Authorities)을 정의하는 엔티티입니다.
- * 예: ADMIN, MANAGER, USER 등
+ * 시스템 내에서 사용되는 사용자 역할을 정의하는 엔티티입니다.
+ * RoleType Enum의 roleId(String)을 PK로 사용합니다.
  */
 @Entity
 @Getter
@@ -19,23 +18,18 @@ import java.util.Set;
 @Table(name = "role")
 public class Role {
 
-    // 역할 ID (문자열, 예: ROLE_ADMIN)
     @Id
-    @Column(name = "role_id", length = 50)
+    @Column(name = "role_id", nullable = false, length = 50)
     private String roleId;
 
-    // 역할 타입 (Enum을 사용하여 정의된 역할 목록 관리) / Enum 이름: ADMIN, MANAGER, CLERK
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role_type", nullable = false, unique = true, length = 50)
-    private RoleType roleType;
-
-    // 역할 설명
     @Column(name = "description", length = 255)
     private String description;
 
-    // 이 역할이 가지고 있는 RoleAuthority 매핑 (양방향 매핑, 읽기 전용)
-    // 🚨 수정: RoleAuthority 대신 RoleAuthMapping 사용 (에러 해결)
+    // 🚨 필수 추가: Role과 Authority 간의 N:M을 해소하는 매핑 엔티티와의 관계 (1:N)
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<RoleAuthMapping> roleAuthMappings = new HashSet<>(); // 필드명도 변경
+    private Set<RoleAuthMapping> roleAuthMappings = new HashSet<>(); // 💡 컬렉션 필드 추가
+
+    // 필요하다면, UserRole 매핑 컬렉션 (양방향 연결)도 추가할 수 있습니다.
+    // 하지만 CustomUserDetailsService 오류 해결에는 위 RoleAuthMapping만 필요합니다.
 }

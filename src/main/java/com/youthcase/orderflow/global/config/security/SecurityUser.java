@@ -1,70 +1,73 @@
-package com.youthcase.orderflow.global.config.security; // 🚨 패키지 경로 수정
+package com.youthcase.orderflow.global.config.security;
 
-import com.youthcase.orderflow.auth.domain.User;
-import com.youthcase.orderflow.auth.domain.Role;
 import lombok.Getter;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+/**
+ * JWT 토큰 인증 후 SecurityContext에 저장될 커스텀 UserDetails 객체입니다.
+ * JWT의 Subject(사용자 ID)와 권한 정보를 담습니다.
+ */
 @Getter
+@ToString
 public class SecurityUser implements UserDetails {
 
-    private final User user;
+    // JWT Subject에서 추출한 사용자 고유 ID (Username으로 사용)
+    private final String userId;
 
-    public SecurityUser(User user) {
-        this.user = user;
-    }
+    // JWT 인증 시에는 사용하지 않으므로 빈 문자열을 받습니다.
+    private final String password;
+
+    // JWT Claims에서 추출한 권한 목록
+    private final Collection<? extends GrantedAuthority> authorities;
+
+    private final boolean isEnabled;
 
     /**
-     * 사용자가 가진 권한 목록을 반환합니다. (에러 35 해결)
+     * SecurityUser 생성자.
+     * @param userId 토큰의 Subject (Username)
+     * @param password JWT 인증 시에는 빈 문자열 ("")
+     * @param authorities 사용자의 권한 목록
      */
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // 지역 변수명 변경 (충돌 방지)
-        Set<SimpleGrantedAuthority> grantedAuthorities = user.getRoles().stream() // User 엔티티의 getRoles() 호출 가정
-                .map(Role::getRoleId)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toSet());
-
-        return grantedAuthorities; // 수정된 변수 반환
+    public SecurityUser(String userId, String password, Collection<? extends GrantedAuthority> authorities) {
+        this.userId = userId;
+        this.password = password;
+        this.authorities = authorities;
+        this.isEnabled = true; // 기본적으로 계정 활성화
     }
 
-    // --- UserDetails 필수 메서드 구현 ---
+    // --- UserDetails 인터페이스 구현 메서드 ---
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        // JWT 기반이므로 실제로 사용되지 않음
+        return this.password;
     }
 
     @Override
     public String getUsername() {
-        return user.getUserId();
+        // Spring Security에서 식별자로 사용됨
+        return this.userId;
     }
 
-    // --- 계정 상태 관련 메서드 ---
+    // 모든 계정 관련 설정은 기본적으로 true로 설정
+    @Override
+    public boolean isAccountNonExpired() { return isEnabled; }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return isEnabled; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return isEnabled; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return user.isEnabled(); // User 엔티티의 isEnabled() 호출 가정 (에러 81 해결)
-    }
+    public boolean isEnabled() { return isEnabled; }
 }

@@ -18,10 +18,5 @@ public interface AuthorityRepository extends JpaRepository<Authority, Long> {
      */
     Optional<Authority> findByAuthority(String authority);
 
-    /**
-     * 특정 URL 패턴을 포함하는 모든 권한을 조회합니다. (필요시 사용)
-     * @param url URL 패턴
-     * @return Authority 엔티티 리스트
-     */
-    List<Authority> findByUrlContaining(String url);
+    List<Authority> findByUrlPatternContaining(String urlPattern);
 }

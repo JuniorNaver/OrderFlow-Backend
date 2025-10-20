@@ -21,12 +21,15 @@ public class AuthorityInitializer implements CommandLineRunner {
                     .orElseGet(() -> {
                         Authority newAuth = Authority.builder()
                                 .authority(type.name())
-                                .url(type.getUrlPattern())
+                                // 💡 수정: url 대신 urlPattern 필드로 설정
+                                .urlPattern(type.getUrlPattern())
                                 .description(type.getDescription())
                                 .build();
                         Authority saved = authorityRepository.save(newAuth);
+
+                        // 💡 수정: getUrl 대신 getUrlPattern()으로 호출
                         System.out.printf("✅ Authority 등록됨: %s (%s)%n",
-                                saved.getAuthority(), saved.getUrl());
+                                saved.getAuthority(), saved.getUrlPattern());
                         return saved;
                     });
         }

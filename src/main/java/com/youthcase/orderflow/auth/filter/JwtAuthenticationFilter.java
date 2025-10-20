@@ -34,21 +34,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Request Header에서 토큰 추출
         String jwt = resolveToken(request);
 
-        // 2. 추출된 토큰의 유효성 검증
-        if (StringUtils.hasText(jwt) && jwtProvider.validateToken(jwt)) {
+        if (StringUtils.hasText(jwt)) {
+            if (jwtProvider.validateToken(jwt)) {
+                // 3. 토큰이 유효하면 인증 객체(Authentication) 생성 및 SecurityContext에 저장
+                Authentication authentication = jwtProvider.getAuthentication(jwt);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                // 💡 [변경] 유효하지 않은 토큰에 대해 Custom AuthenticationException을 던지도록 처리
+                //    (Spring Security의 Exception Translation Filter가 이를 잡아 EntryPoint로 전달함)
+                request.setAttribute("jwt_exception", "Invalid or Expired JWT Token");
 
-            // 3. 토큰이 유효하면 인증 객체(Authentication) 생성
-            Authentication authentication = jwtProvider.getAuthentication(jwt);
-
-            // 4. SecurityContext에 인증 정보 저장
-            // 이로써 해당 요청은 인증된 상태로 간주되어 컨트롤러까지 진행됩니다.
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                // 예외를 던지거나, EntryPoint를 명시적으로 호출해야 하지만,
+                // 현재 로직을 유지하면서 Custom EntryPoint를 통해 401을 명확히 반환하는 것이 일반적입니다.
+            }
         }
 
-        // 다음 필터로 진행
+        // 다음 필터로 진행 (401 처리는 Spring Security의 기본 EntryPoint나 Custom EntryPoint에 위임됨)
         filterChain.doFilter(request, response);
     }
 

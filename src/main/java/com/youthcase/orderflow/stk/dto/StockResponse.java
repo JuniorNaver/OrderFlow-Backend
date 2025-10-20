@@ -14,7 +14,7 @@ import java.time.LocalDate; // LocalDate import 추가
 public class StockResponse {
 
     // 1. STK 고유 정보
-    private Long stkId;             // ✅ 추가: 재고 ID (PK)
+    private Long stkId;
     private Integer quantity;
     private String status;
 
@@ -24,10 +24,10 @@ public class StockResponse {
     private BigDecimal price;
 
     // 3. 연관 엔티티 식별자 및 핵심 정보
-    private String warehouseId;     // ✅ 추가: 창고 ID
-    private Long lotId;             // ✅ 추가: 로트 ID
-    private LocalDate expDate;      // ✅ 추가: 유통기한
-    private Long grHeaderId;        // ✅ 추가: 입고 헤더 ID
+    private String warehouseId;     //창고 ID
+    private Long lotId;             //로트 ID
+    private LocalDate expDate;      //유통기한
+    private Long grHeaderId;        //입고 헤더 ID
 
     public static StockResponse fromEntity(STK s) {
         // null 체크를 포함하여 안전하게 연관 정보를 추출합니다.

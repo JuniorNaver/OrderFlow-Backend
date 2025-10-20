@@ -46,6 +46,14 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponseDTO(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
+    // ✅ 3️⃣ 리소스 찾을 수 없음 (예: StoreService에서 throw new ResourceNotFoundException)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponseDTO(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+    }
+
     // 3. [기타] JWT 토큰 관련 런타임 예외 처리 (선택적)
     // JWTProvider에서 발생하는 MalformedJwtException, ExpiredJwtException 등은
     // JwtAuthenticationFilter 내부에서 처리되어 401로 반환되므로, 여기서는 불필요할 수 있습니다.

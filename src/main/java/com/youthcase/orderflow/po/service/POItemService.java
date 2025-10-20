@@ -9,6 +9,10 @@ import java.util.List;
 
 public interface POItemService {
 
+
+    /** '담기' 클릭시 POItem 추가 */
+    POItemResponseDTO addPOItem(Long poId, POItemRequestDTO poItemRequestDTO, String gtin);
+
     /** 장바구니 상품 조회 (poId, status 기준) */
     List<POItemResponseDTO> getAllItems(Long poId, POStatus status);
 

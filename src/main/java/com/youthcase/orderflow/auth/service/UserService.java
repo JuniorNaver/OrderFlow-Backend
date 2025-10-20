@@ -1,30 +1,36 @@
 package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.domain.User;
-// import com.youthcase.orderflow.auth.dto.UserRegisterRequestDTO; // 제거: registerUser 메서드가 제거됨
+import com.youthcase.orderflow.auth.dto.UserResponseDTO;
+
 import java.util.Optional;
 
 public interface UserService {
 
-    //  제거: registerUser(UserRegisterRequestDTO) 메서드를 제거하여 UerServiceImpl의 구현 누락 에러 해결
+    /**
+     * 주어진 userId를 사용하여 사용자 상세 정보를 조회하고 UserResponseDTO로 반환합니다.
+     *
+     * @param userId 현재 인증된 사용자의 ID
+     * @return 사용자 상세 정보가 담긴 UserResponseDTO
+     */
+    UserResponseDTO getUserDetails(String userId);
+
+    // 💡 추가: Roles 컬렉션까지 함께 Fetch Join으로 로드하는 메서드
+    /**
+     * 사용자 ID로 User 엔티티를 조회합니다. (Roles 컬렉션을 EAGER 로딩)
+     * @param userId 조회할 사용자 ID
+     * @return User 엔티티 (Optional)
+     */
+    Optional<User> findByUserIdWithRoles(String userId);
 
     /**
-     * 사용자 ID로 User 엔티티를 조회합니다.
+     * 사용자 ID로 User 엔티티를 조회합니다. (일반 LAZY 로딩)
      * @param userId 조회할 사용자 ID
      * @return User 엔티티 (Optional)
      */
     Optional<User> findByUserId(String userId);
 
-    /**
-     * 사용자의 이름, 근무지, 이메일 정보를 업데이트합니다. ( 신규 추가)
-     */
+    // ... (나머지 메서드 유지) ...
     User updateUserDetails(String userId, String username, String workspace, String email);
-
-    /**
-     * 로그인된 사용자 본인의 비밀번호를 변경합니다.
-     * @param userId 비밀번호를 변경할 사용자 ID
-     * @param newRawPassword 새로운 비밀번호 (인코딩 전)
-     */
     void changePassword(String userId, String newRawPassword);
 }
-// -- END --

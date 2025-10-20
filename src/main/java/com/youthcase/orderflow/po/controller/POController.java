@@ -27,19 +27,31 @@ public class POController {
         this.poService = poService;
     }
 
-    /** 장바구니 PO 생성 */
+    /** '담기' 클릭시 POHeader 추가 */
     @PostMapping("") // POST /api/po
     public ResponseEntity<Map<String, Long>> createPO() {
         Long poId = poHeaderService.createNewPO(); // status = PR
         return ResponseEntity.ok(Map.of("poId", poId));
     }
 
+    /** '담기' 클릭시 POItem 추가 */
+    @PostMapping("/{poId}/items")
+    public ResponseEntity<POItemResponseDTO> addPOItem(
+            @PathVariable Long poId,
+            @RequestBody POItemRequestDTO poItemRequestDTO,
+            @RequestParam String gtin
+    ) {
+        POItemResponseDTO response = poItemService.addPOItem(poId, poItemRequestDTO, gtin);
+        return ResponseEntity.ok(response);
+    }
+
+
+
     /** 장바구니 상품 조회: 헤더id와 상태 기준으로 아이템 목록 찾아오기 */
     @GetMapping("/items")
     public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
         return poItemService.getAllItems(poId, status);
     }
-
 
 
 

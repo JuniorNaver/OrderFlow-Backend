@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.stk.service;
 
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.dto.AdjustmentRequest;
 import com.youthcase.orderflow.stk.dto.DisposalRequest;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO; // 👈 DTO import 추가
 import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
@@ -47,6 +48,7 @@ public interface STKService {
 
     // Date 대신 LocalDate를 사용하여 일관성 및 안정성 확보
     List<STK> disposeExpiredStock(LocalDate targetDate);
+    List<STK> markExpiredStock();
     List<STK> markNearExpiryStock(LocalDate targetDate);
     List<STK> searchByProductName(String name);
     List<STK> findRelocationRequiredStocks();
@@ -56,5 +58,7 @@ public interface STKService {
     STK findFirstAvailableByGtin(String gtin);
     // 폐기 요청을 받아 재고를 처리하는 메서드 추가
     List<STK> executeDisposal(DisposalRequest request);
+    List<STK> findStocksRequiringAdjustment();
+    List<STK> executeStockAdjustment(AdjustmentRequest request);
 
 }

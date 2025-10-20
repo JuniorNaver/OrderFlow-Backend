@@ -69,10 +69,9 @@ public class AuthServiceImpl implements AuthService {
         // 1. 토큰 유효성 검사 및 사용자 ID 획득
         String userId = validatePasswordResetToken(token);
 
-        // 2. 비밀번호 초기화에 사용된 토큰 사용 처리 (중복 사용 방지)
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 토큰입니다."));
-
+        // 수정: 리포지토리에 정의된 정확한 메서드 이름 'findByTokenAndUsedFalse'를 사용합니다.
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenAndUsedFalse(token)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("유효한 토큰을 찾을 수 없습니다: %s", token)));
         resetToken.useToken();
         passwordResetTokenRepository.save(resetToken); // 사용 플래그 업데이트
 
@@ -83,10 +82,9 @@ public class AuthServiceImpl implements AuthService {
         // 새 비밀번호 암호화 및 업데이트
         String encodedPassword = passwordEncoder.encode(newPassword);
 
-        // 🚨 수정: user.setPassword(encodedPassword) 대신 updatePassword() 사용
+        // User 엔티티의 updatePassword 메서드를 사용하여 업데이트
         user.updatePassword(encodedPassword);
 
-        // @Transactional이므로 save는 생략 가능하지만, 명시적으로 호출할 수도 있습니다.
         userRepository.save(user);
     }
 
@@ -139,8 +137,14 @@ public class AuthServiceImpl implements AuthService {
 
         LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
 
-        // 토큰을 DB에 저장 (3개의 인수가 필요하다고 가정)
-        PasswordResetToken tokenEntity = new PasswordResetToken(user.getUserId(), resetToken, expiryDate);
+        // 💡 수정: PasswordResetToken.builder()를 사용하여 User 객체를 참조하도록 변경
+        PasswordResetToken tokenEntity = PasswordResetToken.builder()
+                .user(user) // User 객체 직접 참조
+                .token(resetToken)
+                .expiryDate(expiryDate)
+                .used(false)
+                .build();
+
         passwordResetTokenRepository.save(tokenEntity);
 
         // 3. 이메일 본문 생성 및 발송
@@ -166,8 +170,8 @@ public class AuthServiceImpl implements AuthService {
     public String validatePasswordResetToken(String token) {
 
         // 1. 토큰 값으로 엔티티 조회
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않거나 만료된 토큰입니다."));
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenAndUsedFalse(token)
+                .orElseThrow(() -> new IllegalArgumentException(String.format("유효한 토큰을 찾을 수 없습니다: %s", token)));
 
         // 2. 토큰 사용 여부 및 만료 시간 확인
         if (resetToken.isUsed() || resetToken.isExpired()) {
@@ -176,12 +180,16 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 3. 검증 성공 시 사용자 ID 반환
-        return resetToken.getUserId();
+        // 💡 수정: User 엔티티에서 ID를 추출하도록 변경
+        return resetToken.getUser().getUserId();
     }
 
+    /**
+     * 사용자 회원가입을 처리하고, 생성된 사용자의 ID를 반환합니다.
+     */
     @Override
     @Transactional
-    public void registerNewUser(UserRegisterRequestDTO request) {
+    public String registerNewUser(UserRegisterRequestDTO request) {
 
         // 1. (선택적) userId 중복 확인
         if (userRepository.existsByUserId(request.getUserId())) {
@@ -191,7 +199,6 @@ public class AuthServiceImpl implements AuthService {
         // 2. DTO 정보를 기반으로 User 엔티티 생성
         User user = User.builder()
                 .userId(request.getUserId())
-                // 🚨 수정: .username(...) 대신 .name(...) 사용
                 .name(request.getUsername())
                 .email(request.getEmail())
                 .workspace(request.getWorkspace())
@@ -199,6 +206,9 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
 
-        userRepository.save(user);
+        // 4. 저장 및 생성된 User ID 반환
+        User savedUser = userRepository.save(user);
+
+        return savedUser.getUserId();
     }
 }
