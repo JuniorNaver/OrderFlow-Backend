@@ -32,7 +32,7 @@ public class AdminAuthorityController {
 
         Authority newAuthority = authorityService.createAuthority(
                 request.getAuthority(),
-                request.getUrl()
+                request.getUrlPattern()
         );
 
         return ResponseEntity
@@ -68,7 +68,7 @@ public class AdminAuthorityController {
         Authority updatedAuthority = authorityService.updateAuthority(
                 authorityId,
                 request.getAuthority(),
-                request.getUrl()
+                request.getUrlPattern()
         );
 
         return ResponseEntity.ok(AuthorityResponseDTO.from(updatedAuthority));

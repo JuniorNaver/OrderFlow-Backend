@@ -22,7 +22,7 @@ public class RefreshToken {
     // PK: 사용자 ID (User 테이블의 PK가 아님, 논리적 연결을 위한 ID)
     @Id
     @Column(name = "USER_ID", length = 50, nullable = false)
-    private String userId;
+    private String userId; // 이대로 유지하거나, 필드명을 userPkId 등으로 명확히 해도 좋음
 
     // Refresh Token 값 자체
     @Column(name = "TOKEN", length = 500, nullable = false)

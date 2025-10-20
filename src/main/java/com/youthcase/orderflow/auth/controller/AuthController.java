@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/auth") // 인증 관련 경로를 관리
@@ -88,11 +91,19 @@ public class AuthController {
      * @param request UserRegisterRequestDTO
      * @return ResponseEntity<Void> (201 Created)
      */
+    // AuthController.java (개선)
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody UserRegisterRequestDTO request) {
-        authService.registerNewUser(request);
-        // 리소스 생성 성공 시 201 Created 응답
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        String userId = authService.registerNewUser(request); // userId 반환하도록 Service 수정 가정
+
+        // 생성된 리소스의 위치(Location)를 헤더에 포함 (예: /api/auth/users/{userId})
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(userId) // 생성된 User ID를 사용
+                .toUri();
+
+        return ResponseEntity.created(location).build(); // 201 Created + Location 헤더
     }
 
     /**

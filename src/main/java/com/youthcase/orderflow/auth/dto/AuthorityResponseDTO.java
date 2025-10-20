@@ -5,26 +5,20 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder // 빌더 패턴을 사용하여 객체 생성
+@Builder
 public class AuthorityResponseDTO {
 
     private Long authorityId;
     private String authority;
-    private String url;
-
-    /**
-     * Authority 엔티티를 AuthorityResponseDTO로 변환하는 정적 팩토리 메서드
-     * @param authority 변환할 Authority 엔티티
-     * @return AuthorityResponseDTO 객체
-     */
+    // 💡 필드명을 Request DTO, Entity와 동일하게 urlPattern으로 변경
+    private String urlPattern;
 
     public static AuthorityResponseDTO from(Authority authority) {
         return AuthorityResponseDTO.builder()
-                // 💡 authority.getId()로 수정 (엔티티 PK 필드명에 맞춤)
                 .authorityId(authority.getId())
                 .authority(authority.getAuthority())
-                // 💡 authority.getUrl() 호출이 가능하도록 Authority 엔티티에 url 필드가 있다고 가정
-                .url(authority.getUrl())
+                // 💡 Getter도 urlPattern에 맞춥니다.
+                .urlPattern(authority.getUrlPattern())
                 .build();
     }
 }

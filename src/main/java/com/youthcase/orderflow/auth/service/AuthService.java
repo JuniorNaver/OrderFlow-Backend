@@ -32,7 +32,10 @@ public interface AuthService {
      */
     void resetPassword(String token, String newPassword);
 
-    void registerNewUser(UserRegisterRequestDTO request);
-
-
+    /**
+     * [수정] 사용자 회원가입을 처리하고, 생성된 사용자의 ID를 반환합니다.
+     * @param request 사용자 등록 요청 DTO
+     * @return 생성된 사용자의 ID (String)
+     */
+    String registerNewUser(UserRegisterRequestDTO request);
 }
