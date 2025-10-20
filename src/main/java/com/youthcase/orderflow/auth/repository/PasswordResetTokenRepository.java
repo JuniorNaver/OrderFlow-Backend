@@ -10,13 +10,21 @@ import java.util.Optional;
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
 
     /**
-     * 토큰 값(String token)으로 PasswordResetToken 엔티티를 조회합니다.
+     * 특정 사용자 ID(PK)에 대해 아직 사용되지 않은(Used=false) 토큰을 조회합니다.
+     * * [쿼리 파싱 경로 설명]
+     * findBy -> PasswordResetToken
+     * User -> PasswordResetToken 엔티티의 'user' 필드 (ManyToOne 관계)
+     * UserId -> User 엔티티의 'userId' 필드 (AppUser의 PK로 예상)
+     * AndUsedFalse -> PasswordResetToken 엔티티의 'used' 필드가 false인 조건
+     * * @param userId 사용자 엔티티의 기본 키(String 타입으로 가정)
+     * @return 사용 가능한 PasswordResetToken
      */
-    Optional<PasswordResetToken> findByToken(String token);
+    Optional<PasswordResetToken> findByUserUserIdAndUsedFalse(String userId);
 
     /**
-     * 사용자 ID로 아직 사용되지 않은 유효한 토큰을 조회합니다. (선택적)
-     * 이 메서드를 사용하여 사용자가 여러 개의 초기화 토큰을 생성하는 것을 방지할 수 있습니다.
+     * 토큰 값(String token)으로 아직 사용되지 않은 토큰을 조회합니다.
+     * @param token 토큰 문자열
+     * @return 사용 가능한 PasswordResetToken
      */
-    Optional<PasswordResetToken> findByUserIdAndUsedFalse(String userId);
+    Optional<PasswordResetToken> findByTokenAndUsedFalse(String token);
 }

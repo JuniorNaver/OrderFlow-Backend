@@ -27,21 +27,33 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
 
-        // 1. 응답 상태 코드 및 Content Type 설정
+        // 💡 1. Filter에서 설정한 예외 Attribute 확인
+        String exception = (String) request.getAttribute("jwt_exception");
+
+        // 최종 응답 메시지를 저장할 변수
+        String errorMessage;
+
+        if (exception != null) {
+            // Filter에서 명시적으로 오류가 설정된 경우 (유효하지 않은 토큰)
+            errorMessage = exception;
+        } else {
+            // SecurityContext에 인증 정보가 없어 EntryPoint가 호출된 일반적인 경우 (토큰 없음)
+            errorMessage = "인증 정보(JWT 토큰)가 없거나 유효하지 않습니다.";
+        }
+
+        // 2. 응답 상태 코드 및 Content Type 설정
         response.setStatus(HttpStatus.UNAUTHORIZED.value()); // 401 Unauthorized
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        // 2. 클라이언트에게 전달할 오류 메시지 작성
+        // 3. 클라이언트에게 전달할 오류 메시지 작성
         Map<String, Object> errorDetails = new HashMap<>();
         errorDetails.put("status", HttpStatus.UNAUTHORIZED.value());
         errorDetails.put("error", "Unauthorized");
-
-        // authException.getMessage()를 통해 구체적인 오류를 전달할 수 있습니다.
-        errorDetails.put("message", "인증 정보(JWT 토큰)가 없거나 유효하지 않습니다.");
+        errorDetails.put("message", errorMessage); // 💡 동적으로 메시지 설정
         errorDetails.put("path", request.getRequestURI());
 
-        // 3. JSON 형태로 응답 스트림에 쓰기
+        // 4. JSON 형태로 응답 스트림에 쓰기
         response.getWriter().write(objectMapper.writeValueAsString(errorDetails));
     }
 }

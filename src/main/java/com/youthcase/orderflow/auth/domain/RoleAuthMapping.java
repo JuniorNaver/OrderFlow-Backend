@@ -37,9 +37,8 @@ public class RoleAuthMapping {
 
     @Builder
     public RoleAuthMapping(Role role, Authority authority) {
-        // 🚨 수정: authority.getAuthorityId() 대신 authority.getId() 호출
-        this.id = new RoleAuthMappingId(role.getRoleId(), authority.getId());
         this.role = role;
         this.authority = authority;
+        // this.id = new RoleAuthMappingId(role.getRoleId(), authority.getId()); 이 부분은 제거
     }
 }

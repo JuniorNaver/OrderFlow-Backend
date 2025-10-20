@@ -32,9 +32,7 @@ public class UserController {
         String userId = securityUser.getUsername();
 
         User user = userService.findByUserId(userId)
-                // Optional<User>를 반환한다고 가정
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
-
+                .orElseThrow(() -> new IllegalStateException("인증된 사용자의 DB 정보를 찾을 수 없습니다: " + userId));
         return ResponseEntity.ok(UserResponseDTO.from(user));
     }
 

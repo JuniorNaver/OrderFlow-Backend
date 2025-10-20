@@ -4,9 +4,10 @@ import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.dto.DisposalRequest;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
 import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
+import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ AdjustmentRequest DTO 임포트
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
-import com.youthcase.orderflow.pr.repository.LotRepository; // LotRepository import
+import com.youthcase.orderflow.pr.repository.LotRepository;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -68,24 +69,22 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional
     public STK createStock(STK stock) {
-        // =======================================================
-        // 🚨 ORA-02291 방지를 위한 필수 부모 키의 존재 여부 사전 검증
-        // =======================================================
+        // ... (생략: 부모 키 존재 여부 검증 로직)
 
-        // 1. Product (GTIN) 검증 (타입: String)
+        // 1. Product (GTIN) 검증
         String gtin = stock.getProduct() != null ? stock.getProduct().getGtin() : null;
         if (gtin == null || !productRepository.existsById(gtin)) {
             throw new IllegalArgumentException("참조하려는 제품 (GTIN) 정보가 DB에 존재하지 않거나 필수입니다: " + gtin);
         }
 
-        // 2. Lot ID 검증 (getId()가 아닌 getLotId()로 가정하여 수정. 실제 Lot 엔티티에 따라 수정 필요)
-        Long lotId = stock.getLot() != null ? stock.getLot().getLotId() : null; // ⭐️ getLotId()로 수정 (가정)
+        // 2. Lot ID 검증
+        Long lotId = stock.getLot() != null ? stock.getLot().getLotId() : null;
         if (lotId == null || !lotRepository.existsById(lotId)) {
             throw new IllegalArgumentException("참조하려는 Lot (ID) 정보가 DB에 존재하지 않거나 필수입니다: " + lotId);
         }
 
-        // 3. Warehouse ID 검증 (타입: String으로 수정)
-        String warehouseId = stock.getWarehouse() != null ? stock.getWarehouse().getWarehouseId() : null; // ⭐️ String으로 타입 변경
+        // 3. Warehouse ID 검증
+        String warehouseId = stock.getWarehouse() != null ? stock.getWarehouse().getWarehouseId() : null;
         if (warehouseId == null || !warehouseRepository.existsById(warehouseId)) {
             throw new IllegalArgumentException("참조하려는 창고 (Warehouse ID) 정보가 DB에 존재하지 않거나 필수입니다: " + warehouseId);
         }
@@ -122,14 +121,12 @@ public class STKServiceImpl implements STKService {
 
     @Override
     public List<STK> getStockByProductGtin(String gtin) {
+        // 재고가 0보다 큰 활성 재고 랏 목록을 유통기한 순으로 조회
         return stkRepository.findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0);
     }
 
-    /**
-     * ⭐️ STKService의 findByGtin(String) 메서드 구현 (반환 타입 STK로 가정)
-     */
     @Override
-    public STK findByGtin(String gtin) { // ⭐️ 반환 타입을 STK로 수정
+    public STK findByGtin(String gtin) {
         return stkRepository.findTopByProduct_Gtin(gtin)
                 .orElseThrow(() -> new NoSuchElementException("GTIN에 해당하는 재고를 찾을 수 없습니다: " + gtin));
     }
@@ -142,22 +139,35 @@ public class STKServiceImpl implements STKService {
     @Override
     public List<STK> findExpiredStocks() {
         LocalDate today = LocalDate.now();
+        // 유통기한 만료된 활성 재고 목록을 조회하여 폐기 예정 목록으로 반환
         return stkRepository.findExpiredActiveStockBefore(today);
     }
 
+
+
+
     // --------------------------------------------------
-    // 🗑️ 폐기 및 출고 처리 로직 (추상 메서드 구현 누락 해결)
+    // 🗑️ 폐기 및 출고 처리 로직
     // --------------------------------------------------
 
-    /**
-     * ⭐️ STKService의 추상 메서드 구현: 유통기한 만료 재고 폐기 처리
-     */
+    // ⭐️ markExpiredStock() 메서드 (STKService에 정의된 것으로 가정하고 @Override 유지)
     @Override
     @Transactional
-    public List<STK> disposeExpiredStock(LocalDate targetDate) { // ⭐️ 구현 추가
+    public List<STK> markExpiredStock() {
+        LocalDate today = LocalDate.now();
+        List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(today);
+        for (STK stock : expiredStocks) {
+            stock.updateStatus("EXPIRED");
+            stkRepository.save(stock);
+        }
+        return expiredStocks;
+    }
+
+    @Override
+    @Transactional
+    public List<STK> disposeExpiredStock(LocalDate targetDate) {
         List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(targetDate);
         for (STK stock : expiredStocks) {
-            // [TODO] 폐기 로직: 재고를 0으로 만들고 상태를 'DISPOSED'로 변경
             stock.setQuantity(0);
             stock.updateStatus("DISPOSED");
             stkRepository.save(stock);
@@ -165,15 +175,11 @@ public class STKServiceImpl implements STKService {
         return expiredStocks;
     }
 
-    /**
-     * ⭐️ STKService의 추상 메서드 구현: 유통기한 임박 재고 표시
-     */
     @Override
     @Transactional
-    public List<STK> markNearExpiryStock(LocalDate targetDate) { // ⭐️ 구현 추가
+    public List<STK> markNearExpiryStock(LocalDate targetDate) {
         List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(targetDate);
         for (STK stock : nearExpiryStocks) {
-            // [TODO] 임박 재고 로직: 상태를 'NEAR_EXPIRY'로 변경
             stock.updateStatus("NEAR_EXPIRY");
             stkRepository.save(stock);
         }
@@ -183,7 +189,7 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional
     public void deductStockForSalesOrder(StockDeductionRequestDTO requestDTO) {
-        // ... (로직 생략 없이 유지)
+        // ... (출고 차감 로직 생략 없이 유지)
         for (StockDeductionRequestDTO.DeductionItem item : requestDTO.getItems()) {
             String gtin = item.getGtin();
             Integer requiredQuantity = item.getQuantity();
@@ -215,23 +221,23 @@ public class STKServiceImpl implements STKService {
         }
     }
 
+    // --------------------------------------------------
+    // 🗑️ 개별 폐기 실행 로직
+    // --------------------------------------------------
+
     @Override
     @Transactional
     public List<STK> executeDisposal(DisposalRequest request) {
-        // 처리된 STK 객체를 담을 리스트
         List<STK> updatedStocks = new ArrayList<>();
 
         for (DisposalRequest.DisposalItem item : request.getItems()) {
             Long lotId = item.getLotId();
             int requestedQuantity = item.getQuantity();
 
-            // 1. lotId로 해당하는 STK 객체를 찾습니다. (LotId는 STK와 1:1 또는 STK가 Lot을 참조한다고 가정)
-            // 여기서는 Lot 엔티티를 통해 STK를 찾는 대신, STK 엔티티에 lotId를 직접 필터링할 수 있다고 가정합니다.
-            // 실제 데이터 모델에 맞게 findByLotId로 수정해야 합니다. (예: stkRepository.findByLot_LotId(lotId))
-            Optional<STK> stkOptional = stkRepository.findByLot_LotId(lotId);
+            // Lot ID로 활성 재고를 찾습니다.
+            Optional<STK> stkOptional = stkRepository.findByLot_LotIdAndQuantityGreaterThan(lotId, 0);
 
             if (stkOptional.isEmpty()) {
-                // 해당 Lot ID에 대한 활성 재고가 없는 경우
                 throw new NoSuchElementException("Lot ID " + lotId + "에 해당하는 활성 재고를 찾을 수 없습니다.");
             }
 
@@ -239,17 +245,15 @@ public class STKServiceImpl implements STKService {
             int currentQuantity = stock.getQuantity();
 
             if (requestedQuantity <= 0 || requestedQuantity > currentQuantity) {
-                // 요청 수량이 유효하지 않은 경우
                 throw new IllegalArgumentException("Lot ID " + lotId + "에 대한 폐기 요청 수량(" + requestedQuantity + ")이 유효하지 않습니다.");
             }
 
-            // 2. 재고 수량 감소
+            // 재고 수량 감소 및 상태 변경
             int newQuantity = currentQuantity - requestedQuantity;
             stock.setQuantity(newQuantity);
 
-            // 3. 폐기 완료 시 상태 변경
             if (newQuantity == 0) {
-                stock.updateStatus("DISPOSED"); // 또는 'INACTIVE', 'RETIRED' 등 폐기 상태
+                stock.updateStatus("DISPOSED");
             }
 
             stkRepository.save(stock);
@@ -257,5 +261,58 @@ public class STKServiceImpl implements STKService {
         }
 
         return updatedStocks;
+    }
+
+    // --------------------------------------------------
+    // ⚙️ 재고 조정 실행 로직 (AdjustmentRequest 구현)
+    // --------------------------------------------------
+
+    /**
+     * ⭐️ 재고 조정 요청을 받아 최종 수량으로 업데이트합니다.
+     */
+    @Override
+    @Transactional
+    public List<STK> executeStockAdjustment(AdjustmentRequest request) {
+        List<STK> updatedStocks = new ArrayList<>();
+
+        for (AdjustmentRequest.AdjustmentItem item : request.getItems()) {
+
+            Long lotId = item.getLotId();
+            int targetQuantity = item.getTargetQuantity();
+
+            // Lot ID로 조정할 STK 재고 항목을 조회합니다. (재고가 0 이하라도 조회되어야 하므로 findByLot_LotId 사용)
+            Optional<STK> stkOptional = stkRepository.findByLot_LotId(lotId);
+
+            STK stock = stkOptional
+                    .orElseThrow(() -> new NoSuchElementException("Lot ID " + lotId + "에 해당하는 재고를 찾을 수 없습니다."));
+
+            // 현재 수량과 목표 수량이 다를 때만 처리합니다.
+            if (stock.getQuantity() != targetQuantity) {
+
+                // STK 엔티티의 updateQuantity를 사용하여 수량을 업데이트하고 최종 업데이트 시간을 기록합니다.
+                stock.updateQuantity(targetQuantity);
+
+                // 조정 후 상태 로직 (비즈니스 요구사항에 맞게 상태를 업데이트)
+                if (stock.getQuantity() <= 0) {
+                    // 조정 후에도 수량이 0 이하인 경우 (예: 손실 확정)
+                    stock.updateStatus("ADJUSTED_TO_INACTIVE");
+                } else {
+                    // 조정 후 수량이 양수이면 ACTIVE 상태로 복귀
+                    stock.updateStatus("ACTIVE");
+                }
+
+                stkRepository.save(stock);
+                updatedStocks.add(stock);
+            }
+        }
+
+        return updatedStocks;
+    }
+
+    // ⭐️ 재고 조정이 필요한 (수량이 0 이하인) 재고 목록 조회 메서드 구현
+    @Override
+    public List<STK> findStocksRequiringAdjustment() {
+        // 0 이하의 수량을 가진 재고를 조회합니다.
+        return stkRepository.findByQuantityLessThanEqual(0);
     }
 }

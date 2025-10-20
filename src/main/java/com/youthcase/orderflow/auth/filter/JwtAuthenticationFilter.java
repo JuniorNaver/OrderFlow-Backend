@@ -34,18 +34,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Request Header에서 토큰 추출
         String jwt = resolveToken(request);
 
-        // 2. 추출된 토큰의 유효성 검증
-        if (StringUtils.hasText(jwt) && jwtProvider.validateToken(jwt)) {
-
-            // 3. 토큰이 유효하면 인증 객체(Authentication) 생성
-            Authentication authentication = jwtProvider.getAuthentication(jwt);
-
-            // 4. SecurityContext에 인증 정보 저장
-            // 이로써 해당 요청은 인증된 상태로 간주되어 컨트롤러까지 진행됩니다.
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (StringUtils.hasText(jwt)) {
+            if (jwtProvider.validateToken(jwt)) {
+                // 3. 토큰이 유효하면 인증 객체(Authentication) 생성
+                Authentication authentication = jwtProvider.getAuthentication(jwt);
+                // 4. SecurityContext에 인증 정보 저장
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                // 💡 유효하지 않은 토큰에 대한 오류 메시지를 request attribute에 설정
+                request.setAttribute("jwt_exception", "Invalid or Expired JWT Token");
+            }
         }
 
         // 다음 필터로 진행

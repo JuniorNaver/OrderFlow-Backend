@@ -2,82 +2,64 @@ package com.youthcase.orderflow.stk.repository;
 
 import com.youthcase.orderflow.stk.domain.STK;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query; // ⭐️ sumActiveQuantity를 위해 필요할 수 있습니다.
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface STKRepository extends JpaRepository<STK, Long> {
 
-    // 1. 전체 재고의 수량(quantity) 합계를 구하는 메서드
-    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.status NOT IN ('DISPOSED', 'INACTIVE')")
-    Long sumActiveQuantity();
+    // --------------------------------------------------
+    // 📦 재고 조회 및 FIFO (활성 재고)
+    // --------------------------------------------------
 
-    // 2. 유통기한 만료 재고 조회
-    @Query("SELECT s FROM STK s JOIN s.lot l " +
-            "WHERE s.status = 'ACTIVE' AND l.expDate < :targetDate")
-    List<STK> findExpiredActiveStockBefore(@Param("targetDate") LocalDate targetDate);
-
-    // 3. 유통기한 임박 재고 조회
-    /**
-     * 현재 활성(ACTIVE) 상태의 재고 중 유통기한이 (오늘 ~ limitDate) 사이에 있는 재고를 조회합니다.
-     * @param limitDate 임박 기준일 (예: 오늘 + 90일)
-     */
-    @Query("SELECT s FROM STK s JOIN s.lot l " +
-            "WHERE s.status = 'ACTIVE' AND l.expDate <= :limitDate AND l.expDate >= CURRENT_DATE")
-    List<STK> findNearExpiryActiveStock(@Param("limitDate") LocalDate limitDate);
-
-    // 4. 특정 상품의 재고를 유통기한 오름차순으로 조회 (수량 > 0)
+    /** GTIN과 수량이 0보다 큰 활성 재고를 유통기한 순으로 조회 (FIFO 원칙) */
     List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, int quantity);
 
-    // 5. 상품명으로 재고 검색 (대소문자 무시, 부분 일치)
-    List<STK> findByProduct_ProductNameContainingIgnoreCase(String name);
-
-    @Query("SELECT s FROM STK s " +
-            "JOIN FETCH s.product p " +
-            "JOIN FETCH s.lot l " +
-            "JOIN FETCH s.warehouse w " +
-            "LEFT JOIN FETCH s.goodsReceipt gr")
-    List<STK> findAllWithDetails();
-
-    /**
-     * 위치 변경이 필요한 재고를 조회하는 쿼리 메서드 (예시)
-     */
-    List<STK> findByIsRelocationNeededTrue();
-
+    /** 특정 GTIN의 재고 하나를 조회 */
     Optional<STK> findTopByProduct_Gtin(String gtin);
 
-    // 💡 또 다른 예시: 위치 코드에 'R' (Relocation, 임시 보관소 등)이 포함된 재고를 제외하는 경우
-    // List<STK> findByLocationNotContaining(String code);
-
-    Optional<STK> findByProduct_Gtin(String gtin);
-    /**
-     * 특정 창고/지점의 모든 활성 재고(STK)를 조회하고, 제품(Product)의 GTIN과 Lot의 유통기한(EXP_DATE) 순으로 정렬합니다.
-     * 이를 통해 FIFO 위배 검사를 위한 데이터를 준비합니다.
-     */
-    @Query("SELECT s FROM STK s " +
-            "JOIN FETCH s.lot l " +
-            "JOIN FETCH s.product p " +
-            "WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 " +
-            "ORDER BY p.gtin ASC, l.expDate ASC")
-    List<STK> findActiveStocksForFifoCheck(@Param("warehouseId") Long warehouseId);
-
-    @Query("SELECT s FROM STK s JOIN s.product p JOIN s.lot l " +
-            "WHERE p.gtin = :gtin AND s.quantity > 0 " +
-            "ORDER BY l.expDate ASC")
-    List<STK> findActiveStockLotsByGtin(@Param("gtin") String gtin);
-
-    /**
-     * ⭐️ 추가: Lot ID를 기준으로 활성 재고(quantity > 0)를 조회
-     * Lot 엔티티의 lotId 필드를 참조하는 STK를 찾습니다.
-     * STK 엔티티에 Lot lot; 필드가 있고 Lot 엔티티에 Long lotId; 필드가 있다고 가정합니다.
-     */
+    /** Lot ID로 수량이 0보다 큰 활성 재고 조회 (폐기 처리 시 사용) */
     Optional<STK> findByLot_LotIdAndQuantityGreaterThan(Long lotId, int quantity);
 
-    // 폐기 로직에서 Lot ID로만 찾고 싶은 경우 (수량 체크는 서비스에서 하므로 0보다 큰 재고만 조회하지 않아도 됨)
+    /** Lot ID로 STK 조회 (조정 처리 시 수량 0 이하도 조회하기 위해 사용) */
     Optional<STK> findByLot_LotId(Long lotId);
+
+    // --------------------------------------------------
+    // 🗑️ 상태 및 기간 조회
+    // --------------------------------------------------
+
+    /** 특정 날짜 이전에 유통기한이 만료된 활성 재고 조회 (폐기 목록/실행) */
+    // STK 엔티티가 Lot 엔티티를 통해 유통기한(expDate)을 참조한다고 가정
+    @Query("SELECT s FROM STK s JOIN s.lot l WHERE l.expDate < :date AND s.quantity > 0 AND s.status = 'ACTIVE'")
+    List<STK> findExpiredActiveStockBefore(LocalDate date);
+
+    /** 특정 날짜까지 유통기한이 임박한 활성 재고 조회 (대시보드 현황) */
+    @Query("SELECT s FROM STK s JOIN s.lot l WHERE l.expDate <= :limitDate AND s.quantity > 0 AND s.status = 'ACTIVE'")
+    List<STK> findNearExpiryActiveStock(LocalDate limitDate);
+
+    /** 위치 변경 필요 재고 조회 */
+    List<STK> findByIsRelocationNeededTrue();
+
+    /** 상품명으로 재고 검색 */
+    List<STK> findByProduct_ProductNameContainingIgnoreCase(String name);
+
+    /** 재고 총 수량 합계 (대시보드 현황) */
+    // ⭐️ 재고 상태가 ACTIVE인 재고의 수량 합계를 구하는 쿼리 (가정)
+    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.status = 'ACTIVE'")
+    Long sumActiveQuantity();
+
+    // --------------------------------------------------
+    // ⚙️ 재고 조정 관련 (Quantity <= N)
+    // --------------------------------------------------
+
+    /** * ⭐️ 수량 조정 대상 목록 조회: 수량이 지정된 값(예: 0) 이하인 재고 항목들을 조회합니다.
+     * FIFO 위반 등으로 수량 불일치가 발생한 재고를 찾을 때 사용됩니다.
+     */
+    List<STK> findByQuantityLessThanEqual(Integer quantity);
+
+    // ⭐️ 특정 창고 ID의 활성 재고를 유통기한 순으로 조회 (FIFO 검사 목적)
+    @Query("SELECT s FROM STK s JOIN s.lot l WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 AND s.status = 'ACTIVE' ORDER BY l.expDate ASC")
+    List<STK> findActiveStocksForFifoCheck(Long warehouseId);
 }

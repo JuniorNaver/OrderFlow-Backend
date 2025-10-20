@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors; // 💡 Collectors import 추가
 
 /**
  * 사용자 정보를 담는 엔티티입니다.
@@ -34,7 +35,7 @@ public class User {
     @Column(name = "email", length = 100)
     private String email;
 
-    // 💡 필수 추가 필드: 근무지 (UserService에서 사용됨)
+    // 근무지 (UserService에서 사용됨)
     @Column(name = "workspace", length = 100)
     private String workspace;
 
@@ -42,24 +43,20 @@ public class User {
     @Builder.Default
     private boolean enabled = true;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    // 💡 변경: UserRole 엔티티를 참조하는 1:N 관계로 변경됨
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<Role> roles = new HashSet<>();
+    private Set<UserRole> userRoles = new HashSet<>();
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
 
+    // --- 비즈니스 로직 지원 메서드 ---
 
     // UserService.updateUserDetails() 지원 메서드
     public void updateDetails(String name, String workspace, String email) {
-        // 비즈니스 규칙에 따라 null 체크 또는 유효성 검사를 추가할 수 있습니다.
         if (name != null) this.name = name;
         if (workspace != null) this.workspace = workspace;
         if (email != null) this.email = email;
@@ -70,7 +67,13 @@ public class User {
         this.password = newHashedPassword;
     }
 
-    public void addRoles(Set<Role> roles) {
-        this.roles = roles;
+    // 💡 추가: UserResponseDTO에서 getRoles() 오류를 해결하기 위해 추가된 헬퍼 메서드
+    /**
+     * UserRole 관계를 통해 연결된 실제 Role 엔티티 목록을 반환합니다.
+     */
+    public Set<Role> getRoles() {
+        return this.userRoles.stream()
+                .map(UserRole::getRole) // UserRole 엔티티에 getRole()이 있다고 가정
+                .collect(Collectors.toSet());
     }
 }

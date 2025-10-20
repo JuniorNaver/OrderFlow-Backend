@@ -27,4 +27,3 @@ public interface UserService {
      */
     void changePassword(String userId, String newRawPassword);
 }
-// -- END --
