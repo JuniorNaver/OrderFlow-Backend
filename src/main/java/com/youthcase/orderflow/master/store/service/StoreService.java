@@ -121,9 +121,8 @@ public class StoreService {
 
     @Transactional
     public void delete(String storeId) {
-        if (!repository.existsById(storeId)) {
-            throw new ResourceNotFoundException("삭제할 지점을 찾을 수 없습니다: " + storeId); // ✅ 404 처리
-        }
-        repository.deleteById(storeId);
+        Store store = repository.findById(storeId)
+                .orElseThrow(() -> new ResourceNotFoundException("삭제할 지점을 찾을 수 없습니다: " + storeId));
+        repository.delete(store);
     }
 }

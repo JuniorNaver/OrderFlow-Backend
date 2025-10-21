@@ -11,6 +11,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate; // Lot의 expDate 필드를 위해 추가
 import java.time.LocalDateTime;
@@ -57,6 +59,7 @@ public class STK {
     // ============= FK 매핑 =============
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WAREHOUSE_ID", referencedColumnName = "WAREHOUSE_ID")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private Warehouse warehouse;
 
