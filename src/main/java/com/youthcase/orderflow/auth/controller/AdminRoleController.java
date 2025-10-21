@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/roles")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")  //등을 사용하여 ADMIN만 접근 가능하도록 해야 합니다.
 public class AdminRoleController {
 
     private final RoleService roleService;
