@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin/authorities") // 권한 관리를 위한 관리자 전용 경로
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminAuthorityController {
 
     private final AuthorityService authorityService;
@@ -28,6 +27,7 @@ public class AdminAuthorityController {
      * POST /api/admin/authorities
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthorityResponseDTO> createAuthority(@Valid @RequestBody AuthorityRequestDTO request) {
 
         Authority newAuthority = authorityService.createAuthority(
@@ -45,7 +45,7 @@ public class AdminAuthorityController {
      * GET /api/admin/authorities
      */
     @GetMapping
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AuthorityResponseDTO>> getAllAuthorities() {
 
         List<AuthorityResponseDTO> responseList = authorityService.findAllAuthorities().stream()
@@ -60,7 +60,7 @@ public class AdminAuthorityController {
      * PUT /api/admin/authorities/{authorityId}
      */
     @PutMapping("/{authorityId}")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthorityResponseDTO> updateAuthority(
             @PathVariable Long authorityId,
             @RequestBody AuthorityRequestDTO request) {
@@ -79,7 +79,7 @@ public class AdminAuthorityController {
      * DELETE /api/admin/authorities/{authorityId}
      */
     @DeleteMapping("/{authorityId}")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteAuthority(@PathVariable Long authorityId) {
 
         authorityService.deleteAuthority(authorityId);
