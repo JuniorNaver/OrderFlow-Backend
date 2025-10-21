@@ -17,7 +17,8 @@ public enum AuthorityType {
     BI_VIEW("BI_VIEW", "/api/bi/**", "BI 대시보드 접근"),
     PR_ORDER("PR_ORDER", "/api/pr/**", "발주 요청 권한"),
     GR_RECEIVE("GR_RECEIVE", "/api/gr/**", "입고 처리 권한"),
-    ENVIRONMENT_EDIT("ENVIRONMENT_EDIT", "/api/settings/**", "점포 운영환경 수정 권한");
+    ENVIRONMENT_EDIT("ENVIRONMENT_EDIT", "/api/settings/**", "점포 운영환경 수정 권한"),
+    SD("SD", "/api/sd/**", "판매관리");
 
     private final String authority;   // 권한명
     private final String urlPattern;  // 적용 URL
