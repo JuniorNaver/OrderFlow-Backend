@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.mockTest;
 
+import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
@@ -10,7 +11,7 @@ import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.StorageMethod;
 import com.youthcase.orderflow.master.product.domain.Unit;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
-import com.youthcase.orderflow.pr.repository.LotRepository;
+import com.youthcase.orderflow.gr.repository.LotRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.stk.domain.*;
 import com.youthcase.orderflow.stk.repository.*;

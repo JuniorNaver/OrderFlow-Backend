@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.gr.domain;
 
 import com.youthcase.orderflow.auth.domain.User;
+import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import jakarta.persistence.*;
@@ -29,8 +30,9 @@ public class GoodsReceiptHeader {
     @Column(name = "GR_HEADER_ID")
     private Long id;  // 입고내역ID (PK)
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "STATUS", length = 20, nullable = false)
-    private String status; // 상태 (예: RECEIVED, CONFIRMED 등)
+    private GoodsReceiptStatus status;
 
     @Column(name = "RECEIPT_DATE", nullable = false)
     private LocalDate receiptDate; // 입고일자

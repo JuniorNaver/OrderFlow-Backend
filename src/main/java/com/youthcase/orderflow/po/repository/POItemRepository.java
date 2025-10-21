@@ -4,6 +4,7 @@ import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
 import com.youthcase.orderflow.po.domain.POStatus;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -19,6 +20,5 @@ public interface POItemRepository extends JpaRepository<POItem, Long> {
 
     //상품 no, 상태로 단일 상품 조회
     Optional<POItem> findByItemNoAndStatus(Long itemNo, POStatus status);
-
 
 }

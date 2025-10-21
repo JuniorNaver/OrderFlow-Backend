@@ -1,6 +1,6 @@
-package com.youthcase.orderflow.pr.repository;
+package com.youthcase.orderflow.gr.repository;
 
-import com.youthcase.orderflow.pr.domain.Lot;
+import com.youthcase.orderflow.gr.domain.Lot;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -3,21 +3,29 @@ package com.youthcase.orderflow.gr.mapper;
 import com.youthcase.orderflow.gr.domain.*;
 import com.youthcase.orderflow.gr.dto.*;
 import com.youthcase.orderflow.auth.domain.User;
+import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
 public class GoodsReceiptMapper {
 
-    public GoodsReceiptHeader toEntity(GoodsReceiptHeaderDTO dto, User user, Warehouse warehouse, POHeader poHeader, List<Product> products) {
+    public GoodsReceiptHeader toEntity(
+            GoodsReceiptHeaderDTO dto,
+            User user,
+            Warehouse warehouse,
+            POHeader poHeader,
+            Map<String, Product> productMap // ← 변경 핵심
+    ) {
         GoodsReceiptHeader header = GoodsReceiptHeader.builder()
                 .id(dto.getId())
-                .status(dto.getStatus())
+                .status(GoodsReceiptStatus.RECEIVED)
                 .receiptDate(dto.getReceiptDate())
                 .note(dto.getNote())
                 .user(user)
@@ -31,18 +39,15 @@ public class GoodsReceiptMapper {
                             .itemNo(i.getItemNo())
                             .qty(i.getQty())
                             .note(i.getNote())
-                            .product(products.stream()
-                                    .filter(p -> p.getGtin().equals(i.getGtin()))
-                                    .findFirst()
-                                    .orElse(null))
+                            .product(productMap.get(i.getGtin())) // ← O(1)
                             .header(header)
                             .build())
                     .collect(Collectors.toList());
             header.setItems(items);
         }
-
         return header;
     }
+
 
     public GoodsReceiptHeaderDTO toDTO(GoodsReceiptHeader entity) {
         if (entity == null) return null;

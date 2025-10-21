@@ -1,10 +1,10 @@
 package com.youthcase.orderflow.sd.sdRefund.service;
 
 import com.youthcase.orderflow.master.product.domain.Product;
-import com.youthcase.orderflow.pr.domain.Lot;
+import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
-import com.youthcase.orderflow.pr.repository.LotRepository;
+import com.youthcase.orderflow.gr.repository.LotRepository;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

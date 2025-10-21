@@ -1,6 +1,5 @@
-package com.youthcase.orderflow.pr.domain;
+package com.youthcase.orderflow.gr.domain;
 
-import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import jakarta.persistence.*;
@@ -34,9 +33,12 @@ public class Lot {
     @Column(name = "EXP_DATE", nullable = true)
     private LocalDate expDate;
 
+    @Column(name = "LOT_NO", length = 50, unique = true, nullable = false)
+    private String lotNo;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "EXPIRY_TYPE", length = 16, nullable = false)
-    private ExpiryType expiryType;
+    private ExpiryType expiryType = ExpiryType.NONE;
 
     @jakarta.validation.constraints.PositiveOrZero
     @Column(name = "QTY", precision = 12, scale = 2, nullable = false)
@@ -56,9 +58,9 @@ public class Lot {
 
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
-    // ORA-00904 오류 해결 및 DB 컬럼명 일치 (GOODS_RECEIPT_HEADER)
-    @JoinColumn(name = "GR_HEADER_ID", nullable = true)
-    private GoodsReceiptHeader goodsReceiptHeader; // Java 컨벤션에 따라 소문자로 시작하도록 변경
+    @JoinColumn(name = "MM_GR_ITEM", nullable = true)
+    private GoodsReceiptItem goodsReceiptItem; // Java 컨벤션에 따라 소문자로 시작하도록 변경
+
 
     @Transient
     public long getRemainDays() {
@@ -66,14 +68,20 @@ public class Lot {
     }
 
     @PrePersist
-    void onCreate() {
-        var now = OffsetDateTime.now();
-        createdAt = now;
-        updatedAt = now;
+    public void prePersist() {
+        OffsetDateTime now = OffsetDateTime.now();
+        if (this.createdAt == null) this.createdAt = now;
+        this.updatedAt = now;
+
+        if (this.lotNo == null || this.lotNo.isBlank()) {
+            this.lotNo = "LOT-" + System.currentTimeMillis();
+        }
     }
 
     @PreUpdate
     void onUpdate() {
         updatedAt = OffsetDateTime.now();
     }
+
+
 }

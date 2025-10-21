@@ -7,7 +7,7 @@ import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
 import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ AdjustmentRequest DTO 임포트
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
-import com.youthcase.orderflow.pr.repository.LotRepository;
+import com.youthcase.orderflow.gr.repository.LotRepository;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -324,4 +324,26 @@ public class STKServiceImpl implements STKService {
         // 0 이하의 수량을 가진 재고를 조회합니다.
         return stkRepository.findByQuantityLessThanEqual(0);
     }
+
+    //GR
+    @Override
+    @Transactional
+    public void increaseStock(String warehouseId, String gtin, Long qty, String lotNo, LocalDate expDate) {
+        // ✅ 입고 처리: 재고 증가
+        System.out.printf("📦 재고 증가: 창고=%s, 상품=%s, 수량=%d, LOT=%s, 유통기한=%s%n",
+                warehouseId, gtin, qty, lotNo, expDate);
+
+        // TODO: stkRepository.findByWarehouseAndGtin() → 수량 증가 → save()
+    }
+
+    @Override
+    @Transactional
+    public void decreaseStock(String warehouseId, String gtin, Long qty, String lotNo, LocalDate expDate) {
+        // ✅ 출고 처리: 재고 차감
+        System.out.printf("🚚 재고 감소: 창고=%s, 상품=%s, 수량=%d, LOT=%s, 유통기한=%s%n",
+                warehouseId, gtin, qty, lotNo, expDate);
+
+        // TODO: stkRepository.findByWarehouseAndGtin() → 수량 감소 → save()
+    }
+
 }

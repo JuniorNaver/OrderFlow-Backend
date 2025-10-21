@@ -4,6 +4,8 @@ import com.youthcase.orderflow.auth.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "PO_HEADER")
@@ -46,5 +48,9 @@ public class POHeader {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "poHeader", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<POItem> items = new ArrayList<>();
 
 }
