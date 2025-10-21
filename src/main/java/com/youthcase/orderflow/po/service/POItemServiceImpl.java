@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,36 +43,47 @@ public class POItemServiceImpl implements POItemService {
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
 
         // 3️⃣ 가격 조회 (Product에 매핑된 Price)
-        Price price = priceRepository.findByProduct_Gtin(gtin)
+        Price price = priceRepository.findByGtin(gtin)
                 .orElseThrow(() -> new IllegalArgumentException("Price not found"));
 
-        // 4️⃣ 총액 계산
-        Long total = price.getPurchasePrice() * dto.getOrderQty();
+        // ✅ 4️⃣ 기존 동일 상품 존재 여부 확인
+        Optional<POItem> existingItemOpt = poItemRepository.findByPoHeaderAndGtin(poHeader, product);
 
-        // 5️⃣ POItem 엔티티 생성
-        POItem poItem = POItem.builder()
-                .itemNo(dto.getItemNo())
-                .poHeader(poHeader)
-                .gtin(product)
-                .price(price) // ✅ Price 엔티티 전체 주입
-                .orderQty(dto.getOrderQty())
-                .total(total)
-                .expectedArrival(LocalDate.now().plusDays(3))
-                .status(POStatus.PR)
-                .build();
 
-        // 6️⃣ 저장
-        POItem saved = poItemRepository.save(poItem);
+        POItem poItem;
+        if (existingItemOpt.isPresent()) {
+            // 기존 상품이 있으면 → 수량 업데이트
+            poItem = existingItemOpt.get();
+            Long newQty = poItem.getOrderQty() + dto.getOrderQty();
+            poItem.setOrderQty(newQty);
+            // 총액 재계산
+            poItem.setTotal(price.getPurchasePrice() * newQty);
+            poItemRepository.save(poItem);
+        } else {
+            // 없으면 → 새로 추가
+            Long total = price.getPurchasePrice() * dto.getOrderQty();
+            poItem = POItem.builder()
+                    .itemNo(dto.getItemNo())
+                    .poHeader(poHeader)
+                    .gtin(product)
+                    .price(price) // ✅ Price 엔티티 전체 주입
+                    .orderQty(dto.getOrderQty())
+                    .total(total)
+                    .expectedArrival(LocalDate.now().plusDays(3))
+                    .status(POStatus.PR)
+                    .build();
+            poItemRepository.save(poItem);
+        }
 
         // 7️⃣ 응답 DTO 반환
+        // 5️⃣ 응답 DTO 반환
         return POItemResponseDTO.builder()
-                //.itemNo(saved.getItemNo())
-                .gtin(saved.getGtin().getGtin())
-                .productName(saved.getGtin().getProductName())
-                .orderQty(saved.getOrderQty())
-                .purchasePrice(saved.getPrice()) // ✅ 단가 접근
-                .total(saved.getTotal())
-                .status(saved.getStatus())
+                .gtin(poItem.getGtin().getGtin())
+                .productName(poItem.getGtin().getProductName())
+                .orderQty(poItem.getOrderQty())
+                .purchasePrice(poItem.getPrice().getPurchasePrice())
+                .total(poItem.getTotal())
+                .status(poItem.getStatus())
                 .build();
     }
 
@@ -111,7 +123,7 @@ public class POItemServiceImpl implements POItemService {
                 .productName(item.getGtin().getProductName()) // 상품명을 가져오는 방법. gtin = Product { gtin = "8801234567890", productName = "햇반 100g" }
                 .gtin(item.getGtin().getGtin())   // ✅ 필드명 DTO 기준으로 통일
                 .expectedArrival(item.getExpectedArrival())
-                .purchasePrice(item.getPrice())
+                .purchasePrice(item.getPrice().getPurchasePrice())
                 .orderQty(item.getOrderQty())
                 .total(item.getTotal())
                 .status(item.getStatus())
@@ -164,7 +176,7 @@ public class POItemServiceImpl implements POItemService {
         return items.stream()
                 .map(item -> POItemResponseDTO.builder()
                         .itemNo(item.getItemNo())
-                        .purchasePrice(item.getPrice())
+                        .purchasePrice(item.getPrice().getPurchasePrice())
                         .orderQty(item.getOrderQty())
                         .gtin(item.getGtin().getGtin())
                         .build())

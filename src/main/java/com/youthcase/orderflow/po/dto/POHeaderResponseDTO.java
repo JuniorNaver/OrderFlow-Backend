@@ -23,6 +23,7 @@ public class POHeaderResponseDTO {
                 .poId(header.getPoId())
                 .status(header.getStatus())
                 .totalAmount(header.getTotalAmount())
+                .remarks(header.getRemarks())
                 .build();
     }
 }

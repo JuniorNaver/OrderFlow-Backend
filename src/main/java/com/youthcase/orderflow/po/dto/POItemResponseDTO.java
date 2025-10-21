@@ -16,7 +16,7 @@ public class POItemResponseDTO {
     private String productName;
     private String gtin;
     private LocalDate expectedArrival;
-    private Price purchasePrice;
+    private Long purchasePrice;
     private Long orderQty;
     private Long total;
     private POStatus status;
