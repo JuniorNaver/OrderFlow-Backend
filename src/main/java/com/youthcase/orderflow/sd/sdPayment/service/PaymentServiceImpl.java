@@ -164,11 +164,13 @@ public class PaymentServiceImpl implements PaymentService {
         item.setPaymentMethod(method);
         item.setAmount(amount);
         item.setTransactionNo(result.getTransactionNo());
+        item.setImpUid(impUid);
         item.setPaymentStatus(PaymentStatus.APPROVED);
         paymentItemRepository.save(item);
         header.getPaymentItems().add(item);
 
-        log.info("💳 결제 완료 - method={}, amount={}, txNo={}", method, amount, result.getTransactionNo());
+        log.info("💳 결제 완료 - method={}, amount={}, txNo={}, impUid={}",
+                method, amount, result.getTransactionNo(), impUid);
     }
 
     /**

@@ -91,12 +91,16 @@ public class STK {
     // ⭐️ Service에서 사용된 위임(Delegate) Getter 메서드 추가
     // --------------------------------------------------
 
-    /** 1. STKServiceImpl에서 사용된 getProductName()을 Product 엔티티로 위임 */
+    /**
+     * 1. STKServiceImpl에서 사용된 getProductName()을 Product 엔티티로 위임
+     */
     public String getProductName() {
         return this.product != null ? this.product.getProductName() : null;
     }
 
-    /** 2. STKServiceImpl에서 사용된 getExpiryDate()를 Lot 엔티티로 위임 */
+    /**
+     * 2. STKServiceImpl에서 사용된 getExpiryDate()를 Lot 엔티티로 위임
+     */
     public LocalDate getExpiryDate() {
         // Lot 엔티티에 expDate 필드가 LocalDate 타입으로 정의되어 있다고 가정
         return this.lot != null ? this.lot.getExpDate() : null;
@@ -144,4 +148,16 @@ public class STK {
         this.status = newStatus;
         this.lastUpdatedAt = java.time.LocalDateTime.now();
     }
+
+    public static STK createForRefund(Product product, Lot lot, int quantity) {
+        STK stk = new STK();
+        stk.setProduct(product);
+        stk.setLot(lot);
+        stk.setQuantity(quantity);
+        stk.setHasExpirationDate(lot != null && lot.getExpDate() != null);
+        stk.setStatus("RETURNED");
+        stk.setLastUpdatedAt(LocalDateTime.now());
+        return stk;
+    }
+
 }

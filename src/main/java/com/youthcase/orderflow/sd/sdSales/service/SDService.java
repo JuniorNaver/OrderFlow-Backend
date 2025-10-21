@@ -20,6 +20,8 @@ public interface SDService{
     void confirmOrder(ConfirmOrderRequest request);
     // 주문에 속한 아이템 목록 조회 보류도
     List<SalesItemDTO> getItemsByOrderId(Long orderId);
+
+    void updateItemQuantity(Long itemId, int quantity);
     // 주문 완료(결제 확정)
     void completeOrder(Long orderId);
     //보류 기능
