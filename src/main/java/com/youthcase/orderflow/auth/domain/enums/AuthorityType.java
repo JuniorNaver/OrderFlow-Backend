@@ -18,7 +18,7 @@ public enum AuthorityType {
     PR_ORDER("PR_ORDER", "/api/pr/**", "발주 요청 권한"),
     GR_RECEIVE("GR_RECEIVE", "/api/gr/**", "입고 처리 권한"),
     ENVIRONMENT_EDIT("ENVIRONMENT_EDIT", "/api/settings/**", "점포 운영환경 수정 권한"),
-    PO_CONFIRM("PO_CONFIRM", "/api/po/confirm/**", "발주 확정 권한");
+    PO_CONFIRM("PO_CONFIRM", "/api/po/confirm/**", "발주 확정 권한"),
     SD("SD", "/api/sd/**", "판매관리");
 
     private final String authority;   // 권한명
