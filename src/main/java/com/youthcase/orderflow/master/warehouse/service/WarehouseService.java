@@ -1,34 +1,81 @@
 package com.youthcase.orderflow.master.warehouse.service;
 
+import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
-import com.youthcase.orderflow.master.warehouse.dto.WarehouseUpdateDTO;
+import com.youthcase.orderflow.master.warehouse.dto.WarehouseRequestDTO;
+import com.youthcase.orderflow.master.store.repository.StoreRepository;
+import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
-public interface WarehouseService {
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class WarehouseService {
 
-    /**
-     * 신규 창고 등록 (Create)
-     */
-    Warehouse createWarehouse(Warehouse warehouse);
+    private final WarehouseRepository warehouseRepository;
+    private final StoreRepository storeRepository;
 
-    /**
-     * 전체 창고 목록 조회 (Read All)
-     */
-    List<Warehouse> getAllWarehouses();
+    // ────────────────────────────────
+    // 🔹 1. 창고 등록
+    // ────────────────────────────────
+    @Transactional
+    public Warehouse createWarehouse(WarehouseRequestDTO dto) {
+        Store store = storeRepository.findById(dto.getStoreId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다: " + dto.getStoreId()));
 
-    /**
-     * 특정 창고 ID로 상세 정보 조회 (Read One)
-     */
-    Warehouse getWarehouseById(String warehouseId);
+        Warehouse warehouse = dto.toEntity(store);
+        return warehouseRepository.save(warehouse);
+    }
 
-    /**
-     * 기존 창고 정보 수정 (Update)
-     */
-    Warehouse updateWarehouse(String warehouseId, WarehouseUpdateDTO updateDto);
+    // ────────────────────────────────
+    // 🔹 2. 전체 조회
+    // ────────────────────────────────
+    public List<Warehouse> getAllWarehouses() {
+        return warehouseRepository.findAll();
+    }
 
-    /**
-     * 창고 정보 삭제 (Delete)
-     */
-    void deleteWarehouse(String warehouseId);
+    // ────────────────────────────────
+    // 🔹 3. 단일 조회
+    // ────────────────────────────────
+    public Warehouse getWarehouseById(String warehouseId) {
+        return warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new NoSuchElementException("창고를 찾을 수 없습니다: " + warehouseId));
+    }
+
+    // ────────────────────────────────
+    // 🔹 4. 창고 정보 수정
+    // ────────────────────────────────
+    @Transactional
+    public Warehouse updateWarehouse(String warehouseId, WarehouseRequestDTO dto) {
+        Warehouse warehouse = getWarehouseById(warehouseId);
+
+        // ✅ Store 재조회 (지점 변경 시)
+        Store store = storeRepository.findById(dto.getStoreId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다: " + dto.getStoreId()));
+
+        // ✅ DTO의 변경사항 적용
+        dto.applyToEntity(warehouse, store);
+
+        return warehouseRepository.save(warehouse);
+    }
+
+    // ────────────────────────────────
+    // 🔹 5. 창고 삭제
+    // ────────────────────────────────
+    @Transactional
+    public void deleteWarehouse(String warehouseId) {
+        warehouseRepository.deleteById(warehouseId);
+    }
+
+    // ────────────────────────────────
+    // 🔹 6. 점포별 창고 조회
+    // ────────────────────────────────
+    public List<Warehouse> getWarehousesByStoreId(String storeId) {
+        return warehouseRepository.findByStore_StoreId(storeId);
+    }
 }
