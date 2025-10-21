@@ -21,12 +21,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')") // 모든 관리자 API에 ADMIN 권한 요구
 public class AdminUserController {
 
     private final UserService userService;
 
     // [GET] 계정 목록 조회 및 검색
+    @PreAuthorize("hasRole('ADMIN')") // 모든 관리자 API에 ADMIN 권한 요구
     @GetMapping
     public ResponseEntity<List<AccountAdminResponseDTO>> getAdminUserList(
             @RequestParam(required = false) String search) {
@@ -36,6 +36,7 @@ public class AdminUserController {
     }
 
     // [POST] 계정 생성
+    @PreAuthorize("hasRole('ADMIN')") // 모든 관리자 API에 ADMIN 권한 요구
     @PostMapping
     public ResponseEntity<AccountAdminResponseDTO> createAccount(
             @Valid @RequestBody AccountCreateRequestDTO request) {
@@ -45,6 +46,7 @@ public class AdminUserController {
     }
 
     // [PUT] 계정 정보 수정
+    @PreAuthorize("hasRole('ADMIN')") // 모든 관리자 API에 ADMIN 권한 요구
     @PutMapping("/{userId}")
     public ResponseEntity<AccountAdminResponseDTO> updateAccount(
             @PathVariable String userId,
@@ -55,6 +57,7 @@ public class AdminUserController {
     }
 
     // 💡 [DELETE] 계정 일괄 삭제 (UserBatchDeleteRequestDTO 활용)
+    @PreAuthorize("hasRole('ADMIN')") // 모든 관리자 API에 ADMIN 권한 요구
     @DeleteMapping("/batch")
     public ResponseEntity<Void> deleteAccountsBatch(
             @Valid @RequestBody UserBatchDeleteRequestDTO request) {
@@ -66,6 +69,7 @@ public class AdminUserController {
     }
 
     // [DELETE] 개별 계정 삭제 (Path Variable 사용)
+    @PreAuthorize("hasRole('ADMIN')") // 모든 관리자 API에 ADMIN 권한 요구
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteAccount(@PathVariable String userId) {
 
