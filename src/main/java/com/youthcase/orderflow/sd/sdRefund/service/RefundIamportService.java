@@ -47,28 +47,13 @@ public class RefundIamportService {
         return token;
     }
 
-    // ✅ 2. 결제 검증
-    /*public boolean verifyPayment(String impUid) {
-        String token = getAccessToken();
-        String url = "https://api.iamport.kr/payments/" + impUid;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<Map> res
-        ponse = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-        Map responseBody = (Map) response.getBody().get("response");
-
-        String status = (String) responseBody.get("status");
-        log.info("✅ PG 결제 검증 완료: imp_uid={}, status={}", impUid, status);
-
-        return "paid".equals(status);
-    }*/
-
     // ✅ 3. 환불 요청
     public boolean cancelPayment(String impUid, String reason, double amount) {
+        if (impUid == null || impUid.isBlank()) {
+            log.error("❌ cancelPayment 실패: impUid가 비어 있습니다.");
+            return false;
+        }
+
         String token = getAccessToken();
         String url = "https://api.iamport.kr/payments/cancel";
 
@@ -79,21 +64,29 @@ public class RefundIamportService {
         Map<String, Object> body = new HashMap<>();
         body.put("imp_uid", impUid);
         body.put("reason", reason);
-        body.put("amount", amount);
+        if (amount > 0) body.put("amount", amount);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
-        Map responseBody = (Map) response.getBody().get("response");
+        Map bodyMap = response.getBody();
+        if (bodyMap == null || bodyMap.get("response") == null) {
+            log.warn("⚠️ PG 환불 실패: {}", bodyMap);
+            return false;
+        }
 
-        if (responseBody != null && "cancelled".equals(responseBody.get("status"))) {
-            log.info("✅ PG 환불 성공: imp_uid={}", impUid);
+        Map responseBody = (Map) bodyMap.get("response");
+        String status = (String) responseBody.get("status");
+
+        if ("cancelled".equals(status) || "partial_cancelled".equals(status)) {
+            log.info("✅ PG 환불 성공: imp_uid={}, status={}", impUid, status);
             return true;
         } else {
             log.warn("⚠️ PG 환불 실패: {}", responseBody);
             return false;
         }
     }
+
 
     public VerifyRefundResponse verifyPayment(String impUid) {
         String token = getAccessToken();

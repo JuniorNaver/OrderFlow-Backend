@@ -8,17 +8,21 @@ import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
+import com.youthcase.orderflow.sd.sdSales.repository.SalesItemRepository;
 import com.youthcase.orderflow.sd.sdSales.service.SDService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/sd")
 @RequiredArgsConstructor
 public class SDController {
     private final SDService sdService;
     private final SalesHeaderRepository salesHeaderRepository;
+    private final SalesItemRepository salesItemRepository;
     // 1. 주문 생성 (판매등록 버튼 클릭시)
     @PostMapping("/create")
     public ResponseEntity<SalesHeaderDTO> createOrder(@RequestParam String storeId) {
@@ -48,6 +52,17 @@ public class SDController {
         SalesItemDTO dto = sdService.addItemToOrder(request);
         return ResponseEntity.ok(dto);
     }
+
+    @DeleteMapping("/items/{id}")
+    public ResponseEntity<Void> deleteSalesItem(@PathVariable Long id) {
+        if (!salesItemRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        salesItemRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(e.getMessage());
@@ -96,6 +111,16 @@ public class SDController {
                 @RequestBody List<SalesItemDTO> items
     ) {
             sdService.saveOrUpdateOrder(orderId, items, SalesStatus.HOLD);
+            return ResponseEntity.ok().build();
+        }
+
+        @PatchMapping("/items/{itemId}/quantity")
+        public ResponseEntity<Void> updateItemQuantity(
+                @PathVariable Long itemId,
+                @RequestBody Map<String, Integer> body
+        ) {
+            int quantity = body.get("quantity");
+            sdService.updateItemQuantity(itemId, quantity);
             return ResponseEntity.ok().build();
         }
 

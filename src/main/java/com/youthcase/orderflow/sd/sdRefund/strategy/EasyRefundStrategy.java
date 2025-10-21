@@ -8,7 +8,6 @@ import com.youthcase.orderflow.sd.sdPayment.domain.PaymentItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 
 @Service("EASY")
@@ -21,7 +20,6 @@ public class EasyRefundStrategy implements RefundStrategy {
     @Override
     public boolean verify(RefundHeader header) {
         try {
-            // ✅ Set → Stream으로 첫 번째 결제 항목 가져오기
             PaymentItem firstItem = header.getPaymentHeader()
                     .getPaymentItems()
                     .stream()
@@ -46,10 +44,9 @@ public class EasyRefundStrategy implements RefundStrategy {
 
     @Override
     public RefundResponse refund(RefundHeader header) {
-        RefundStatus resultStatus;
+        log.info("💛 간편결제 환불 처리 시작: refundId={}", header.getRefundId());
 
         try {
-            // ✅ 첫 번째 PaymentItem 가져오기
             PaymentItem firstItem = header.getPaymentHeader()
                     .getPaymentItems()
                     .stream()
@@ -61,7 +58,7 @@ public class EasyRefundStrategy implements RefundStrategy {
                 throw new IllegalStateException("간편결제 환불 실패: impUid가 없습니다.");
             }
 
-            boolean ok = iamport.cancelPayment(impUid, header.getReason(), header.getRefundAmount().doubleValue());
+            boolean ok = iamport.cancelPayment(impUid, header.getDetailReason(), header.getRefundAmount().doubleValue());
 
             if (ok) {
                 header.setRefundStatus(RefundStatus.COMPLETED);
@@ -77,14 +74,12 @@ public class EasyRefundStrategy implements RefundStrategy {
             log.error("❌ 간편결제 환불 처리 중 예외 발생", e);
         }
 
-        resultStatus = header.getRefundStatus();
-
         return RefundResponse.builder()
                 .refundId(header.getRefundId())
                 .paymentId(header.getPaymentHeader().getPaymentId())
                 .refundAmount(header.getRefundAmount().doubleValue())
-                .refundStatus(resultStatus)
-                .reason(header.getReason())
+                .refundStatus(header.getRefundStatus())
+                .reason(header.getDetailReason())
                 .requestedTime(header.getRequestedTime())
                 .approvedTime(header.getApprovedTime())
                 .build();
