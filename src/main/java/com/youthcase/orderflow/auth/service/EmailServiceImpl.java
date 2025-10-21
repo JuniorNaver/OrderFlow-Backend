@@ -1,11 +1,10 @@
 package com.youthcase.orderflow.auth.service;
 
-import com.youthcase.orderflow.auth.service.EmailService;
+import com.youthcase.orderflow.global.util.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 

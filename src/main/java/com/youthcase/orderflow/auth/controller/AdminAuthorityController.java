@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin/authorities") // 권한 관리를 위한 관리자 전용 경로
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminAuthorityController {
 
     private final AuthorityService authorityService;
@@ -27,7 +28,6 @@ public class AdminAuthorityController {
      * POST /api/admin/authorities
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthorityResponseDTO> createAuthority(@Valid @RequestBody AuthorityRequestDTO request) {
 
         Authority newAuthority = authorityService.createAuthority(

@@ -31,7 +31,8 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public Optional<Role> findByRoleType(RoleType roleType) {
         // 💡 수정: Role 엔티티에 RoleType 필드가 없고 RoleRepository에서 해당 메서드가 제거되었으므로,
-        // RoleType의 getRoleId()를 사용하여 findByRoleId를 호출합니다.
+        // RoleType의 getRoleId()를
+        // 사용하여 findByRoleId를 호출합니다.
         return roleRepository.findByRoleId(roleType.getRoleId());
     }
 

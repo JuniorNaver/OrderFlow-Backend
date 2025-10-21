@@ -35,7 +35,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
 
-        User user = userRepository.findByUserId(userId)
+        User user = userRepository.findByUserId(userId) // <- 이 메서드가 이제 EntityGraph로 최적화됨
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + userId));
 
         // 1. UserRole 매핑을 통해 사용자가 가진 모든 Role 엔티티를 가져옵니다.

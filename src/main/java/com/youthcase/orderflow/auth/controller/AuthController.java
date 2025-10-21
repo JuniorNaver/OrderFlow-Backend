@@ -29,13 +29,9 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginRequestDTO request) {
 
-        // 1. AuthService에 인증 로직 위임 및 토큰 생성 요청
-        TokenResponseDTO tokenResponse = authService.authenticateAndGenerateToken(
-                request.getUserId(),
-                request.getPassword()
-        );
+        // 🚨 수정: LoginRequestDTO 객체 전체를 서비스로 전달하도록 변경
+        TokenResponseDTO tokenResponse = authService.authenticateAndGenerateToken(request);
 
-        // 2. 생성된 토큰 응답 (200 OK)
         return ResponseEntity.ok(tokenResponse);
     }
 
@@ -117,13 +113,29 @@ public class AuthController {
         return ResponseEntity.ok(tokenResponse);
     }
 
-    /*
-    @PostMapping("/password/reset-request")
+    /**
+     * [POST] 비밀번호 초기화 요청
+     * 사용자 ID와 이메일을 검증하고, 비밀번호 초기화 토큰을 생성하여 이메일로 발송합니다.
+     * POST /api/auth/password/reset-request
+     *
+     * @param request PasswordResetRequestDTO (userId, email)
+     * @return 204 No Content
+     */
+    /**
+     * 비밀번호 초기화 이메일 발송을 요청합니다.
+     * 클라이언트로부터 받은 DTO에는 userId(또는 이메일)가 포함되어야 합니다.
+     * @param request 비밀번호 초기화 요청 DTO (PasswordResetRequestDTO 또는 유사 DTO)
+     * @return 성공 응답
+     */
+    @PostMapping("/password-reset-request")
     public ResponseEntity<Void> requestPasswordReset(@RequestBody PasswordResetRequestDTO request) {
-        // ... (비밀번호 초기화 토큰 생성 및 이메일 발송 로직)
-        authService.sendPasswordResetEmail(request.getUserId(), request.getEmail());
-        return ResponseEntity.noContent().build(); // 204 No Content
+
+        // 🚨 [수정] 서비스 인터페이스에 정의된 requestPasswordReset(String) 메서드를 호출합니다.
+        // 이전에 sendPasswordResetEmail(String, String)을 호출하던 부분을 대체합니다.
+        authService.requestPasswordReset(request.getUserId());
+
+        return ResponseEntity.ok().build();
     }
-    */
+
 
 }
