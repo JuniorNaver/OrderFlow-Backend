@@ -13,6 +13,7 @@ public class CategoryData {
 
     public static  final List<CategorySeed> SEED = List.of(
             new CategorySeed("01010105","실온","조미료코너","종합조미료","설탕"),
+        new CategorySeed("01010399","실온","조미료코너","장류","쌈장"),
         new CategorySeed("01020101","냉장","유제품코너","우유","일반우유"),
         new CategorySeed("01020102","냉장","유제품코너","우유","기능성우유"),
         new CategorySeed("01020103","냉장","유제품코너","우유","연유"),

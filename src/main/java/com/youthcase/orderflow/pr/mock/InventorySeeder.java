@@ -92,6 +92,50 @@ public class InventorySeeder implements CommandLineRunner {
         inventoryService.receive("8801046426593", 40);
         inventoryService.receive("8801441021089", 40);
         inventoryService.receive("8809949565159", 40);
+        inventoryService.receive("8809345050372", 40);
+        inventoryService.receive("8801173603294", 40);
+        inventoryService.receive("8806006548711", 40);
+        inventoryService.receive("4902430223829", 40);
+        inventoryService.receive("8809184002938", 40);
+        inventoryService.receive("8801260710935", 40);
+        inventoryService.receive("8809756292019", 40);
+        inventoryService.receive("4984824343061", 40);
+        inventoryService.receive("8807424241574", 40);
+        inventoryService.receive("8809148128759", 40);
+        inventoryService.receive("8809266600038", 40);
+        inventoryService.receive("8806016320024", 40);
+        inventoryService.receive("8806335610769", 40);
+        inventoryService.receive("8801166099615", 40);
+        inventoryService.receive("8801166092173", 40);
+        inventoryService.receive("8809750663570", 40);
+        inventoryService.receive("8802260000996", 40);
+        inventoryService.receive("8801166260046", 40);
+        inventoryService.receive("8809949557826", 40);
+        inventoryService.receive("8806105404949", 40);
+        inventoryService.receive("8806121702319", 40);
+        inventoryService.receive("8802260010261", 40);
+        inventoryService.receive("8809193960779", 40);
+        inventoryService.receive("8801489115863", 40);
+        inventoryService.receive("4719003016814", 40);
+        inventoryService.receive("662834500585", 40);
+        inventoryService.receive("8809502408916", 40);
+        inventoryService.receive("8801489416212", 40);
+        inventoryService.receive("8801101890437", 40);
+        inventoryService.receive("8801056232153", 40);
+        inventoryService.receive("827854004806", 40);
+        inventoryService.receive("8806105404949", 40);
+        inventoryService.receive("8809552278897", 40);
+        inventoryService.receive("8809878063818", 40);
+        inventoryService.receive("8809425312048", 40);
+        inventoryService.receive("8801392092183", 40);
+        inventoryService.receive("8801104948180", 40);
+        inventoryService.receive("8809226309230", 40);
+        inventoryService.receive("8801558702024", 40);
+        inventoryService.receive("8801814003155", 40);
+        inventoryService.receive("8801166034814", 40);
+        inventoryService.receive("8801019309946", 40);
+
+
 
         log.info("InventorySeeder done.");
     }
