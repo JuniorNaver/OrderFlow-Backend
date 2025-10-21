@@ -93,28 +93,46 @@ public class SDServiceImpl implements SDService {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품의 재고가 없습니다."));
 
-        SalesItem item = new SalesItem();
-        item.setProduct(product);
-        item.setStk(stk);
-        item.setSalesQuantity(request.getQuantity());
-        item.setSdPrice(request.getPrice());
-        item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+        SalesItem existingItem = salesItemRepository.findByOrderIdAndGtin(
+                request.getOrderId(), request.getGtin()
+        );
 
-        // ✅ 핵심: Header에 아이템을 추가하여 양방향 관계 유지
-        header.addSalesItem(item);
+        SalesItem item;
+        if (existingItem != null) {
+            int newQty = existingItem.getSalesQuantity() + request.getQuantity();
+            BigDecimal newSubtotal = existingItem.getSdPrice()
+                    .multiply(BigDecimal.valueOf(newQty));
 
-        // ✅ 총액 갱신
-        if (header.getTotalAmount() == null)
-            header.setTotalAmount(BigDecimal.ZERO);
-        header.setTotalAmount(header.getTotalAmount().add(item.getSubtotal()));
+            existingItem.setSalesQuantity(newQty);
+            existingItem.setSubtotal(newSubtotal);
+            item = existingItem;
+            log.info("♻️ 기존 상품 갱신 - {}, {}", product.getProductName(), newQty);
+        } else {
+            item = new SalesItem();
+            item.setProduct(product);
+            item.setStk(stk);
+            item.setSalesQuantity(request.getQuantity());
+            item.setSdPrice(request.getPrice());
+            item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+            header.addSalesItem(item);
+            log.info("🆕 신규 상품 추가 - {}, {}", product.getProductName(), item.getSalesQuantity());
+        }
 
-        salesHeaderRepository.saveAndFlush(header); // cascade 덕분에 item 자동 저장됨
+        BigDecimal newTotal = header.getSalesItems().stream()
+                .map(SalesItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        header.setTotalAmount(newTotal);
 
-        log.info("🧾 상품 추가 완료 - orderNo={}, 상품={}, 수량={}, 금액={}",
-                header.getOrderNo(), product.getProductName(), item.getSalesQuantity(), item.getSubtotal());
 
+        salesItemRepository.saveAndFlush(item);
+
+        log.info("✅ addItemToOrder 완료: itemId={}, orderNo={}", item.getNo(), header.getOrderNo());
         return SalesItemDTO.from(item);
     }
+
+
+
+
 
     // ✅ 주문 확정
     @Override
@@ -156,6 +174,37 @@ public class SDServiceImpl implements SDService {
     public List<SalesItemDTO> getItemsByOrderId(Long orderId) {
         return salesItemRepository.findItemsByHeaderId(orderId);
     }
+
+    @Override
+    @Transactional
+    public void updateItemQuantity(Long itemId, int quantity) {
+        SalesItem item = salesItemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("판매 항목을 찾을 수 없습니다."));
+
+        BigDecimal subtotal = item.getSdPrice().multiply(BigDecimal.valueOf(quantity));
+
+        // ✅ 직접 DB 업데이트 (즉시 쿼리 실행)
+        salesItemRepository.updateQuantity(itemId, quantity, subtotal);
+
+        // ✅ 헤더 금액 갱신
+        SalesHeader header = item.getSalesHeader();
+        BigDecimal newTotal = header.getSalesItems().stream()
+                .map(i -> {
+                    // ✅ 잘못된 비교 수정 (i.getNo → i.getId)
+                    if (i.getNo().equals(itemId)) {
+                        return subtotal; // 바뀐 항목은 새 subtotal로 계산
+                    }
+                    return i.getSubtotal();
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        header.setTotalAmount(newTotal);
+        salesHeaderRepository.save(header);
+
+        log.info("🧾 수량 변경 완료(DB 반영) - itemId={}, qty={}, subtotal={}, headerTotal={}",
+                itemId, quantity, subtotal, newTotal);
+    }
+
 
     // ✅ 주문 완료 처리
     @Override

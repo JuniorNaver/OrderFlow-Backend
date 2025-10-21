@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -29,6 +30,7 @@ public class PaymentController {
      * 💳 결제 요청 (카드 / 현금 / 간편결제)
      * - paymentMethod: CARD, CASH, EASY
      */
+//    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SD')")
     @PostMapping
     public ResponseEntity<PaymentResult> createPayment(@Valid @RequestBody PaymentRequest request) {
         log.info("💳 [결제요청] method={}, orderId={}, amount={}",
@@ -60,6 +62,7 @@ public class PaymentController {
     /**
      * 📄 결제 단건 조회
      */
+//    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SD')")
     @GetMapping("/{id}")
     public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id) {
         log.info("🔍 [결제조회] paymentId={}", id);
@@ -74,6 +77,7 @@ public class PaymentController {
      * ❌ 결제 취소 요청
      * - 카드/현금/간편결제 모두 전략에 맞게 처리
      */
+//    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SD')")
     @PostMapping("/{itemId}/cancel")
     public ResponseEntity<PaymentResult> cancelPayment(@PathVariable Long itemId) {
         log.info("🧾 [결제취소요청] paymentItemId={}", itemId);
@@ -98,6 +102,7 @@ public class PaymentController {
      * - 아임포트 관리자 설정 시 자동 호출
      * - imp_uid만 전달되므로, 서버에서 재검증 필요
      */
+//    @PreAuthorize("hasRole('ADMIN') or hasAuthority('SD')")
     @PostMapping("/webhook")
     public ResponseEntity<Void> webhook(@RequestParam("imp_uid") String impUid) {
         log.info("📡 [Webhook 수신] imp_uid={}", impUid);

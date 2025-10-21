@@ -26,6 +26,9 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     /** Lot ID로 STK 조회 (조정 처리 시 수량 0 이하도 조회하기 위해 사용) */
     Optional<STK> findByLot_LotId(Long lotId);
 
+    // ✅ GTIN + 유통기한 기준으로 재고 찾기
+    Optional<STK> findByProduct_GtinAndLot_ExpDate(String gtin, LocalDate expDate);
+
     // --------------------------------------------------
     // 🗑️ 상태 및 기간 조회
     // --------------------------------------------------
@@ -62,4 +65,5 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // ⭐️ 특정 창고 ID의 활성 재고를 유통기한 순으로 조회 (FIFO 검사 목적)
     @Query("SELECT s FROM STK s JOIN s.lot l WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 AND s.status = 'ACTIVE' ORDER BY l.expDate ASC")
     List<STK> findActiveStocksForFifoCheck(Long warehouseId);
+
 }
