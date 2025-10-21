@@ -10,6 +10,8 @@ package com.youthcase.orderflow.bi.domain.forecast;
 import com.youthcase.orderflow.bi.domain.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

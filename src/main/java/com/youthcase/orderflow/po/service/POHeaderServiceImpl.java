@@ -31,7 +31,7 @@ public class POHeaderServiceImpl implements POHeaderService {
         poHeader.setActionDate(LocalDate.now());          // 3️⃣ 오늘 날짜
 
         // 5️⃣ 테스트용 유저 (ID=1) 실제 로그인 기능이 없으면 임시 유저를 지정
-        User testUser = userRepository.findById("user01")
+        User testUser = userRepository.findById("admin01")
                 .orElseThrow(() -> new IllegalArgumentException("테스트 유저가 없습니다."));
         poHeader.setUser(testUser);
 
@@ -76,6 +76,16 @@ public class POHeaderServiceImpl implements POHeaderService {
                 .actionDate(poHeader.getActionDate())
                 .remarks(poHeader.getRemarks())
                 .build();
+    }
+
+
+    /** 저장한 장바구니 삭제 */
+    @Override
+    public void deletePO(Long poId) {
+        POHeader poHeader = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+
+        poHeaderRepository.delete(poHeader); // 연관된 POItem은 CascadeType.ALL 설정되어 있으면 자동 삭제됨
     }
 }
 

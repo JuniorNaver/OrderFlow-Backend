@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.repository;
 
+import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
 import com.youthcase.orderflow.po.domain.POStatus;
@@ -21,4 +22,6 @@ public interface POItemRepository extends JpaRepository<POItem, Long> {
     //상품 no, 상태로 단일 상품 조회
     Optional<POItem> findByItemNoAndStatus(Long itemNo, POStatus status);
 
+
+    Optional<POItem> findByPoHeaderAndGtin(POHeader poHeader, Product gtin);
 }

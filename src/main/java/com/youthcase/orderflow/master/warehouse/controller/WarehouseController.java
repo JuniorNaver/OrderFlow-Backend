@@ -1,20 +1,17 @@
 package com.youthcase.orderflow.master.warehouse.controller;
 
-import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
-import com.youthcase.orderflow.master.store.repository.StoreRepository;
-import com.youthcase.orderflow.master.warehouse.service.WarehouseService;
 import com.youthcase.orderflow.master.warehouse.dto.WarehouseRequestDTO;
 import com.youthcase.orderflow.master.warehouse.dto.WarehouseResponseDTO;
-import com.youthcase.orderflow.master.warehouse.dto.WarehouseUpdateDTO;
+import com.youthcase.orderflow.master.warehouse.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid; // 유효성 검증을 위해 추가
 
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,75 +20,64 @@ import java.util.stream.Collectors;
 public class WarehouseController {
 
     private final WarehouseService warehouseService;
-    private final StoreRepository storeRepository;
 
-    // 1. 창고 등록 (Create) - RequestDto 사용, @Valid 적용
+    // ────────────────────────────────
+    // 🔹 [ADMIN or ENVIRONMENT_EDIT] 창고 등록
+    // ────────────────────────────────
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ENVIRONMENT_EDIT')")
     @PostMapping
-    public ResponseEntity<WarehouseResponseDTO> createWarehouse(@RequestBody @Valid WarehouseRequestDTO requestDto) {
-        try {
-            // ✅ 1️⃣ Store ID로 실제 엔티티 조회
-            Store store = storeRepository.findById(requestDto.getStoreId())
-                    .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다."));
-
-            // ✅ 2️⃣ Store 주입 후 Entity 생성
-            Warehouse newWarehouse = requestDto.toEntity(store);
-
-            Warehouse createdWarehouse = warehouseService.createWarehouse(newWarehouse);
-
-            // Service에서 받은 Entity를 ResponseDto로 변환하여 반환
-            return new ResponseEntity<>(new WarehouseResponseDTO(createdWarehouse), HttpStatus.CREATED); // 201
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // 잘못된 지점 ID
-        }
+    public ResponseEntity<WarehouseResponseDTO> create(@RequestBody @Valid WarehouseRequestDTO dto) {
+        Warehouse created = warehouseService.createWarehouse(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new WarehouseResponseDTO(created));
     }
 
-    // 2. 전체 창고 조회 (Read All) - ResponseDto 사용
+    // ────────────────────────────────
+    // 🔹 [ADMIN] 전체 창고 조회
+    // ────────────────────────────────
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<WarehouseResponseDTO>> getAllWarehouses() {
-        List<Warehouse> warehouses = warehouseService.getAllWarehouses();
-
-        // Entity List를 DTO List로 변환
-        List<WarehouseResponseDTO> response = warehouses.stream()
+    public ResponseEntity<List<WarehouseResponseDTO>> findAll() {
+        List<WarehouseResponseDTO> response = warehouseService.getAllWarehouses()
+                .stream()
                 .map(WarehouseResponseDTO::new)
                 .collect(Collectors.toList());
-
-        return ResponseEntity.ok(response); // 200 OK
+        return ResponseEntity.ok(response);
     }
 
-    // 3. 특정 창고 조회 (Read One) - ResponseDto 사용
-    @GetMapping("/{id}")
-    public ResponseEntity<WarehouseResponseDTO> getWarehouseById(@PathVariable("id") String id) {
-        try {
-            Warehouse warehouse = warehouseService.getWarehouseById(id);
-            // Entity를 ResponseDto로 변환
-            return ResponseEntity.ok(new WarehouseResponseDTO(warehouse)); // 200 OK
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        }
+    // ────────────────────────────────
+    // 🔹 [ADMIN or ENVIRONMENT_EDIT] 점포별 창고 조회
+    // ────────────────────────────────
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ENVIRONMENT_EDIT')")
+    @GetMapping("/store/{storeId}")
+    public ResponseEntity<List<WarehouseResponseDTO>> findByStore(@PathVariable String storeId) {
+        List<WarehouseResponseDTO> response = warehouseService.getWarehousesByStoreId(storeId)
+                .stream()
+                .map(WarehouseResponseDTO::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
-    // 4. 창고 정보 수정 (Update) - UpdateDto 사용
-    @PutMapping("/{id}")
-    public ResponseEntity<WarehouseResponseDTO> updateWarehouse(@PathVariable("id") String id, @RequestBody @Valid WarehouseUpdateDTO updateDto) {
-        try {
-            // Service는 Entity를 받도록 그대로 두고, Controller에서 DTO의 필드만 전달
-            Warehouse updatedWarehouse = warehouseService.updateWarehouse(id, updateDto);
-
-            // Entity를 ResponseDto로 변환하여 반환
-            return ResponseEntity.ok(new WarehouseResponseDTO(updatedWarehouse)); // 200 OK
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        }
+    // ────────────────────────────────
+    // 🔹 [ADMIN or ENVIRONMENT_EDIT] 창고 정보 수정
+    // ────────────────────────────────
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ENVIRONMENT_EDIT')")
+    @PutMapping("/{warehouseId}")
+    public ResponseEntity<WarehouseResponseDTO> update(
+            @PathVariable String warehouseId,
+            @RequestBody @Valid WarehouseRequestDTO dto
+    ) {
+        Warehouse updated = warehouseService.updateWarehouse(warehouseId, dto);
+        return ResponseEntity.ok(new WarehouseResponseDTO(updated));
     }
 
-    // 5. 창고 삭제 (Delete)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWarehouse(@PathVariable("id") String id){
-        try {
-            warehouseService.deleteWarehouse(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 Not Found
-        }
+    // ────────────────────────────────
+    // 🔹 [ADMIN or ENVIRONMENT_EDIT] 창고 삭제
+    // ────────────────────────────────
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('ENVIRONMENT_EDIT')")
+    @DeleteMapping("/{warehouseId}")
+    public ResponseEntity<Void> delete(@PathVariable String warehouseId) {
+        warehouseService.deleteWarehouse(warehouseId);
+        return ResponseEntity.noContent().build();
     }
 }

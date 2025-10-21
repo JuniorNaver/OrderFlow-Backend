@@ -21,6 +21,8 @@ public interface POHeaderService {
     /** 저장된 장바구니 불러오기 */
     List<POHeaderResponseDTO> getSavedCartList();
 
+    /** 저장한 장바구니 삭제 */
+    void deletePO(Long poId);
 
 }
 

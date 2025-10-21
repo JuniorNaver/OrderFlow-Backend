@@ -11,4 +11,5 @@ public class POItemRequestDTO {
     private Long itemNo;
     private Long orderQty;
     private Long unitPrice;
+    private String gtin;
 }

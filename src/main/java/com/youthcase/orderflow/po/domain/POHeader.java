@@ -29,6 +29,7 @@ public class POHeader {
     private Long poId;
 
     // 상태(PR: 발주 요청, PO: 발주 완료, D: 삭제/취소)
+    @Enumerated(EnumType.STRING)
     @Column(name = "STATUS", length = 10, nullable = false)
     private POStatus status;
 

@@ -32,7 +32,7 @@ public class POItem {
     private LocalDate expectedArrival;
 
     // 매입 단가
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PURCHASE_PRICE", nullable = false)
     private Price price;
 
@@ -59,7 +59,7 @@ public class POItem {
 
     // 상품 고유 코드 (FK → PRODUCT)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GTIN", nullable = false)
+    @JoinColumn(name = "GTIN", referencedColumnName = "GTIN", nullable = false)
     private Product gtin;
 
     @Enumerated(EnumType.STRING)

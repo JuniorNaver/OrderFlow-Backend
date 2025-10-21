@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.master.product.repository;
 
 import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.product.domain.StorageMethod;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -103,4 +104,27 @@ order by coalesce(c.smallCategory, c.largeCategory)
                                                         @Param("cornerName") String cornerName);
 
     Optional<Product> findByProductName(String productName);
+
+    @EntityGraph(attributePaths = "category")
+    @Query("""
+select p from Product p
+left join p.category c
+where p.orderable = true
+  and (:zone is null or p.storageMethod = :zone)
+  and (:hasCats = false
+       or coalesce(c.smallCategory, c.mediumCategory, c.largeCategory) in :cats)
+order by
+  p.productName asc,
+  p.gtin asc
+""")
+    List<Product> findRecommendableInternal(
+            @Param("cats") List<String> cats,
+            @Param("zone") StorageMethod zone,
+            @Param("hasCats") boolean hasCats
+    );
+
+    default List<Product> findRecommendable(List<String> cats, StorageMethod zone) {
+        boolean hasCats = cats != null && !cats.isEmpty();
+        return findRecommendableInternal(hasCats ? cats : List.of(), zone, hasCats);
+    }
 }
