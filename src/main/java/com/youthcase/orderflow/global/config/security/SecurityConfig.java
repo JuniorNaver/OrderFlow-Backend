@@ -7,6 +7,7 @@ import com.youthcase.orderflow.auth.provider.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -75,13 +76,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         // A. 인증 및 가입 관련 경로는 무조건 허용
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
-
-                        // ✅ B. browse 관련 API는 로그인 없이 접근 허용
+                        
+                        // browse 관련 API는 로그인 없이 접근 허용
                         .requestMatchers("/api/products/**").permitAll()
                         .requestMatchers("/api/v1/pr/browse/**").permitAll()
+                        .requestMatchers("/api/v1/pr/stores/**").permitAll()
                         .requestMatchers("/api/v1/pr/inventory/**").permitAll()
                         .requestMatchers("/api/po/**").permitAll()
 
+                        
+                        // B. ⭐️ 나머지 모든 /api/** 경로는 인증 필요! (토큰 검증) ⭐️
+                        .requestMatchers("/api/**").authenticated()
 
                         // C. 위에 해당하지 않는 나머지 모든 요청도 기본적으로 인증 필요 (선택적)
                         .anyRequest().authenticated()

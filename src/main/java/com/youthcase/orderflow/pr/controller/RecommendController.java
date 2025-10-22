@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/pr/stores/{storeId}")
+@RequestMapping("/api/v1/pr/stores/{storeId}")
 public class RecommendController {
 
     private final RecommendService recommendService; // 생성자 주입
