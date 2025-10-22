@@ -7,6 +7,7 @@ import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.service.POHeaderService;
 import com.youthcase.orderflow.po.service.POItemService;
 import com.youthcase.orderflow.po.service.POService;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class POController {
     }
 
 
-    /** '담기' 클릭시 POHeader, POItem 추가 */
+    /** '담기' 클릭시 POHeader + POItem 함께 생성 */
     @PostMapping("/po") // POST /api/po
     public ResponseEntity<Map<String, Long>> createPO() {
         Long poId = poHeaderService.createNewPO(); // status = PR
@@ -48,9 +49,13 @@ public class POController {
 
 
 
+
     /** '장바구니로 가기' 눌렀을 때 장바구니 조회 */
     @GetMapping("/po/items")
-    public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
+    public List<POItemResponseDTO> getAllItems(
+            @RequestParam Long poId,
+            @RequestParam POStatus status
+    ) {
         return poItemService.getAllItems(poId, status);
     }
 
