@@ -76,8 +76,12 @@ public class SecurityConfig {
                         // A. 인증 및 가입 관련 경로는 무조건 허용
                         .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
 
-                        // B. ⭐️ 나머지 모든 /api/** 경로는 인증 필요! (토큰 검증) ⭐️
-                        .requestMatchers("/api/**").authenticated()
+                        // ✅ B. browse 관련 API는 로그인 없이 접근 허용
+                        .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers("/api/v1/pr/browse/**").permitAll()
+                        .requestMatchers("/api/v1/pr/inventory/**").permitAll()
+                        .requestMatchers("/api/po/**").permitAll()
+
 
                         // C. 위에 해당하지 않는 나머지 모든 요청도 기본적으로 인증 필요 (선택적)
                         .anyRequest().authenticated()
