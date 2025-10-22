@@ -123,7 +123,7 @@ public class MockSD {
                         l.setProduct(cola);
                         l.setExpDate(LocalDate.now().plusMonths(6));
                         l.setExpiryType(ExpiryType.NONE);
-                        l.setQty(new BigDecimal("100"));
+                        l.setQty(100L);
                         l.setStatus(Lot.LotStatus.ACTIVE);
                         lotRepository.saveAndFlush(l);
                         System.out.println("✅ LOT 생성 완료: LOT_ID = " + l.getLotId());

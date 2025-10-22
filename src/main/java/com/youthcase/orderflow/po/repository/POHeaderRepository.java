@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
@@ -23,6 +24,9 @@ public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     @Transactional
     @Query("UPDATE POHeader h SET h.status = :status WHERE h.poId = :poId")
     void updateStatus(@Param("poId") Long poId, @Param("status") POStatus status);
+
+    @Query("SELECT p FROM POHeader p LEFT JOIN FETCH p.items WHERE p.poBarcode = :barcode")
+    Optional<POHeader> findByBarcodeWithItems(@Param("barcode") String barcode);
 
 
 }

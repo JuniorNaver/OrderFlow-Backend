@@ -1,7 +1,9 @@
 package com.youthcase.orderflow.gr.controller;
 
 import com.youthcase.orderflow.gr.dto.GoodsReceiptHeaderDTO;
+import com.youthcase.orderflow.gr.dto.POForGRDTO;
 import com.youthcase.orderflow.gr.service.GoodsReceiptService;
+import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,11 +50,18 @@ public class GoodsReceiptController {
         return ResponseEntity.ok().build();
     }
 
+    /** ✅ 6. 바코드 스캔 → 발주 조회 + 품목 리스트 반환 */
+    @GetMapping("/po-search")
+    public ResponseEntity<POForGRDTO> searchPOForGR(@RequestParam String barcode) {
+        return ResponseEntity.ok(service.searchPOForGR(barcode));
+    }
+
     @PostMapping("/scan-confirm")
     public ResponseEntity<GoodsReceiptHeaderDTO> createAndConfirm(@RequestBody Map<String, Long> req) {
         Long poId = req.get("poId");
         GoodsReceiptHeaderDTO dto = service.createAndConfirmFromPO(poId);
         return ResponseEntity.ok(dto);
     }
+
 
 }

@@ -1,18 +1,20 @@
 package com.youthcase.orderflow.gr.service;
 
+import com.youthcase.orderflow.gr.domain.GRExpiryType;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptItem;
-import com.youthcase.orderflow.gr.dto.GoodsReceiptHeaderDTO;
-import com.youthcase.orderflow.gr.dto.GoodsReceiptItemDTO;
-import com.youthcase.orderflow.gr.dto.GoodsReceiptRequest;
-import com.youthcase.orderflow.gr.dto.GoodsReceiptResponse;
+import com.youthcase.orderflow.gr.domain.Lot;
+import com.youthcase.orderflow.gr.dto.*;
 import com.youthcase.orderflow.gr.mapper.GoodsReceiptMapper;
 import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.gr.repository.GoodsReceiptItemRepository;
+import com.youthcase.orderflow.gr.repository.LotRepository;
 import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
+import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.po.domain.POHeader;
+import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
@@ -37,6 +39,7 @@ public class GoodsReceiptService {
     private final WarehouseRepository warehouseRepo;
     private final POHeaderRepository poHeaderRepo;
     private final ProductRepository productRepo;
+    private final LotRepository lotRepository;
     private final GoodsReceiptMapper mapper;
 //    private final GoodsReceiptValidator validator;
 
@@ -87,17 +90,18 @@ public class GoodsReceiptService {
     }
 
     // ✅ 핵심: 입고 확정 → 재고 반영
+    @Transactional
     public void confirmReceipt(Long grId) {
+
         GoodsReceiptHeader header = headerRepo.findWithItemsById(grId)
                 .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
 
-        // 상태 검증
-        // if (header.getStatus() != GoodsReceiptStatus.RECEIVED) throw ...
+        // ✅ 상태 검증
         if (header.getStatus() != GoodsReceiptStatus.RECEIVED) {
             throw new IllegalArgumentException("입고 상태가 RECEIVED가 아닙니다.");
         }
 
-        // 아이템 검증 (수량 0 등)
+        // ✅ 아이템 검증
         for (GoodsReceiptItem item : header.getItems()) {
             if (item.getQty() == null || item.getQty() <= 0) {
                 throw new IllegalArgumentException("입고 수량이 0 이하인 품목이 있습니다. itemNo=" + item.getItemNo());
@@ -107,26 +111,66 @@ public class GoodsReceiptService {
             }
         }
 
-        // ✅ 재고 반영 (창고 단위)
+        // ✅ 창고 정보
         String warehouseId = header.getWarehouse().getWarehouseId();
+
+        // ✅ LOT + 재고(STK) 반영
         for (GoodsReceiptItem item : header.getItems()) {
+            Product product = item.getProduct();
+
+            // 1️⃣ LOT 생성
+            Lot lot = new Lot();
+            lot.setProduct(product);
+            lot.setQty(item.getQty());
+            lot.setGoodsReceiptItem(item);
+            lot.setExpiryType(product.getExpiryType());
+
+            // 상품 정책
+            ExpiryType policy = product.getExpiryType();
+            GRExpiryType calcType = item.getExpiryCalcType();
+
+            // 2️⃣ 유통기한 계산
+            // 2️⃣ 유통기한 계산
+            if (policy != ExpiryType.NONE && calcType != GRExpiryType.NONE) {
+
+                if (calcType == GRExpiryType.FIXED_DAYS && product.getShelfLifeDays() != null) {
+                    lot.setExpDate(header.getReceiptDate().plusDays(product.getShelfLifeDays()));
+
+                } else if (calcType == GRExpiryType.MFG_BASED && product.getShelfLifeDays() != null) {
+                    if (item.getMfgDate() == null) {
+                        throw new IllegalStateException("제조일(MFG_DATE)이 필요합니다: itemNo=" + item.getItemNo());
+                    }
+                    lot.setExpDate(item.getMfgDate().plusDays(product.getShelfLifeDays()));
+
+                } else if (calcType == GRExpiryType.MANUAL) {
+                    if (item.getExpDate() == null) {
+                        throw new IllegalStateException("수동 입력 유통기한이 누락되었습니다: itemNo=" + item.getItemNo());
+                    }
+                    lot.setExpDate(item.getExpDate());
+                }
+            }
+
+            // 3️⃣ LOT 저장
+            lotRepository.save(lot);
+
+            // 4️⃣ 재고 반영 (LOT 기반)
             stockService.increaseStock(
                     warehouseId,
-                    item.getProduct().getGtin(),
+                    product.getGtin(),
                     item.getQty(),
-                    null,           // lotNo (추후 확장)
-                    null            // expDate (추후 확장)
+                    lot.getLotId(),   // LOT 연결
+                    lot.getExpDate()  // 유통기한 전달
             );
         }
 
-        // 상태 전환
+        // ✅ GR 상태 전환
         header.setStatus(GoodsReceiptStatus.CONFIRMED);
         headerRepo.save(header);
 
-        // ✅ 발주 진척도 갱신 (선택: 부분입고/완료 상태 업데이트)
-        // 내부 구현 예: 발주 아이템 대비 누계 수령수량 계산 후 PARTIAL/FULL 상태 전환
+        // ✅ 발주 진척도 갱신
         poProgressService.updateReceiveProgress(header.getPoHeader().getPoId());
     }
+
 
     // (선택) 확정 취소(Reverse)도 같은 패턴으로 만들 수 있음
     public void cancelConfirmedReceipt(Long grId, String reason) {
@@ -237,6 +281,33 @@ public class GoodsReceiptService {
             }
         }
         return GoodsReceiptHeaderDTO.from(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public POForGRDTO searchPOForGR(String barcode) {
+        var po = poHeaderRepo.findByBarcodeWithItems(barcode)
+                .orElseThrow(() -> new IllegalArgumentException("발주 없음"));
+
+        var itemDTOs = po.getItems().stream()
+                .map(item -> POItemResponseDTO.builder()
+                        .itemNo(item.getItemNo())
+                        .productName(item.getGtin().getProductName())
+                        .gtin(item.getGtin().getGtin())
+                        .expectedArrival(item.getExpectedArrival())
+                        .purchasePrice(item.getPrice() != null ? item.getPrice().getPurchasePrice() : null)
+                        .orderQty(item.getOrderQty())
+                        .total(item.getTotal())
+                        .status(item.getStatus())
+                        .build())
+                .toList();
+
+        return POForGRDTO.builder()
+                .poId(po.getPoId())
+                .name(po.getUser() != null ? po.getUser().getUserId() : "unknown")
+                .totalAmount(po.getTotalAmount())
+                .status(po.getStatus() != null ? po.getStatus().name() : "UNKNOWN")
+                .items(itemDTOs)
+                .build();
     }
 
 

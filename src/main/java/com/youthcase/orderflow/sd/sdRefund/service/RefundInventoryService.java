@@ -48,7 +48,7 @@ public class RefundInventoryService {
             Lot newLot = new Lot();
             newLot.setProduct(product);
             newLot.setExpDate(expDate);
-            newLot.setQty(BigDecimal.valueOf(item.getSalesQuantity()));
+            newLot.setQty((long) item.getSalesQuantity());
             newLot.setStatus(Lot.LotStatus.RETURNED);
             newLot.setCreatedAt(OffsetDateTime.now());
             newLot.setUpdatedAt(OffsetDateTime.now());

@@ -4,6 +4,7 @@ import com.youthcase.orderflow.master.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,4 +45,14 @@ public class GoodsReceiptItem {
 
     @OneToMany(mappedBy = "goodsReceiptItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Lot> lots = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EXPIRY_CALC_TYPE", nullable = false)
+    private GRExpiryType expiryCalcType;
+
+    @Column(name = "MFG_DATE")
+    private LocalDate mfgDate;
+
+    @Column(name = "EXP_DATE_MANUAL")
+    private LocalDate expDate;
 }

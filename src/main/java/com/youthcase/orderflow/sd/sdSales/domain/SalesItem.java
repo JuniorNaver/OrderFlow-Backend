@@ -49,6 +49,6 @@ public class SalesItem {
 
     // ✅ N:1 매핑 (재고)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "STK_ID", nullable = false)
+    @JoinColumn(name = "STK_ID", nullable = true)
     private STK stk;
 }

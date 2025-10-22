@@ -54,4 +54,8 @@ public class POHeader {
     @Builder.Default
     private List<POItem> items = new ArrayList<>();
 
+    @Column(name = "PO_BARCODE", unique = true)
+    private String poBarcode;
+
+
 }

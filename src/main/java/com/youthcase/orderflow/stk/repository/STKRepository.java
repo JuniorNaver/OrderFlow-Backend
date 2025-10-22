@@ -3,6 +3,7 @@ package com.youthcase.orderflow.stk.repository;
 import com.youthcase.orderflow.stk.domain.STK;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query; // ⭐️ sumActiveQuantity를 위해 필요할 수 있습니다.
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,5 +66,16 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // ⭐️ 특정 창고 ID의 활성 재고를 유통기한 순으로 조회 (FIFO 검사 목적)
     @Query("SELECT s FROM STK s JOIN s.lot l WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 AND s.status = 'ACTIVE' ORDER BY l.expDate ASC")
     List<STK> findActiveStocksForFifoCheck(Long warehouseId);
+
+    //GTIN 전체 재고 합계 구해주는 쿼리
+    @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.product.gtin = :gtin AND s.status = 'ACTIVE'")
+    int sumQuantityByGtin(@Param("gtin") String gtin);
+
+    // ✅ 창고 + 상품 + LOT 기준으로 조회 (중복 방지)
+    @Query("SELECT s FROM STK s " +
+            "WHERE s.warehouse.warehouseId = :warehouseId " +
+            "AND s.product.gtin = :gtin " +
+            "AND s.lot.lotId = :lotId")
+    Optional<STK> findByWarehouseAndProductAndLot(String warehouseId, String gtin, Long lotId);
 
 }

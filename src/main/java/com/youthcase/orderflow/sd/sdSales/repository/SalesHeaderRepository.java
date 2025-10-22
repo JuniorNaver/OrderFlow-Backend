@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.sd.sdSales.repository;
 
 import com.youthcase.orderflow.sd.sdSales.domain.SalesHeader;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesStatus;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -41,7 +42,7 @@ public interface SalesHeaderRepository extends JpaRepository<SalesHeader, Long> 
     """, nativeQuery = true)
     String findLastOrderNoByDate(@Param("datePrefix") String datePrefix);
 
-
+    List<SalesHeader> findBySalesStatus(SalesStatus status);
 
 }
 
