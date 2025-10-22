@@ -75,31 +75,31 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     // 중분류 코너 선택시
     @Query("""
-select c.kanCode,
-       coalesce(c.smallCategory, c.mediumCategory, c.largeCategory),
-       count(p.gtin)
-from Category c
-left join Product p on p.category = c
-where c.totalCategory = :total
-  and (:cornerName is null or c.mediumCategory = :cornerName)
-group by c.kanCode, c.smallCategory, c.mediumCategory, c.largeCategory
-order by coalesce(c.smallCategory, c.mediumCategory, c.largeCategory)
-""")
+            select c.kanCode,
+                   coalesce(c.smallCategory, c.mediumCategory, c.largeCategory),
+                   count(p.gtin)
+            from Category c
+            left join Product p on p.category = c
+            where c.totalCategory = :total
+              and (:cornerName is null or c.mediumCategory = :cornerName)
+            group by c.kanCode, c.smallCategory, c.mediumCategory, c.largeCategory
+            order by coalesce(c.smallCategory, c.mediumCategory, c.largeCategory)
+            """)
     List<Object[]> findKanByTotalCategoryAndCorner(@Param("total") String total,
                                                    @Param("cornerName") String cornerName);
 
     // 기타(대분류 코너 선택 시)
     @Query("""
-select c.kanCode,
-       coalesce(c.smallCategory, c.largeCategory),
-       count(p.gtin)
-from Category c
-left join Product p on p.category = c
-where c.totalCategory = :total
-  and (:cornerName is null or c.largeCategory = :cornerName)
-group by c.kanCode, c.smallCategory, c.largeCategory
-order by coalesce(c.smallCategory, c.largeCategory)
-""")
+            select c.kanCode,
+                   coalesce(c.smallCategory, c.largeCategory),
+                   count(p.gtin)
+            from Category c
+            left join Product p on p.category = c
+            where c.totalCategory = :total
+              and (:cornerName is null or c.largeCategory = :cornerName)
+            group by c.kanCode, c.smallCategory, c.largeCategory
+            order by coalesce(c.smallCategory, c.largeCategory)
+            """)
     List<Object[]> findKanByTotalCategoryAndLargeCorner(@Param("total") String total,
                                                         @Param("cornerName") String cornerName);
 
@@ -107,24 +107,35 @@ order by coalesce(c.smallCategory, c.largeCategory)
 
     @EntityGraph(attributePaths = "category")
     @Query("""
-select p from Product p
-left join p.category c
-where p.orderable = true
-  and (:zone is null or p.storageMethod = :zone)
-  and (:hasCats = false
-       or coalesce(c.smallCategory, c.mediumCategory, c.largeCategory) in :cats)
-order by
-  p.productName asc,
-  p.gtin asc
-""")
-    List<Product> findRecommendableInternal(
+            select p from Product p
+            left join p.category c
+            where p.orderable = true
+              and (:zonesEmpty = true or p.storageMethod in :zones)
+              and (:catsEmpty  = true or coalesce(c.smallCategory, c.mediumCategory, c.largeCategory) in :cats)
+            order by
+              p.productName asc,
+              p.gtin asc
+            """)
+    List<Product> findRecommendableInternalMulti(
             @Param("cats") List<String> cats,
-            @Param("zone") StorageMethod zone,
-            @Param("hasCats") boolean hasCats
+            @Param("zones") List<StorageMethod> zones,
+            @Param("catsEmpty") boolean catsEmpty,
+            @Param("zonesEmpty") boolean zonesEmpty
     );
 
-    default List<Product> findRecommendable(List<String> cats, StorageMethod zone) {
-        boolean hasCats = cats != null && !cats.isEmpty();
-        return findRecommendableInternal(hasCats ? cats : List.of(), zone, hasCats);
+    default List<Product> findRecommendable(List<String> cats, List<StorageMethod> zones) {
+        boolean catsEmpty = (cats == null || cats.isEmpty());
+        boolean zonesEmpty = (zones == null || zones.isEmpty());
+
+        // ✅ 제네릭 힌트로 List<Object> 추론 방지
+        List<String> catsArg = catsEmpty  ? java.util.Collections.<String>emptyList()         : cats;
+        List<StorageMethod> zonesArg = zonesEmpty ? java.util.Collections.<StorageMethod>emptyList() : zones;
+
+        return findRecommendableInternalMulti(
+                catsArg,
+                zonesArg,
+                catsEmpty,
+                zonesEmpty
+        );
     }
-}
+ };
