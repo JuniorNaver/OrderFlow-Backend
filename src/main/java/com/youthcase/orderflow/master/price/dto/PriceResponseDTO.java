@@ -4,5 +4,4 @@ public class PriceResponseDTO {
     private String gtin;
     private Long purchasePrice;
     private Long salePrice;
-
 }
