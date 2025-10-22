@@ -18,6 +18,16 @@ public interface UserService {
      */
     UserResponseDTO getUserDetails(String userId);
 
+    // ⭐️ [U] MyPage 정보 수정을 위한 메서드 추가 (일반 사용자용) ⭐️
+    /**
+     * [U] 현재 인증된 사용자 본인의 정보를 수정합니다. (MyPage 기능)
+     * 이 메서드는 반드시 기존 비밀번호 검증 로직을 포함해야 합니다.
+     * @param userId 현재 인증된 사용자의 ID
+     * @param requestDTO 수정 요청 데이터 (이름, 이메일, 연락처, 현재 비밀번호, 새 비밀번호 등)
+     * @return 수정된 UserResponseDTO
+     */
+    UserResponseDTO updateMyDetails(String userId, UserUpdateRequestDTO requestDTO);
+
     // 💡 Roles 컬렉션까지 함께 Fetch Join으로 로드하는 메서드
     /**
      * 사용자 ID로 User 엔티티를 조회합니다. (Roles 컬렉션을 EAGER 로딩)
@@ -32,14 +42,6 @@ public interface UserService {
      * @return User 엔티티 (Optional)
      */
     Optional<User> findByUserId(String userId);
-
-    // ⭐️ 기존 updateUserDetails(String, String, String, String) 메서드는 제거되었으므로,
-    // 현재 구현체가 사용하는 시그니처를 유지합니다.
-    // 기존에 인자 수가 4개였던 updateUserDetails 구현체가 없으므로, @Override 오류를 방지하기 위해
-    // Admin 업데이트 메서드와 관련된 메서드만 남깁니다. (주석 처리된 메서드를 삭제했음을 가정)
-
-    // ⭐️ Admin 업데이트 메서드에 StoreId를 DTO가 아닌 별도의 인자로 받는 로직을 제거하고,
-    // DTO 내부의 StoreId를 사용하도록 updateUser 메서드를 사용합니다.
 
     void changePassword(String userId, String newRawPassword);
 
@@ -62,13 +64,11 @@ public interface UserService {
     UserResponseDTO createUser(UserCreateRequestDTO requestDTO);
 
     /**
-     * 주어진 ID의 사용자 정보를 업데이트합니다.
+     * 주어진 ID의 사용자 정보를 업데이트합니다. (Admin 전용)
      * * @param userId 사용자 PK (String)
      * @param requestDTO 업데이트 요청 데이터
      * @return 업데이트된 계정의 DTO
      */
-    // ⭐️ 기존 updateUserDetails와 겹치거나 혼란을 줄 수 있는 메서드는 updateUser로 통일하고 DTO만 받도록 합니다.
-    // DTO 내부에 storeId가 있으므로 별도 인자 불필요.
     UserResponseDTO updateUser(String userId, UserUpdateRequestDTO requestDTO);
 
     /**
