@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component; // ⭐️ 추가됨 ⭐️
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -17,6 +18,7 @@ import java.io.IOException;
  * JWT 토큰을 검증하고 Security Context에 인증 정보를 설정하는 커스텀 필터입니다.
  * SecurityConfig에서 UsernamePasswordAuthenticationFilter 이전에 등록됩니다.
  */
+@Component // ⭐️ Spring Bean으로 등록하여 SecurityConfig에서 주입받을 수 있게 함 ⭐️
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -42,16 +44,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication = jwtProvider.getAuthentication(jwt);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
-                // 💡 [변경] 유효하지 않은 토큰에 대해 Custom AuthenticationException을 던지도록 처리
-                //    (Spring Security의 Exception Translation Filter가 이를 잡아 EntryPoint로 전달함)
+                // 💡 유효하지 않은 토큰은 인증 객체를 제거하고, EntryPoint로 전달할 속성 설정
+                SecurityContextHolder.clearContext();
                 request.setAttribute("jwt_exception", "Invalid or Expired JWT Token");
 
-                // 예외를 던지거나, EntryPoint를 명시적으로 호출해야 하지만,
-                // 현재 로직을 유지하면서 Custom EntryPoint를 통해 401을 명확히 반환하는 것이 일반적입니다.
+                // ⭐️ [중요]: 유효하지 않은 토큰이지만 permitAll()이 아니기 때문에
+                // Spring Security가 401(AuthenticationEntryPoint)로 이동시킵니다.
             }
         }
 
-        // 다음 필터로 진행 (401 처리는 Spring Security의 기본 EntryPoint나 Custom EntryPoint에 위임됨)
+        // 다음 필터로 진행
         filterChain.doFilter(request, response);
     }
 

@@ -2,12 +2,14 @@ package com.youthcase.orderflow.auth.repository;
 
 import com.youthcase.orderflow.auth.domain.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-/**
- * UserRole 엔티티를 관리하는 JPA Repository 입니다.
- */
-@Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
-    // User와 Role의 매핑 데이터를 조회, 저장, 삭제합니다.
+
+    // 주어진 사용자 ID를 가진 모든 UserRole 매핑을 삭제합니다.
+    @Modifying
+    @Query("DELETE FROM UserRole ur WHERE ur.user.userId = :userId")
+    void deleteByUserId(@Param("userId") String userId);
 }

@@ -50,6 +50,10 @@ public class POHeader {
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
 
+    // 바코드 번호(입고 스캔용)
+    @Column(name = "EXTERNAL_ID", unique = true, length = 20)
+    private String externalId;
+
     @OneToMany(mappedBy = "poHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<POItem> items = new ArrayList<>();

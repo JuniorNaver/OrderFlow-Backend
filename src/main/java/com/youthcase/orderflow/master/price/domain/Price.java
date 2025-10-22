@@ -4,6 +4,8 @@ import com.youthcase.orderflow.master.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -22,6 +24,7 @@ public class Price {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId // ✅ Product의 PK를 Price의 PK로 공유
     @JoinColumn(name = "GTIN")
+    @OnDelete(action = OnDeleteAction.CASCADE) // ✅ Store 삭제 시 Warehouse 자동 삭제
     private Product product;
 
     /** 🔹 기준단가 */

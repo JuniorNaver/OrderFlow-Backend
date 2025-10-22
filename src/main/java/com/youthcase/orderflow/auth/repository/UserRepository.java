@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+// 💡 User 엔티티의 PK(userId)가 String이므로 JpaRepository<User, String>를 유지합니다.
 public interface UserRepository extends JpaRepository<User, String> {
 
-    // 💡 수정됨: 필드 이름 'roles' 대신 'userRoles'를 사용하여 Fetch Join을 수행합니다.
     @Query("SELECT u FROM User u JOIN FETCH u.userRoles ur WHERE u.userId = :userId")
     Optional<User> findByUserIdWithRoles(@Param("userId") String userId);
 
@@ -20,7 +20,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
-    List<User> findByNameContaining(String name);
+    // 💡 추가됨: 사용자 ID 또는 이름에 검색어가 포함된 목록을 조회
+    List<User> findByUserIdContainingOrNameContaining(String userId, String name);
 
     boolean existsByUserId(String userId);
 }

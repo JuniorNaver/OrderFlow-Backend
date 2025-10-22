@@ -5,12 +5,15 @@ import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
+import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,16 +22,25 @@ import java.util.stream.Collectors;
 public class POHeaderServiceImpl implements POHeaderService {
     private final POHeaderRepository poHeaderRepository;
     private final UserRepository userRepository;
-
+    private final POItemService pOItemService;
 
     /** '담기' 클릭시 POHeader 추가 */
     @Override
     @Transactional
     public Long createNewPO() {
+        LocalDate today = LocalDate.now();
+        String branchCode = "S001"; // TODO: 실제 로그인 지점 코드로 교체
+
+        long countToday = poHeaderRepository.countByActionDateAndBranchCode(today, branchCode);  // 오늘 날짜 + 지점 기준 기존 건수 조회
+        String seq = String.format("%02d", countToday + 1);                                      // 일련번호 (01, 02, 03...)
+        String datePart = today.format(DateTimeFormatter.BASIC_ISO_DATE);                        // 날짜에서 하이픈 제거 "20251025"
+        String externalId = datePart + branchCode + seq; // 외부식별자 생성 "20251025S00101"
+
         POHeader poHeader = new POHeader();
         poHeader.setStatus(POStatus.PR); // 'PR' = 초안 상태
         poHeader.setTotalAmount(0L);                      // 2️⃣ 기본 금액
         poHeader.setActionDate(LocalDate.now());          // 3️⃣ 오늘 날짜
+        poHeader.setExternalId(externalId); //
 
         // 5️⃣ 테스트용 유저 (ID=1) 실제 로그인 기능이 없으면 임시 유저를 지정
         User testUser = userRepository.findById("admin01")
@@ -38,6 +50,19 @@ public class POHeaderServiceImpl implements POHeaderService {
         poHeaderRepository.save(poHeader);
         return poHeader.getPoId();
     }
+
+    /** 바코드 번호 생성 */
+    @Override
+    @Transactional
+    public Long createHeaderAndAddItem(String gtin, POItemRequestDTO dto) {
+        // 1️⃣ 새 헤더 생성
+        Long poId = createNewPO();
+        // 2️⃣ 해당 헤더에 아이템 추가
+        pOItemService.addPOItem(poId, dto, gtin);
+        // 3️⃣ 생성된 poId 반환
+        return poId;
+    }
+
 
     /** 모든 발주 헤더 조회 */
     @Override
@@ -68,6 +93,16 @@ public class POHeaderServiceImpl implements POHeaderService {
                 .collect(Collectors.toList());
     };
 
+    /** 저장한 장바구니 삭제 */
+    @Override
+    public void deletePO(Long poId) {
+        POHeader poHeader = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+
+        poHeaderRepository.delete(poHeader); // 연관된 POItem은 CascadeType.ALL 설정되어 있으면 자동 삭제됨
+    }
+
+
     private POHeaderResponseDTO toDto(POHeader poHeader) {
         return POHeaderResponseDTO.builder()
                 .poId(poHeader.getPoId())
@@ -76,16 +111,6 @@ public class POHeaderServiceImpl implements POHeaderService {
                 .actionDate(poHeader.getActionDate())
                 .remarks(poHeader.getRemarks())
                 .build();
-    }
-
-
-    /** 저장한 장바구니 삭제 */
-    @Override
-    public void deletePO(Long poId) {
-        POHeader poHeader = poHeaderRepository.findById(poId)
-                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
-
-        poHeaderRepository.delete(poHeader); // 연관된 POItem은 CascadeType.ALL 설정되어 있으면 자동 삭제됨
     }
 }
 

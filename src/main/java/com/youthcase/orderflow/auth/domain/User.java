@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors; // 💡 Collectors import 추가
+import java.util.stream.Collectors;
 
 /**
  * 사용자 정보를 담는 엔티티입니다.
@@ -39,6 +39,10 @@ public class User {
     @Column(name = "workspace", length = 100)
     private String workspace;
 
+    // ⭐️ 추가: 점포 ID 필드 (DTO에서 참조하며 테이블에 표시되어야 함)
+    @Column(name = "store_id")
+    private Long storeId;
+
     @Column(name = "enabled", nullable = false)
     @Builder.Default
     private boolean enabled = true;
@@ -56,10 +60,12 @@ public class User {
     // --- 비즈니스 로직 지원 메서드 ---
 
     // UserService.updateUserDetails() 지원 메서드
-    public void updateDetails(String name, String workspace, String email) {
+    // ⭐️ 수정: storeId 파라미터를 추가하고 업데이트 로직을 반영합니다.
+    public void updateDetails(String name, String workspace, String email, Long storeId) {
         if (name != null) this.name = name;
         if (workspace != null) this.workspace = workspace;
         if (email != null) this.email = email;
+        if (storeId != null) this.storeId = storeId;
     }
 
     // UserService.changePassword() 지원 메서드

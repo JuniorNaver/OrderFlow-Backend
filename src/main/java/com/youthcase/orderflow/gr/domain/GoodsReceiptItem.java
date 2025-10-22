@@ -44,6 +44,7 @@ public class GoodsReceiptItem {
     private Product product;
 
     @OneToMany(mappedBy = "goodsReceiptItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Lot> lots = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
