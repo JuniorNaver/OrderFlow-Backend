@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.auth.controller;
 
 import com.youthcase.orderflow.auth.dto.UserResponseDTO;
+import com.youthcase.orderflow.auth.dto.UserUpdateRequestDTO;
 import com.youthcase.orderflow.auth.service.UserService;
 import com.youthcase.orderflow.global.config.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
@@ -20,49 +21,50 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-     * [주요 수정 부분] 현재 인증된 사용자 본인의 상세 정보를 조회합니다.
-     * 엔드포인트: GET /api/auth/users/me
-     *
-     * @param securityUser Spring Security Context에서 주입된 현재 인증 정보 객체
-     * @return UserResponseDTO를 포함하는 ResponseEntity (HTTP 200 OK)
-     */
+    // ----------------------------------------------------------------------
+    // [R] 현재 인증된 사용자 본인의 상세 정보를 조회합니다. (MyPage 정보 조회)
+    // 엔드포인트: GET /api/auth/users/me
+    // ----------------------------------------------------------------------
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> getMyDetails(
             @AuthenticationPrincipal SecurityUser securityUser) {
 
-        // 💡 NullPointerException 방지를 위한 안전 체크
-        // SecurityUser가 null인 경우, JWT 필터에서 인증 처리가 제대로 되지 않았거나
-        // 인증되지 않은 사용자가 보안된 엔드포인트에 접근했다는 의미입니다.
+        // 🚨 토큰이 있다면 securityUser는 null이 아니어야 합니다.
         if (securityUser == null) {
-            // 이 경로는 Security Config에 의해 보통 차단되지만, 방어적인 코드를 작성합니다.
-            // 실제 환경에서는 Security Filter 체인이 401 Unauthorized를 반환해야 합니다.
-            // 명시적인 예외를 던져서 Global Exception Handler가 처리하도록 유도할 수 있습니다.
-            // 여기서는 단순화하여 401 응답 코드를 반환합니다.
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED) // 401 Unauthorized
-                    .build();
+            // 이 요청은 반드시 토큰이 필요합니다. securityUser가 null이면 401을 반환합니다.
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // 32번 라인으로 추정되는 securityUser.getUsername() 호출 전에 null 체크가 추가되어 안전합니다.
         String userId = securityUser.getUsername();
 
-        // 서비스 계층을 통해 사용자 상세 정보를 조회합니다.
+        // ⭐️ [수정] try-catch 제거: 예외 처리를 GlobalExceptionHandler에 위임합니다.
+        // UserServiceImpl에서 ResourceNotFoundException을 던지면
+        // GlobalExceptionHandler가 이를 404 Not Found로 처리합니다.
         UserResponseDTO responseDTO = userService.getUserDetails(userId);
-
         return ResponseEntity.ok(responseDTO);
     }
 
-    /**
-     * 사용자 등록 (회원가입) 엔드포인트 예시
-     * @param requestDTO 사용자 등록 요청 데이터
-     * @return 성공 응답
-     */
-    // @PostMapping("/register")
-    // public ResponseEntity<Void> registerUser(@RequestBody UserRegisterRequestDTO requestDTO) {
-    //     // userService.register(requestDTO);
-    //     return ResponseEntity.status(HttpStatus.CREATED).build();
-    // }
+    // ----------------------------------------------------------------------
+    // [U] 현재 인증된 사용자 본인의 상세 정보를 수정합니다. (MyPage 정보 수정)
+    // ----------------------------------------------------------------------
+    @PutMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateMyDetails(
+            @AuthenticationPrincipal SecurityUser securityUser,
+            @RequestBody UserUpdateRequestDTO requestDTO) {
 
-    // ... 여기에 다른 사용자 관련 메서드 (업데이트, 삭제 등)를 추가할 수 있습니다.
+        // 🚨 주의: NullPointerException 방지용 임시 코드 (실제 운영 환경에서는 필터가 처리)
+        // securityUser가 null이면 필터에서 UNAUTHORIZED로 막히므로, 이 코드는 사실상 불필요합니다.
+        if (securityUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userId = securityUser.getUsername();
+
+        // 서비스 계층 호출
+        // 비밀번호 불일치 시 UserServiceImple에서 던진 IllegalArgumentException은
+        // GlobalExceptionHandler에서 400 Bad Request로 처리됩니다.
+        UserResponseDTO responseDTO = userService.updateMyDetails(userId, requestDTO);
+
+        return ResponseEntity.ok(responseDTO);
+    }
 }

@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder; // 비밀번호 변경을 위해 필요하다고 가정
 
     // -------------------------------------------------------------------------
-    // 일반 사용자 (GET, PWD, Find)
+    // 일반 사용자 (GET, PWD, Find, MyPage Update)
     // -------------------------------------------------------------------------
 
     /**
@@ -42,12 +42,51 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDTO getUserDetails(String userId) {
 
+        // ⭐️ 이미 ResourceNotFoundException을 던지고 있습니다. (매우 잘하셨습니다!) ⭐️
         // UserResponseDTO 생성을 위해 WithRoles 메서드를 사용하여 Fetch Join된 User를 가져옵니다.
         User user = findByUserIdWithRoles(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
         return UserResponseDTO.from(user);
     }
+
+    /**
+     * ⭐️ [UserService 구현] 현재 인증된 사용자 본인의 정보를 수정합니다. (MyPage 기능) ⭐️
+     * 비밀번호 검증 및 사용자 편집 가능한 정보(이름, 이메일, 워크스페이스)를 업데이트합니다.
+     */
+    @Override
+    @Transactional
+    public UserResponseDTO updateMyDetails(String userId, UserUpdateRequestDTO requestDTO) {
+        User user = findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        // 1. 정보 수정을 위해서는 반드시 현재 비밀번호를 검증해야 합니다.
+        if (requestDTO.getCurrentPassword() == null || !passwordEncoder.matches(requestDTO.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않아 정보 수정에 실패했습니다.");
+        }
+
+        // 2. 일반 정보 업데이트 (이름, 워크스페이스, 이메일)
+        // StoreId는 일반 사용자가 수정할 수 없으므로 기존 값을 그대로 사용합니다.
+        // User 엔티티의 updateDetails 메서드 시그니처가 (name, workspace, email, storeId)라고 가정
+        user.updateDetails(
+                requestDTO.getName(),
+                requestDTO.getWorkspace(),
+                requestDTO.getEmail(),
+                user.getStoreId() // 기존 StoreId 값 유지 (MyPage에서는 수정 불가)
+        );
+
+        // 3. 새 비밀번호가 제공되었다면, 비밀번호를 변경합니다.
+        if (requestDTO.getNewPassword() != null && !requestDTO.getNewPassword().isEmpty()) {
+            String encodedNewPassword = passwordEncoder.encode(requestDTO.getNewPassword());
+            user.updatePassword(encodedNewPassword);
+        }
+
+        // 4. 저장 및 응답 DTO 반환
+        User updatedUser = userRepository.save(user);
+
+        return UserResponseDTO.from(updatedUser);
+    }
+
 
     /**
      * [UserService 구현] Roles 컬렉션까지 함께 Fetch Join으로 로드하는 메서드 (Repository에 위임)
@@ -65,28 +104,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUserId(userId);
     }
 
-    // ⭐️ 오류가 발생했던 updateUserDetails 메서드는 Admin 업데이트 로직과 충돌/혼란을 막기 위해 제거했습니다.
-    // 71행의 오류가 발생했던 코드가 포함된 메서드입니다.
-    /*
-    @Override
-    @Transactional
-    public User updateUserDetails(String userId, String name, String workspace, String email) {
-        User user = findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found for update with ID: " + userId));
-
-        // user.updateDetails(name, workspace, email, storeId); // 71행 오류의 근원지
-        user.updateDetails(name, workspace, email, user.getStoreId()); // 임시 수정
-
-        return user;
-    }
-    */
-
-    // ⭐️ 기존 인터페이스에 남아있던 updateUserDetails 구현체는 충돌 방지를 위해 제거되었습니다.
-    // 대신 Admin 기능을 위한 updateUser를 사용합니다.
-    @Transactional
-    public UserResponseDTO updateUserDetails(String userId, UserUpdateRequestDTO requestDTO, Long storeId) {
-        throw new UnsupportedOperationException("이 메서드는 사용되지 않습니다. updateUser를 사용하세요.");
-    }
 
     /**
      * [UserService 구현] 사용자 비밀번호를 변경합니다.
@@ -149,7 +166,6 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(newUser);
 
 
-
         // 1. 할당할 Role 엔티티 조회
         Role assignedRole = roleRepository.findByRoleId(requestDTO.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + requestDTO.getRoleId()));
@@ -162,7 +178,6 @@ public class UserServiceImpl implements UserService {
 
         // 3. UserRole 저장 (USER_ROLE 테이블에 레코드 삽입)
         userRoleRepository.save(userRole);
-
 
 
         // 4. 응답 반환 시, UserResponseDTO.from()은 이제 UserRole 컬렉션에서 Role을 찾을 수 있습니다.
@@ -184,7 +199,7 @@ public class UserServiceImpl implements UserService {
                 requestDTO.getName(),
                 requestDTO.getWorkspace(),
                 requestDTO.getEmail(),
-                requestDTO.getStoreId()
+                requestDTO.getStoreId() // Admin 기능이므로 storeId 업데이트 허용
         );
 
         // 2. ⭐️ 역할(Role) 업데이트 로직 시작 ⭐️
