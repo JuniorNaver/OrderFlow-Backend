@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 @Table(name = "LOT", indexes = {
         @Index(name="IX_LOT_PROD_EXP", columnList="GTIN, EXP_DATE"),
         @Index(name="IX_LOT_EXP", columnList="EXP_DATE"),
-        @Index(name="IX_LOT_GR", columnList="GR_HEADER_ID")
+        @Index(name="IX_LOT_GR_ITEM", columnList="MM_GR_ITEM") // ✅ 수정된 인덱스명
 })
 @Getter
 @Setter
@@ -40,7 +40,6 @@ public class Lot {
     @Column(name = "EXPIRY_TYPE", length = 16, nullable = false)
     private ExpiryType expiryType = ExpiryType.NONE;
 
-    @jakarta.validation.constraints.PositiveOrZero
     @Column(name = "QTY", precision = 12, scale = 2, nullable = false)
     private BigDecimal qty;
 
@@ -59,8 +58,7 @@ public class Lot {
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MM_GR_ITEM", nullable = true)
-    private GoodsReceiptItem goodsReceiptItem; // Java 컨벤션에 따라 소문자로 시작하도록 변경
-
+    private GoodsReceiptItem goodsReceiptItem;
 
     @Transient
     public long getRemainDays() {
@@ -82,6 +80,4 @@ public class Lot {
     void onUpdate() {
         updatedAt = OffsetDateTime.now();
     }
-
-
 }
