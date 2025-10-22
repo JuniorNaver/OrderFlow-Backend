@@ -61,4 +61,7 @@ public interface STKService {
     List<STK> findStocksRequiringAdjustment();
     List<STK> executeStockAdjustment(AdjustmentRequest request);
 
+    //GR
+    void increaseStock(String warehouseId, String gtin, Long qty, String lotNo, LocalDate expDate);
+    void decreaseStock(String warehouseId, String gtin, Long qty, String lotNo, LocalDate expDate);
 }

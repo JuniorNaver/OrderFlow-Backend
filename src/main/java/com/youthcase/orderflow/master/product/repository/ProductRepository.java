@@ -35,6 +35,10 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     // 상품검색
     Optional<Product> findByGtin(String gtin);
 
+    //GR다중 상품검색
+    List<Product> findByGtinIn(List<String> gtins);
+
+
     public interface CornerRow {
         String getCornerName();
 

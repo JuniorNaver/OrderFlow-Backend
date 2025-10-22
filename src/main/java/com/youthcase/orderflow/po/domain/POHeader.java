@@ -50,11 +50,8 @@ public class POHeader {
     @JoinColumn(name = "USER_ID", nullable = false)
     private User user;
 
-    /** ✅ POHeader가 삭제되면 관련된 모든 POItem도 자동 삭제됨 */
-    @OneToMany(
-            mappedBy = "poHeader",
-            cascade = CascadeType.ALL,     // 저장, 수정, 삭제 전파
-            orphanRemoval = true           // 고아 객체(부모가 없어진 자식) 자동 삭제
-    )
+    @OneToMany(mappedBy = "poHeader", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<POItem> items = new ArrayList<>();
+
 }

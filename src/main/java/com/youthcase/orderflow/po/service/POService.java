@@ -7,4 +7,6 @@ public interface POService {
     /** 발주 확정 처리 */
     PO confirmOrder(Long poId);
 
+    void updateReceiveProgress(Long poId);
+
 }

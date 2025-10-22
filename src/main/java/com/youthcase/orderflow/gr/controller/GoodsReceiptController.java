@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/gr")
 @RequiredArgsConstructor
@@ -13,13 +16,43 @@ public class GoodsReceiptController {
 
     private final GoodsReceiptService service;
 
+    /** ✅ 1. 전체 조회 */
+    @GetMapping
+    public ResponseEntity<List<GoodsReceiptHeaderDTO>> getAll() {
+        return ResponseEntity.ok(service.findAll());
+    }
+
+    /** ✅ 2. 단건 조회 */
+    @GetMapping("/{id}")
+    public ResponseEntity<GoodsReceiptHeaderDTO> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    /** ✅ 3. 등록 */
     @PostMapping
     public ResponseEntity<GoodsReceiptHeaderDTO> create(@RequestBody GoodsReceiptHeaderDTO dto) {
         return ResponseEntity.ok(service.create(dto));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<GoodsReceiptHeaderDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+    /** ✅ 4. 입고 확정 */
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<Void> confirm(@PathVariable Long id) {
+        service.confirmReceipt(id);
+        return ResponseEntity.ok().build();
     }
+
+    /** ✅ 5. 입고 확정 취소 */
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancel(@PathVariable Long id, @RequestParam(required = false) String reason) {
+        service.cancelConfirmedReceipt(id, reason == null ? "no reason" : reason);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/scan-confirm")
+    public ResponseEntity<GoodsReceiptHeaderDTO> createAndConfirm(@RequestBody Map<String, Long> req) {
+        Long poId = req.get("poId");
+        GoodsReceiptHeaderDTO dto = service.createAndConfirmFromPO(poId);
+        return ResponseEntity.ok(dto);
+    }
+
 }

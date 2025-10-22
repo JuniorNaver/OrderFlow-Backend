@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.gr.repository;
 
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
+import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -32,4 +33,6 @@ public interface GoodsReceiptHeaderRepository extends JpaRepository<GoodsReceipt
      */
     @EntityGraph(attributePaths = {"items"})
     List<GoodsReceiptHeader> findByPoHeader_PoId(Long poId);
+
+    List<GoodsReceiptHeader> findByStatus(GoodsReceiptStatus status);
 }

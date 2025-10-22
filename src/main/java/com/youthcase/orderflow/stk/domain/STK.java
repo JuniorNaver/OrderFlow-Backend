@@ -2,7 +2,7 @@ package com.youthcase.orderflow.stk.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
-import com.youthcase.orderflow.pr.domain.Lot;
+import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import jakarta.persistence.*;

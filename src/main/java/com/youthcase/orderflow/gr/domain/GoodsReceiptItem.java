@@ -4,6 +4,9 @@ import com.youthcase.orderflow.master.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "MM_GR_ITEM")
 @Getter
@@ -24,7 +27,7 @@ public class GoodsReceiptItem {
     private Long itemNo;  // ITEM_NO (PK)
 
     @Column(name = "QTY", nullable = false)
-    private Integer qty;  // 수량
+    private Long qty;  // 수량
 
     @Column(name = "NOTE", length = 255)
     private String note; // 비고
@@ -38,4 +41,7 @@ public class GoodsReceiptItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", referencedColumnName = "GTIN", nullable = false)
     private Product product;
+
+    @OneToMany(mappedBy = "goodsReceiptItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Lot> lots = new ArrayList<>();
 }

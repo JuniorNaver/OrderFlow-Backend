@@ -7,6 +7,6 @@ import lombok.*;
 public class GoodsReceiptItemDTO {
     private Long itemNo;
     private String gtin;
-    private Integer qty;
+    private Long qty;
     private String note;
 }
