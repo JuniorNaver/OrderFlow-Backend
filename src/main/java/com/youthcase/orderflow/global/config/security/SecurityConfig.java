@@ -82,7 +82,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pr/browse/**").permitAll()
                         .requestMatchers("/api/v1/pr/stores/**").permitAll()
                         .requestMatchers("/api/v1/pr/inventory/**").permitAll()
-                        //.requestMatchers("/api/v1/inventory?{gtin}").permitAll()
+                        .requestMatchers("/api/po/**").permitAll()
 
                         
                         // B. ⭐️ 나머지 모든 /api/** 경로는 인증 필요! (토큰 검증) ⭐️

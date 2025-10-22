@@ -52,11 +52,8 @@ public class POController {
 
     /** '장바구니로 가기' 눌렀을 때 장바구니 조회 */
     @GetMapping("/po/items")
-    public List<POItemResponseDTO> getAllItems(
-            @RequestParam Long poId,
-            @RequestParam POStatus status
-    ) {
-        return poItemService.getAllItems(poId, status);
+    public List<POItemResponseDTO> getAllItems(@RequestParam Long poId) {
+        return poItemService.getAllItems(poId);
     }
 
 

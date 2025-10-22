@@ -92,8 +92,8 @@ public class POItemServiceImpl implements POItemService {
 
     /** 장바구니 호출　*/
     @Override
-    public List<POItemResponseDTO> getAllItems(Long poId, POStatus status) {
-        return poItemRepository.findByPoHeader_PoIdAndStatus(poId, status)
+    public List<POItemResponseDTO> getAllItems(Long poId) {
+        return poItemRepository.findByPoHeader_PoId(poId)
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
