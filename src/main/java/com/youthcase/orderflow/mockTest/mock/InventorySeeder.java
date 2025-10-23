@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.pr.mock;
+package com.youthcase.orderflow.mockTest.mock;
 
 import com.youthcase.orderflow.pr.service.InventoryService;
 import lombok.RequiredArgsConstructor;

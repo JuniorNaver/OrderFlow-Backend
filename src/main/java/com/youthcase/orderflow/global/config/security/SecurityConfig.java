@@ -19,6 +19,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity // Spring Security 활성화
@@ -83,6 +86,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pr/stores/**").permitAll()
                         .requestMatchers("/api/v1/pr/inventory/**").permitAll()
                         .requestMatchers("/api/po/**").permitAll()
+                        .requestMatchers("/api/gr/**").permitAll()
+                        .requestMatchers("/api/sd/**").permitAll()
+                        .requestMatchers("/api/payments").permitAll()
+                        .requestMatchers("/api/receipts").permitAll()
+                        .requestMatchers("/api/refunds").permitAll()
                         .requestMatchers("/api/stk/**").permitAll()
 
                         // B. ⭐️ 나머지 모든 /api/** 경로는 인증 필요! (토큰 검증) ⭐️

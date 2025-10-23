@@ -1,14 +1,15 @@
 package com.youthcase.orderflow.auth.domain;
 
+import com.youthcase.orderflow.master.store.domain.Store;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 사용자 정보를 담는 엔티티입니다.
@@ -24,7 +25,7 @@ public class User {
 
     @Id
     @Column(name = "user_id", length = 50)
-    private String userId; // 사용자 ID (PK)
+    private String userId;
 
     @Column(name = "password", nullable = false, length = 100)
     private String password;
@@ -35,51 +36,37 @@ public class User {
     @Column(name = "email", length = 100)
     private String email;
 
-    // 근무지 (UserService에서 사용됨)
-    @Column(name = "workspace", length = 100)
-    private String workspace;
+    // ✅ 지점
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "STORE_ID")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @Comment("소속 지점 (STORE_MASTER 참조)")
+    private Store store;
 
-    // ⭐️ 추가: 점포 ID 필드 (DTO에서 참조하며 테이블에 표시되어야 함)
-    @Column(name = "store_id")
-    private Long storeId;
+    // ✅ 역할 (Role과 직접 연결)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ROLE_ID") // FK 추가
+    @Comment("사용자 역할 (ROLE 테이블 참조)")
+    private Role role;
 
     @Column(name = "enabled", nullable = false)
     @Builder.Default
     private boolean enabled = true;
 
-    // 💡 변경: UserRole 엔티티를 참조하는 1:N 관계로 변경됨
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<UserRole> userRoles = new HashSet<>();
-
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    // --- 비즈니스 로직 ---
 
-    // --- 비즈니스 로직 지원 메서드 ---
-
-    // UserService.updateUserDetails() 지원 메서드
-    // ⭐️ 수정: storeId 파라미터를 추가하고 업데이트 로직을 반영합니다.
-    public void updateDetails(String name, String workspace, String email, Long storeId) {
+    public void updateDetails(String name, String email, Store store, Role role) {
         if (name != null) this.name = name;
-        if (workspace != null) this.workspace = workspace;
         if (email != null) this.email = email;
-        if (storeId != null) this.storeId = storeId;
+        if (store != null) this.store = store;
+        if (role != null) this.role = role;
     }
 
-    // UserService.changePassword() 지원 메서드
     public void updatePassword(String newHashedPassword) {
         this.password = newHashedPassword;
-    }
-
-    // 💡 추가: UserResponseDTO에서 getRoles() 오류를 해결하기 위해 추가된 헬퍼 메서드
-    /**
-     * UserRole 관계를 통해 연결된 실제 Role 엔티티 목록을 반환합니다.
-     */
-    public Set<Role> getRoles() {
-        return this.userRoles.stream()
-                .map(UserRole::getRole) // UserRole 엔티티에 getRole()이 있다고 가정
-                .collect(Collectors.toSet());
     }
 }

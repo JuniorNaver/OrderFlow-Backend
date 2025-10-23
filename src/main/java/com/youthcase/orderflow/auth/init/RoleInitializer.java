@@ -5,6 +5,7 @@ import com.youthcase.orderflow.auth.domain.enums.RoleType;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
+@Order(1)
 public class RoleInitializer implements CommandLineRunner {
 
     private final RoleRepository roleRepository;

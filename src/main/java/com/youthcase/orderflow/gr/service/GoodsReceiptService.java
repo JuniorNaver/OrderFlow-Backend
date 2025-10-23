@@ -1,16 +1,15 @@
 package com.youthcase.orderflow.gr.service;
 
-import com.youthcase.orderflow.gr.domain.GRExpiryType;
-import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
-import com.youthcase.orderflow.gr.domain.GoodsReceiptItem;
-import com.youthcase.orderflow.gr.domain.Lot;
+import com.youthcase.orderflow.gr.domain.*;
 import com.youthcase.orderflow.gr.dto.*;
 import com.youthcase.orderflow.gr.mapper.GoodsReceiptMapper;
 import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.auth.repository.UserRepository;
-import com.youthcase.orderflow.gr.repository.GoodsReceiptItemRepository;
 import com.youthcase.orderflow.gr.repository.LotRepository;
+import com.youthcase.orderflow.gr.repository.StkHistoryRepository;
+import com.youthcase.orderflow.gr.status.GRExpiryType;
 import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
+import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.po.domain.POHeader;
@@ -21,6 +20,7 @@ import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import com.youthcase.orderflow.po.service.POService;
 import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,14 +34,13 @@ import java.util.stream.Collectors;
 public class GoodsReceiptService {
 
     private final GoodsReceiptHeaderRepository headerRepo;
-    private final GoodsReceiptItemRepository itemRepo;
     private final UserRepository userRepo;
     private final WarehouseRepository warehouseRepo;
     private final POHeaderRepository poHeaderRepo;
     private final ProductRepository productRepo;
     private final LotRepository lotRepository;
     private final GoodsReceiptMapper mapper;
-//    private final GoodsReceiptValidator validator;
+    private final StkHistoryRepository stkHistoryRepository;
 
     // ✅ 재고 반영을 외부 포트(도메인 서비스)로 분리 — 실무 확장 포인트
     private final STKService stockService; // 아래 인터페이스 참고
@@ -86,15 +85,28 @@ public class GoodsReceiptService {
     public GoodsReceiptHeaderDTO findById(Long id) {
         GoodsReceiptHeader header = headerRepo.findWithItemsById(id)
                 .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
-        return mapper.toDTO(header);
+
+        var dto = mapper.toDTO(header);
+
+        List<LotDTO> lots = lotRepository
+                .findByGoodsReceiptItem_HeaderId(id)
+                .stream()
+                .map(LotDTO::from)
+                .toList();
+
+        dto.setLots(lots);
+        return dto;
     }
 
     // ✅ 핵심: 입고 확정 → 재고 반영
     @Transactional
     public void confirmReceipt(Long grId) {
-
         GoodsReceiptHeader header = headerRepo.findWithItemsById(grId)
                 .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
+
+        if (header.getStatus() == GoodsReceiptStatus.CONFIRMED) {
+            throw new IllegalStateException("이미 확정된 입고입니다.");
+        }
 
         // ✅ 상태 검증
         if (header.getStatus() != GoodsReceiptStatus.RECEIVED) {
@@ -130,7 +142,6 @@ public class GoodsReceiptService {
             GRExpiryType calcType = item.getExpiryCalcType();
 
             // 2️⃣ 유통기한 계산
-            // 2️⃣ 유통기한 계산
             if (policy != ExpiryType.NONE && calcType != GRExpiryType.NONE) {
 
                 if (calcType == GRExpiryType.FIXED_DAYS && product.getShelfLifeDays() != null) {
@@ -143,12 +154,15 @@ public class GoodsReceiptService {
                     lot.setExpDate(item.getMfgDate().plusDays(product.getShelfLifeDays()));
 
                 } else if (calcType == GRExpiryType.MANUAL) {
-                    if (item.getExpDate() == null) {
+                    if (item.getExpDateManual() == null) {
                         throw new IllegalStateException("수동 입력 유통기한이 누락되었습니다: itemNo=" + item.getItemNo());
                     }
-                    lot.setExpDate(item.getExpDate());
+                    lot.setExpDate(item.getExpDateManual());
                 }
             }
+
+            boolean exists = lotRepository.findByProduct_GtinAndExpDateAndStatus(product.getGtin(), lot.getExpDate(), LotStatus.ACTIVE).isPresent();
+            if (exists) throw new IllegalStateException("이미 동일 유통기한 LOT가 존재합니다.");
 
             // 3️⃣ LOT 저장
             lotRepository.save(lot);
@@ -160,6 +174,18 @@ public class GoodsReceiptService {
                     item.getQty(),
                     lot.getLotId(),   // LOT 연결
                     lot.getExpDate()  // 유통기한 전달
+            );
+
+            // ✅ 재고 로그 남기기 (STK는 건드리지 않음)
+            stkHistoryRepository.save(
+                    STKHistory.builder()
+                            .warehouseId(warehouseId)
+                            .product(product)
+                            .lotId(lot.getLotId())
+                            .actionType("IN") // 입고
+                            .changeQty(item.getQty())
+                            .note("입고 확정으로 자동 생성됨")
+                            .build()
             );
         }
 
@@ -186,11 +212,27 @@ public class GoodsReceiptService {
         String warehouseId = header.getWarehouse().getWarehouseId();
         // 재고 차감
         for (GoodsReceiptItem item : header.getItems()) {
+
+            if (item.getQty() <= 0) {
+                throw new IllegalArgumentException("입고 취소 수량이 0 이하일 수 없습니다.");
+            }
             stockService.decreaseStock(
                     warehouseId,
                     item.getProduct().getGtin(),
                     item.getQty(),
                     null, null
+            );
+
+            stkHistoryRepository.save(
+                    STKHistory.builder()
+                            .warehouseId(warehouseId)
+                            .product(item.getProduct())
+                            .lotId(null) // LOT는 연결 안 함
+                            .actionType("OUT") // 확정취소
+                            .changeQty(item.getQty())
+                            .performedBy(header.getUser())
+                            .note("입고 확정 취소로 자동 생성됨")
+                            .build()
             );
         }
 
@@ -205,6 +247,8 @@ public class GoodsReceiptService {
 
         // 발주 진척도 롤백
         poProgressService.updateReceiveProgress(header.getPoHeader().getPoId());
+
+
     }
 
     @Transactional
@@ -214,9 +258,9 @@ public class GoodsReceiptService {
 
         GoodsReceiptHeader gr = GoodsReceiptHeader.builder()
                 .poHeader(po)
-                .warehouse(po.getUser().getWorkspace() != null
-                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
-                        : null)
+//                .warehouse(po.getUser().getStore() != null
+//                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
+//                        : null)
                 .user(po.getUser())
                 .status(GoodsReceiptStatus.CONFIRMED)
                 .receiptDate(LocalDate.now())
@@ -310,14 +354,14 @@ public class GoodsReceiptService {
                 .build();
     }
 
+    @Transactional
+    @Scheduled(cron = "0 0 9 * * *")
+    public void checkoutExpiredLots() {
+        List<Lot> lots = lotRepository.findAll().stream()
+                .filter(l -> l.getRemainDays() <= 0 && l.getStatus() != LotStatus.EXPIRED)
+                .peek(l -> l.setStatus(LotStatus.EXPIRED))
+                .toList();
 
-
-   /* @Transactional
-    public GoodsReceiptResponse createReceipt(GoodsReceiptRequest request) {
-        // ✅ 1. 전체 유효성 검사
-        validator.validateAll(request);
-
-        // ✅ 2. 저장 로직 수행
-        GoodsReceiptHeader header = new GoodsReceiptHeader();
-    }*/
+        lotRepository.saveAll(lots);
+    }
 }

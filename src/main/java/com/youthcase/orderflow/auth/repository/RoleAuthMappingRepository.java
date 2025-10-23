@@ -3,6 +3,7 @@ package com.youthcase.orderflow.auth.repository;
 import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.domain.Role;
 import com.youthcase.orderflow.auth.domain.RoleAuthMapping;
+import com.youthcase.orderflow.auth.domain.RoleAuthMappingId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface RoleAuthMappingRepository extends JpaRepository<RoleAuthMapping, Long> {
+public interface RoleAuthMappingRepository extends JpaRepository<RoleAuthMapping, RoleAuthMappingId> {
 
     /**
      * 역할 ID(roleId)에 매핑된 권한 목록과 관련된 Authority 엔티티를 JOIN FETCH하여 조회합니다.

@@ -15,7 +15,7 @@ public class AuthorityResponseDTO {
 
     public static AuthorityResponseDTO from(Authority authority) {
         return AuthorityResponseDTO.builder()
-                .authorityId(authority.getId())
+                .authorityId(authority.getAuthorityId())
                 .authority(authority.getAuthority())
                 // 💡 Getter도 urlPattern에 맞춥니다.
                 .urlPattern(authority.getUrlPattern())

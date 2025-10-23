@@ -93,7 +93,7 @@ public class PurchaseRequestService {
      * @param to 종료일 (YYYYMMDD)
      * @return 추천 발주 결과 리스트
      */
-    public List<RecommendDTO> loadRecommendedOrders(Long storeId, String from, String to) {
+    public List<RecommendDTO> loadRecommendedOrders(String storeId, String from, String to) {
         try {
             // ① 재고 정보 (임시 mock — 추후 MM_STK 연동)
             Map<Long, BigDecimal> stockData = Map.of(

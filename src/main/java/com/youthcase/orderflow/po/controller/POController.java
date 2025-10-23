@@ -25,7 +25,7 @@ public class POController {
             @RequestBody(required = false) POItemRequestDTO dto
     ) {
         Long poId = (gtin != null && dto != null)
-                ? poService.createHeaderAndAddItem(gtin, dto)
+                ? poService.createHeaderAndItem(gtin, dto)
                 : null;
         return ResponseEntity.ok(Map.of("poId", poId));
     }

@@ -30,7 +30,7 @@ public class BIForecastResult extends BaseTimeEntity {
 
     /** 점포 식별자 (FK: DIM_STORE.STORE_ID) */
     @Column(name = "STORE_ID", nullable = false)
-    private Long storeId;
+    private String storeId;
 
     /** 상품 식별자 (FK: DIM_PRODUCT.PRODUCT_ID) */
     @Column(name = "PRODUCT_ID", nullable = false)
