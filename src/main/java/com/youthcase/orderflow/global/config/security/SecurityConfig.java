@@ -85,7 +85,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/po/**").permitAll()
                         .requestMatchers("/api/stk/**").permitAll()
 
-                        
                         // B. ⭐️ 나머지 모든 /api/** 경로는 인증 필요! (토큰 검증) ⭐️
                         .requestMatchers("/api/**").authenticated()
 
