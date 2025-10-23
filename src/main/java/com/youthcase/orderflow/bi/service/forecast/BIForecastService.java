@@ -29,7 +29,7 @@ public class BIForecastService {
      * @param to 종료일(YYYYMMDD)
      * @return ForecastDTO 리스트
      */
-    public List<ForecastDTO> getForecasts(Long storeId, String from, String to) {
+    public List<ForecastDTO> getForecasts(String storeId, String from, String to) {
         return repository.findByStoreIdAndPeriodStartKeyGreaterThanEqualAndPeriodEndKeyLessThanEqual(storeId, from, to)
                 .stream()
                 .map(mapper::toDto)

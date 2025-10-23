@@ -18,9 +18,6 @@ public class UserUpdateRequestDTO {
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
     private String name;
 
-    @NotBlank(message = "워크스페이스는 필수 입력 항목입니다.")
-    private String workspace;
-
     @NotBlank(message = "이메일은 필수 입력 항목입니다.")
     @Email(message = "유효한 이메일 형식이 아닙니다.")
     private String email;
@@ -54,5 +51,5 @@ public class UserUpdateRequestDTO {
     /**
      * 관리자가 담당 Store ID를 변경할 때 사용합니다. (Admin 전용)
      */
-    private Long storeId; // Nullable
+    private String storeId; // Nullable
 }

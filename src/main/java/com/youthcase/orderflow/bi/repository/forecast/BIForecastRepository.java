@@ -23,6 +23,6 @@ public interface BIForecastRepository extends JpaRepository<BIForecastResult, Lo
      * @return 예측 결과 리스트
      */
     List<BIForecastResult> findByStoreIdAndPeriodStartKeyGreaterThanEqualAndPeriodEndKeyLessThanEqual(
-            Long storeId, String from, String to
+            String storeId, String from, String to
     );
 }
