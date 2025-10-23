@@ -27,7 +27,7 @@ public class Lot {
     private Long lotId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GTIN", nullable = true)
+    @JoinColumn(name = "GTIN", referencedColumnName = "GTIN", nullable = true)
     private Product product;
 
     @Column(name = "EXP_DATE", nullable = true)
@@ -40,8 +40,8 @@ public class Lot {
     @Column(name = "EXPIRY_TYPE", length = 16, nullable = false)
     private ExpiryType expiryType = ExpiryType.NONE;
 
-    @Column(name = "QTY", precision = 12, scale = 2, nullable = false)
-    private BigDecimal qty;
+    @Column(name = "QTY", nullable = false)
+    private Long qty;
 
     public enum LotStatus { ACTIVE, ON_HOLD, CONSUMED, EXPIRED, DISPOSED, RETURNED }
 
@@ -57,8 +57,9 @@ public class Lot {
 
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MM_GR_ITEM", nullable = true)
-    private GoodsReceiptItem goodsReceiptItem;
+    @JoinColumn(name = "GR_ITEM_ID", nullable = true)
+    private GoodsReceiptItem goodsReceiptItem; // Java 컨벤션에 따라 소문자로 시작하도록 변경
+
 
     @Transient
     public long getRemainDays() {
@@ -72,7 +73,10 @@ public class Lot {
         this.updatedAt = now;
 
         if (this.lotNo == null || this.lotNo.isBlank()) {
-            this.lotNo = "LOT-" + System.currentTimeMillis();
+            this.lotNo = String.format("LOT-%s-%s-%d",
+                    LocalDate.now(),
+                    product != null ? product.getGtin() : "UNKNOWN",
+                    System.nanoTime());
         }
     }
 

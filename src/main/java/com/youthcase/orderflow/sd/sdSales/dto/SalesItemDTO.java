@@ -1,28 +1,48 @@
 package com.youthcase.orderflow.sd.sdSales.dto;
-import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.youthcase.orderflow.sd.sdSales.domain.SalesItem;
+import lombok.*;
 
 import java.math.BigDecimal;
 
+/**
+ * 🧾 SalesItemDTO
+ * - SalesItem 엔티티의 데이터를 프론트로 전달하는 DTO
+ * - JPQL DTO Projection(new ...) 및 도메인 변환 둘 다 지원
+ */
 @Getter
 @Setter
 @NoArgsConstructor(force = true)
 @AllArgsConstructor
+@Builder
 public class SalesItemDTO {
 
-    private final Long id;             // SalesItem.no
-    private final String gtin;         // ✅ 추가: Product.GTIN (프론트 중복검출용)
-    private final String productName;
-    private final BigDecimal sdPrice;
-    private final int salesQuantity;
-    private final int stockQuantity;
-    private final BigDecimal subtotal; // 계산용 필드
+    private Long no;             // SalesItem.no
+    private String gtin;         // Product.GTIN
+    private String productName;  // 상품명
+    private BigDecimal sdPrice;  // 단가
+    private int salesQuantity;   // 수량
+    private int stockQuantity;   // 표시용 재고
+    private BigDecimal subtotal; // 소계 (단가 * 수량)
 
+    // ✅ JPQL용 생성자 (Hibernate가 이걸 사용함)
+    // SUM() 결과는 Long/Integer/BigDecimal 등으로 나올 수 있으므로 Number로 받음
+    public SalesItemDTO(Long no, String gtin, String productName,
+                        BigDecimal sdPrice, int salesQuantity,
+                        Number stockQuantity, BigDecimal subtotal) {
+        this.no = no; // Hibernate는 no 필드로 인식
+        this.gtin = gtin;
+        this.productName = productName;
+        this.sdPrice = sdPrice;
+        this.salesQuantity = salesQuantity;
+        this.stockQuantity = stockQuantity != null ? stockQuantity.intValue() : 0;
+        this.subtotal = subtotal;
+    }
+
+    // ✅ 도메인 → DTO 변환 (일반 서비스/컨트롤러에서 사용)
     public static SalesItemDTO from(SalesItem s) {
+        if (s == null) return null;
+
         String name = (s.getProduct() != null && s.getProduct().getProductName() != null)
                 ? s.getProduct().getProductName()
                 : "상품명 미등록";
@@ -31,7 +51,8 @@ public class SalesItemDTO {
                 ? s.getProduct().getGtin()
                 : "UNKNOWN";
 
-        BigDecimal price = s.getSdPrice() != null ? s.getSdPrice() : BigDecimal.ZERO;
+        BigDecimal price = (s.getSdPrice() != null) ? s.getSdPrice() : BigDecimal.ZERO;
+
         int stock = (s.getStk() != null && s.getStk().getQuantity() != null)
                 ? s.getStk().getQuantity()
                 : 0;
@@ -40,7 +61,7 @@ public class SalesItemDTO {
 
         return new SalesItemDTO(
                 s.getNo(),
-                gtin, // ✅ GTIN 포함
+                gtin,
                 name,
                 price,
                 s.getSalesQuantity(),

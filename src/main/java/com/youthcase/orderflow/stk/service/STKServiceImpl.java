@@ -1,5 +1,8 @@
 package com.youthcase.orderflow.stk.service;
 
+import com.youthcase.orderflow.gr.domain.Lot;
+import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.dto.DisposalRequest;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -328,22 +332,61 @@ public class STKServiceImpl implements STKService {
     //GR
     @Override
     @Transactional
-    public void increaseStock(String warehouseId, String gtin, Long qty, String lotNo, LocalDate expDate) {
+    public void increaseStock(String warehouseId, String gtin, Long qty, Long lotNo, LocalDate expDate) {
         // ✅ 입고 처리: 재고 증가
-        System.out.printf("📦 재고 증가: 창고=%s, 상품=%s, 수량=%d, LOT=%s, 유통기한=%s%n",
-                warehouseId, gtin, qty, lotNo, expDate);
+        Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new IllegalArgumentException("창고 없음"));
+        Product product = productRepository.findByGtin(gtin)
+                .orElseThrow(() -> new IllegalArgumentException("상품 없음"));
+        Lot lot = lotRepository.findById(lotNo)
+                .orElseThrow(() -> new IllegalArgumentException("LOT 없음"));
 
-        // TODO: stkRepository.findByWarehouseAndGtin() → 수량 증가 → save()
+        // 기존 재고 존재 여부 확인
+        Optional<STK> existingOpt = stkRepository.findByWarehouseAndProductAndLot(warehouseId, gtin, lotNo);
+
+        STK stk;
+        if (existingOpt.isPresent()) {
+            // ✅ 기존 재고가 있으면 수량만 증가
+            stk = existingOpt.get();
+            int newQty = stk.getQuantity() + qty.intValue();
+            stk.setQuantity(newQty);
+            stk.setLastUpdatedAt(LocalDateTime.now());
+        } else {
+            // ✅ 신규 재고 생성
+            stk = STK.builder()
+                    .warehouse(warehouse)
+                    .product(product)
+                    .lot(lot)
+                    .goodsReceipt(null)
+                    .quantity(qty.intValue())
+                    .hasExpirationDate(expDate != null)
+                    .status("ACTIVE")
+                    .lastUpdatedAt(LocalDateTime.now())
+                    .isRelocationNeeded(false)
+                    .location(null)
+                    .build();
+        }
+
+        stkRepository.save(stk);
     }
 
     @Override
     @Transactional
-    public void decreaseStock(String warehouseId, String gtin, Long qty, String lotNo, LocalDate expDate) {
+    public void decreaseStock(String warehouseId, String gtin, Long qty, Long lotNo, LocalDate expDate) {
         // ✅ 출고 처리: 재고 차감
-        System.out.printf("🚚 재고 감소: 창고=%s, 상품=%s, 수량=%d, LOT=%s, 유통기한=%s%n",
-                warehouseId, gtin, qty, lotNo, expDate);
+        STK stk = stkRepository.findByWarehouseAndProductAndLot(warehouseId, gtin, lotNo)
+                .orElseThrow(() -> new IllegalArgumentException("해당 재고 없음"));
 
-        // TODO: stkRepository.findByWarehouseAndGtin() → 수량 감소 → save()
+        int remain = stk.getQuantity() - qty.intValue();
+        if (remain < 0) {
+            throw new IllegalStateException("재고 수량 부족: " + stk.getProductName());
+        }
+
+        stk.setQuantity(remain);
+        stk.setLastUpdatedAt(LocalDateTime.now());
+
+        if (remain == 0) stk.setStatus("EMPTY");
+
+        stkRepository.save(stk);
     }
-
 }

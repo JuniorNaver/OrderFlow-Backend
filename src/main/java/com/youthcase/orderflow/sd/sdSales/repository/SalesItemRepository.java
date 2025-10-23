@@ -15,18 +15,25 @@ import java.util.List;
 @Repository
 public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
 
-    @Query("SELECT new com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO( " +
-            "si.no, " +
-            "p.gtin, " +
-            "p.productName, " +
-            "si.sdPrice, " +
-            "si.salesQuantity, " +
-            "COALESCE(st.quantity, 0), " +
-            "(si.sdPrice * si.salesQuantity)) " +
-            "FROM SalesItem si " +
-            "JOIN si.product p " +
-            "LEFT JOIN si.stk st " +
-            "WHERE si.salesHeader.orderId = :orderId")
+    @Query("""
+            SELECT new com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO(
+              si.no, 
+              p.gtin,
+              p.productName,
+              si.sdPrice,
+              si.salesQuantity,
+              /* ✅ 활성 재고 총합 */
+              (SELECT COALESCE(SUM(s.quantity), 0) 
+                 FROM STK s 
+                WHERE s.product.gtin = p.gtin 
+                  AND s.status = 'ACTIVE'),
+              /* 소계 */
+              (si.sdPrice * si.salesQuantity)
+            )
+            FROM SalesItem si
+            JOIN si.product p
+            WHERE si.salesHeader.orderId = :orderId
+            """)
     List<SalesItemDTO> findItemsByHeaderId(@Param("orderId") Long orderId);
 
     List<SalesItem> findBySalesHeader_OrderId(Long orderId);
@@ -49,4 +56,11 @@ public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
     int updateQuantity(@Param("itemId") Long itemId,
                        @Param("qty") int qty,
                        @Param("subtotal") BigDecimal subtotal);
+
+    // 특정 주문 내 특정 상품의 총 판매 수량
+    @Query("SELECT COALESCE(SUM(si.salesQuantity), 0) FROM SalesItem si " +
+            "WHERE si.salesHeader.orderId = :orderId AND si.product.gtin = :gtin")
+    int sumQuantityByOrderAndGtin(@Param("orderId") Long orderId,
+                                  @Param("gtin") String gtin);
+
 }
