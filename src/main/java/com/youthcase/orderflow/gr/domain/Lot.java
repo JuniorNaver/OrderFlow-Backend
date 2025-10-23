@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 @Table(name = "LOT", indexes = {
         @Index(name="IX_LOT_PROD_EXP", columnList="GTIN, EXP_DATE"),
         @Index(name="IX_LOT_EXP", columnList="EXP_DATE"),
-        @Index(name="IX_LOT_GR_ITEM", columnList="MM_GR_ITEM") // ✅ 수정된 인덱스명
+        @Index(name="IX_LOT_GR_ITEM", columnList="GR_ITEM_ID") // ✅ 수정된 인덱스명
 })
 @Getter
 @Setter
