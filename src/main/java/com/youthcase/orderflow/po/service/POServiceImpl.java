@@ -37,7 +37,7 @@ public class POServiceImpl implements POService {
 
     // ---------------------- 공통 메서드 ----------------------
 
-    /** 새 POHeader 생성 */
+    /** POHeader 생성 */
     private Long createNewPOHeader() {
         LocalDate today = LocalDate.now();
         String branchCode = "S001"; // TODO: 로그인 지점 코드로 변경
@@ -46,15 +46,11 @@ public class POServiceImpl implements POService {
         String datePart = today.format(DateTimeFormatter.BASIC_ISO_DATE);
         String externalId = datePart + branchCode + seq; // 예: 20251025S00101
 
-        User user = userRepository.findById("admin01")
-                .orElseThrow(() -> new IllegalArgumentException("테스트 유저가 없습니다."));
-
         POHeader header = new POHeader();
         header.setStatus(POStatus.PR);
-        header.setTotalAmount(0L);
+        header.setTotalAmount(0L);  // 이거 합계로 바꾸자.
         header.setActionDate(today);
         header.setExternalId(externalId);
-        header.setUser(user);
 
         poHeaderRepository.save(header);
         return header.getPoId();
@@ -64,7 +60,7 @@ public class POServiceImpl implements POService {
 
     /** 새 헤더 생성 + 아이템 추가 */
     @Override
-    public Long createHeaderAndAddItem(String gtin, POItemRequestDTO dto) {
+    public Long createHeaderAndItem(String gtin, POItemRequestDTO dto) {
         Long poId = createNewPOHeader();
         addPOItem(poId, dto, gtin);
         return poId;
