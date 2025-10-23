@@ -12,7 +12,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Set; // Set이 사용되지 않지만 기존 코드에 있었으므로 유지
+import java.util.Set;
 
 /**
  * 개발 환경에서 필요한 초기 데이터를 설정하는 클래스입니다.
@@ -31,19 +31,39 @@ public class DevDataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
-        // 1. ROLE_ADMIN Role이 없으면 생성
+        // =========================================================
+        // 1. 역할(Role) 생성 및 확인
+        // =========================================================
+
+        // ROLE_ADMIN
         Role adminRole = roleRepository.findByRoleId(RoleType.ADMIN.getRoleId())
                 .orElseGet(() -> roleRepository.save(Role.builder()
                         .roleId(RoleType.ADMIN.getRoleId())
                         .description(RoleType.ADMIN.getDescription())
                         .build()));
 
-        // 2. admin01 계정 생성 (중복 확인)
+        // ROLE_MANAGER
+        Role managerRole = roleRepository.findByRoleId(RoleType.MANAGER.getRoleId())
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .roleId(RoleType.MANAGER.getRoleId())
+                        .description(RoleType.MANAGER.getDescription())
+                        .build()));
+
+        // ROLE_CLERK
+        Role clerkRole = roleRepository.findByRoleId(RoleType.CLERK.getRoleId())
+                .orElseGet(() -> roleRepository.save(Role.builder()
+                        .roleId(RoleType.CLERK.getRoleId())
+                        .description(RoleType.CLERK.getDescription())
+                        .build()));
+
+
+        // =========================================================
+        // 2. 관리자 계정 (admin01) 생성 (1개)
+        // =========================================================
         if (!userRepository.existsByUserId("admin01")) {
 
             String encodedPassword = passwordEncoder.encode("1234");
 
-            // 2-1. User 객체 저장
             User adminUser = userRepository.save(User.builder()
                     .userId("admin01")
                     .name("관리자 계정")
@@ -53,7 +73,6 @@ public class DevDataInitializer implements CommandLineRunner {
                     .workspace("본사")
                     .build());
 
-            // 2-2. UserRole 객체 생성 및 저장
             UserRole adminUserRole = UserRole.builder()
                     .user(adminUser)
                     .role(adminRole)
@@ -63,74 +82,74 @@ public class DevDataInitializer implements CommandLineRunner {
             System.out.println(">>> 초기 관리자 계정(admin01/1234) 생성 완료.");
         }
 
-// ----------------------------------------------------------------------
-// 💡 추가된 코드 시작: manager01 계정 및 ROLE_MANAGER 설정
-// ----------------------------------------------------------------------
 
-        // 3. ROLE_MANAGER Role이 없으면 생성
-        // RoleType에 MANAGER가 정의되어 있다고 가정합니다.
-        Role managerRole = roleRepository.findByRoleId(RoleType.MANAGER.getRoleId())
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .roleId(RoleType.MANAGER.getRoleId())
-                        .description(RoleType.MANAGER.getDescription())
-                        .build()));
+        // =========================================================
+        // 3. 점장 계정 (managerXX) 생성 (10개)
+        // =========================================================
+        final int MANAGER_COUNT = 10;
+        for (int i = 1; i <= MANAGER_COUNT; i++) {
+            // 사용자 ID: manager01, manager02, ...
+            String userId = String.format("manager%02d", i);
+            String name = String.format("지점장-%02d", i);
+            String email = String.format("manager%02d@orderflow.com", i);
+            String password = "managerpass";
+            String workspace = String.format("지점-M%02d", i);
 
-        // 4. manager01 계정 생성 (중복 확인)
-        if (!userRepository.existsByUserId("manager01")) {
-            String encodedPassword = passwordEncoder.encode("manager1234"); // 비밀번호 인코딩
+            if (!userRepository.existsByUserId(userId)) {
+                String encodedPassword = passwordEncoder.encode(password);
 
-            // 4-1. User 객체 저장
-            User managerUser = userRepository.save(User.builder()
-                    .userId("manager01")
-                    .name("매니저 계정")
-                    .email("manager01@orderflow.com")
-                    .password(encodedPassword)
-                    .enabled(true)
-                    .workspace("본사/매니저")
-                    .build());
+                User managerUser = userRepository.save(User.builder()
+                        .userId(userId)
+                        .name(name)
+                        .email(email)
+                        .password(encodedPassword)
+                        .enabled(true)
+                        .workspace(workspace)
+                        .build());
 
-            // 4-2. UserRole 객체 생성 및 저장
-            UserRole managerUserRole = UserRole.builder()
-                    .user(managerUser)
-                    .role(managerRole)
-                    .build();
-            userRoleRepository.save(managerUserRole);
-
-            System.out.println(">>> 초기 매니저 계정(manager01/manager1234) 생성 완료.");
+                UserRole managerUserRole = UserRole.builder()
+                        .user(managerUser)
+                        .role(managerRole)
+                        .build();
+                userRoleRepository.save(managerUserRole);
+            }
         }
+        System.out.println(">>> 점장 계정 " + MANAGER_COUNT + "개 생성 완료.");
 
-// ----------------------------------------------------------------------
-// 💡 추가된 코드 끝
-// ----------------------------------------------------------------------
 
-        // 5. 일반 사용자 user01 계정 생성 - RoleType.CLERK 사용 (기존 3번)
-        Role clerkRole = roleRepository.findByRoleId(RoleType.CLERK.getRoleId())
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .roleId(RoleType.CLERK.getRoleId())
-                        .description(RoleType.CLERK.getDescription())
-                        .build()));
+        // =========================================================
+        // 4. 점원 계정 (clerkXX) 생성 (20개)
+        // =========================================================
+        final int CLERK_COUNT = 20;
+        for (int i = 1; i <= CLERK_COUNT; i++) {
+            // 사용자 ID: clerk01, clerk02, ...
+            String userId = String.format("clerk%02d", i);
+            String name = String.format("점원-%02d", i);
+            String email = String.format("clerk%02d@orderflow.com", i);
+            String password = "clerkpass";
+            String workspace = String.format("지점-C%02d", i);
 
-        if (!userRepository.existsByUserId("user01")) {
-            String encodedPassword = passwordEncoder.encode("userpass");
+            if (!userRepository.existsByUserId(userId)) {
+                String encodedPassword = passwordEncoder.encode(password);
 
-            // 5-1. User 객체 저장
-            User normalUser = userRepository.save(User.builder()
-                    .userId("user01")
-                    .name("일반 사용자")
-                    .email("user01@orderflow.com")
-                    .password(encodedPassword)
-                    .enabled(true)
-                    .workspace("지점A")
-                    .build());
+                User clerkUser = userRepository.save(User.builder()
+                        .userId(userId)
+                        .name(name)
+                        .email(email)
+                        .password(encodedPassword)
+                        .enabled(true)
+                        .workspace(workspace)
+                        .build());
 
-            // 5-2. UserRole 객체 생성 및 저장
-            UserRole normalUserRole = UserRole.builder()
-                    .user(normalUser)
-                    .role(clerkRole)
-                    .build();
-            userRoleRepository.save(normalUserRole);
-
-            System.out.println(">>> 초기 일반 사용자 계정(user01/userpass) 생성 완료.");
+                UserRole clerkUserRole = UserRole.builder()
+                        .user(clerkUser)
+                        .role(clerkRole)
+                        .build();
+                userRoleRepository.save(clerkUserRole);
+            }
         }
+        System.out.println(">>> 점원 계정 " + CLERK_COUNT + "개 생성 완료.");
+
+        // 총 계정: 1 (admin) + 10 (manager) + 20 (clerk) = 31개
     }
 }
