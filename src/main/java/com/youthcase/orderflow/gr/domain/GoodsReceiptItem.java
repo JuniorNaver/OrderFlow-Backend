@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.gr.domain;
 
+import com.youthcase.orderflow.gr.status.GRExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "MM_GR_ITEM")
+@Table(name = "GR_ITEM")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,7 +22,7 @@ public class GoodsReceiptItem {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gr_item_seq_gen")
     @SequenceGenerator(
             name = "gr_item_seq_gen",
-            sequenceName = "MM_GR_ITEM_SEQ",
+            sequenceName = "GR_ITEM_SEQ",
             allocationSize = 1
     )
     @Column(name = "ITEM_NO")
@@ -33,7 +34,6 @@ public class GoodsReceiptItem {
     @Column(name = "NOTE", length = 255)
     private String note; // 비고
 
-    // ✅ FK: 입고헤더 (MM_GR_HEADER)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GR_HEADER_ID", nullable = false)
     private GoodsReceiptHeader header;

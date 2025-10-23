@@ -17,6 +17,7 @@ public class GoodsReceiptHeaderDTO {
     private Long poId;
     private String userId;
     private List<GoodsReceiptItemDTO> items;
+    private List<LotDTO> lots;
 
     public static GoodsReceiptHeaderDTO from(GoodsReceiptHeader entity) {
         return GoodsReceiptHeaderDTO.builder()
