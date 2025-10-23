@@ -31,11 +31,13 @@ public class GoodsReceiptHeader {
     private Long id;  // 입고내역ID (PK)
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "STATUS", length = 20, nullable = false)
-    private GoodsReceiptStatus status;
+    @Column(name = "STATUS", nullable = false)
+    @Builder.Default
+    private GoodsReceiptStatus status = GoodsReceiptStatus.RECEIVED;
 
+    @Builder.Default
     @Column(name = "RECEIPT_DATE", nullable = false)
-    private LocalDate receiptDate; // 입고일자
+    private LocalDate receiptDate = LocalDate.now(); // 입고일자
 
     @Column(name = "NOTE", length = 255)
     private String note; // 비고
@@ -60,8 +62,4 @@ public class GoodsReceiptHeader {
     @Builder.Default
     private List<GoodsReceiptItem> items = new ArrayList<>();
 
-    public void addItem(GoodsReceiptItem item) {
-        this.items.add(item);
-        item.setHeader(this);
-    }
 }

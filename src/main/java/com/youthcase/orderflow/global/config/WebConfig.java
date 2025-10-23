@@ -13,7 +13,7 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**") // 🔹 모든 /api 경로 허용
+            registry.addMapping("/api/**") // 🔹 모든 /api 경로 허용
                         .allowedOrigins("http://localhost:5173") // 🔹 프론트엔드 포트
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
