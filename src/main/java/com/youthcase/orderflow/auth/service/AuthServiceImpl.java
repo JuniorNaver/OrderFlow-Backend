@@ -2,6 +2,7 @@ package com.youthcase.orderflow.auth.service;
 
 import com.youthcase.orderflow.auth.domain.PasswordResetToken;
 import com.youthcase.orderflow.auth.domain.RefreshToken;
+import com.youthcase.orderflow.auth.domain.Role;
 import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
 import com.youthcase.orderflow.auth.dto.UserRegisterRequestDTO;
@@ -9,8 +10,11 @@ import com.youthcase.orderflow.auth.exception.DuplicateUserException;
 import com.youthcase.orderflow.auth.provider.JwtProvider;
 import com.youthcase.orderflow.auth.repository.PasswordResetTokenRepository;
 import com.youthcase.orderflow.auth.repository.RefreshTokenRepository;
+import com.youthcase.orderflow.auth.repository.RoleRepository;
 import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.auth.service.security.CustomUserDetailsService;
+import com.youthcase.orderflow.master.store.domain.Store;
+import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,12 +30,16 @@ import java.time.LocalDateTime;
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
 
-    private final CustomUserDetailsService customUserDetailsService;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final StoreRepository storeRepository;
+
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+
+    private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final UserRepository userRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
@@ -191,24 +199,37 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public String registerNewUser(UserRegisterRequestDTO request) {
 
-        // 1. (선택적) userId 중복 확인
+        // 1️⃣ 중복 체크
         if (userRepository.existsByUserId(request.getUserId())) {
             throw new DuplicateUserException("이미 존재하는 사용자 ID입니다: " + request.getUserId());
         }
 
-        // 2. DTO 정보를 기반으로 User 엔티티 생성
+        // 2️⃣ 기본 역할(Role) 부여
+        //    → 예: 회원가입 시 ROLE_CLERK 자동 할당
+        Role defaultRole = roleRepository.findByRoleId("CLERK")
+                .orElseThrow(() -> new IllegalStateException("기본 역할(CLEREK)을 찾을 수 없습니다."));
+
+        // (선택) Store 연계가 필요하다면 추가
+        Store store = null;
+        if (request.getStoreId() != null) {
+            store = storeRepository.findById(request.getStoreId())
+                    .orElseThrow(() -> new IllegalArgumentException("Store not found with ID: " + request.getStoreId()));
+        }
+
+        // 3️⃣ 새 사용자 엔티티 생성
         User user = User.builder()
                 .userId(request.getUserId())
                 .name(request.getUsername())
                 .email(request.getEmail())
-                .workspace(request.getWorkspace())
-                // 3. 비밀번호는 반드시 암호화하여 저장합니다!
                 .password(passwordEncoder.encode(request.getPassword()))
+                .role(defaultRole)  // ✅ 기본 ROLE 설정
+                .store(store)       // ✅ 선택적 지점 설정
+                .enabled(true)
                 .build();
 
-        // 4. 저장 및 생성된 User ID 반환
-        User savedUser = userRepository.save(user);
-
-        return savedUser.getUserId();
+        // 4️⃣ 저장 후 반환
+        userRepository.save(user);
+        return user.getUserId();
     }
+
 }

@@ -22,6 +22,6 @@ public interface BIRecommendRepository extends JpaRepository<BIRecommendResult, 
      * @param to      종료일(YYYYMMDD)
      */
     List<BIRecommendResult> findByStoreIdAndPeriodStartKeyGreaterThanEqualAndPeriodEndKeyLessThanEqual(
-            Long storeId, String from, String to
+            String storeId, String from, String to
     );
 }

@@ -55,7 +55,7 @@ class BIForecastControllerTest {
                 .confidenceRate(91.2)
                 .build();
 
-        given(forecastService.getForecasts(anyLong(), anyString(), anyString()))
+        given(forecastService.getForecasts(anyString(), anyString(), anyString()))
                 .willReturn(List.of(mockResult));
 
         // MockMvc 설정

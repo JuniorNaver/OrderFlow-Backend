@@ -1,6 +1,11 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  output:
+    ansi:
+      enabled: always
+  banner:
+    charset: UTF-8
   ## datasource (개발용 Oracle DB)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver

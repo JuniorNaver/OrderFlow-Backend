@@ -28,7 +28,7 @@ public class BIForecastController {
      */
     @GetMapping
     public ResponseEntity<List<ForecastDTO>> getForecasts(
-            @RequestParam Long storeId,
+            @RequestParam String storeId,
             @RequestParam String from,
             @RequestParam String to
     ) {

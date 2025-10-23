@@ -36,7 +36,7 @@ public class BIRecommendBatchService {
      * @param currentStockData Map<ProductId, 재고수량>
      */
     @Transactional
-    public void generateRecommendations(Long storeId, String from, String to, Map<Long, BigDecimal> currentStockData) {
+    public void generateRecommendations(String storeId, String from, String to, Map<Long, BigDecimal> currentStockData) {
 
         // 1️⃣ 지정된 기간의 예측 판매량 조회
         List<BIForecastResult> forecasts =
@@ -74,7 +74,7 @@ public class BIRecommendBatchService {
      * - 재고 부족(예측 > 재고) 조건 동시 만족 시 추천
      */
     @Transactional
-    public void generateRecommendationsV2(Long storeId, String from, String to,
+    public void generateRecommendationsV2(String storeId, String from, String to,
                                           Map<Long, BigDecimal> currentStockData,
                                           Map<Long, BigDecimal> baselineData,
                                           Map<Long, BigDecimal> factorCoefData) {

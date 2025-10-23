@@ -24,7 +24,7 @@ public class BIRecommendService {
     /**
      * 특정 기간의 추천 발주 결과 조회
      */
-    public List<RecommendDTO> getRecommendations(Long storeId, String from, String to) {
+    public List<RecommendDTO> getRecommendations(String storeId, String from, String to) {
         return repository.findByStoreIdAndPeriodStartKeyGreaterThanEqualAndPeriodEndKeyLessThanEqual(storeId, from, to)
                 .stream()
                 .map(mapper::toDto)

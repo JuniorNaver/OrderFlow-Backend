@@ -16,7 +16,7 @@ import java.util.Map;
 public class RecommendRefreshRequest {
 
     /** 점포 ID */
-    private Long storeId;
+    private String storeId;
 
     /** 기간 시작일 (YYYYMMDD) */
     private String from;

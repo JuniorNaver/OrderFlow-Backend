@@ -36,7 +36,7 @@ public class BIRecommendController {
      */
     @GetMapping
     public ResponseEntity<List<RecommendDTO>> getRecommendations(
-            @RequestParam Long storeId,
+            @RequestParam String storeId,
             @RequestParam String from,
             @RequestParam String to
     ) {

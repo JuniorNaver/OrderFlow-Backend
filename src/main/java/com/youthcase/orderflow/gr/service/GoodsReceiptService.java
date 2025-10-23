@@ -214,9 +214,9 @@ public class GoodsReceiptService {
 
         GoodsReceiptHeader gr = GoodsReceiptHeader.builder()
                 .poHeader(po)
-                .warehouse(po.getUser().getWorkspace() != null
-                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
-                        : null)
+//                .warehouse(po.getUser().getStore() != null
+//                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
+//                        : null)
                 .user(po.getUser())
                 .status(GoodsReceiptStatus.CONFIRMED)
                 .receiptDate(LocalDate.now())
