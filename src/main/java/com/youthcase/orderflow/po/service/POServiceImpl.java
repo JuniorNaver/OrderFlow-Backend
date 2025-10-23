@@ -1,22 +1,29 @@
 package com.youthcase.orderflow.po.service;
 
-import com.youthcase.orderflow.gr.domain.GoodsReceiptItem;
-import com.youthcase.orderflow.gr.repository.GoodsReceiptItemRepository;
-import com.youthcase.orderflow.po.domain.PO;
+import com.youthcase.orderflow.auth.domain.User;
+import com.youthcase.orderflow.auth.repository.UserRepository;
+import com.youthcase.orderflow.master.price.domain.Price;
+import com.youthcase.orderflow.master.price.repository.PriceRepository;
+import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
 import com.youthcase.orderflow.po.domain.POStatus;
+import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
+import com.youthcase.orderflow.po.dto.POItemRequestDTO;
+import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.po.repository.POItemRepository;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,85 +31,180 @@ public class POServiceImpl implements POService {
 
     private final POHeaderRepository poHeaderRepository;
     private final POItemRepository poItemRepository;
-    private final GoodsReceiptItemRepository grItemRepo;
+    private final ProductRepository productRepository;
+    private final PriceRepository priceRepository;
+    private final UserRepository userRepository;
 
+    // ---------------------- 공통 메서드 ----------------------
+
+    /** 새 POHeader 생성 */
+    private Long createNewPOHeader() {
+        LocalDate today = LocalDate.now();
+        String branchCode = "S001"; // TODO: 로그인 지점 코드로 변경
+        long countToday = poHeaderRepository.countByActionDateAndBranchCode(today, branchCode);
+        String seq = String.format("%02d", countToday + 1);
+        String datePart = today.format(DateTimeFormatter.BASIC_ISO_DATE);
+        String externalId = datePart + branchCode + seq; // 예: 20251025S00101
+
+        User user = userRepository.findById("admin01")
+                .orElseThrow(() -> new IllegalArgumentException("테스트 유저가 없습니다."));
+
+        POHeader header = new POHeader();
+        header.setStatus(POStatus.PR);
+        header.setTotalAmount(0L);
+        header.setActionDate(today);
+        header.setExternalId(externalId);
+        header.setUser(user);
+
+        poHeaderRepository.save(header);
+        return header.getPoId();
+    }
+
+    // ---------------------- 서비스 구현 ----------------------
+
+    /** 새 헤더 생성 + 아이템 추가 */
     @Override
-    public PO confirmOrder(Long poId) {
-        // 1. 발주 헤더 조회
-        POHeader poHeader = poHeaderRepository.findById(poId)
-                .orElseThrow(() -> new EntityNotFoundException("발주를 찾을 수 없습니다."));
-
-        // 2. 상태를 'PO'로 변경
-        poHeader.setStatus(POStatus.PO);
-
-        // 3. 저장
-        POHeader savedHeader = poHeaderRepository.save(poHeader);
-
-        // 4. 관련된 아이템 조회
-        List<POItem> items = poItemRepository.findByPoHeader_PoId(poId);
-
-        // 5. 본사로 전송 (추후 실제 구현)
-        sendToHQ(savedHeader, items);
-
-        // 6. DTO 로 묶어서 리턴
-        return new PO(savedHeader, items);
+    public Long createHeaderAndAddItem(String gtin, POItemRequestDTO dto) {
+        Long poId = createNewPOHeader();
+        addPOItem(poId, dto, gtin);
+        return poId;
     }
 
-    // 본사로 발주 정보 전송
-    private void sendToHQ(POHeader poHeader, List<POItem> items) {
-        System.out.println("본사로 발주 전송: HeaderID=" + poHeader.getPoId());
+    /** 기존 헤더에 아이템 추가 */
+    @Override
+    public POItemResponseDTO addPOItem(Long poId, POItemRequestDTO dto, String gtin) {
+        POHeader header = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+
+        Product product = productRepository.findByGtin(gtin)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+
+        Price price = priceRepository.findByGtin(gtin)
+                .orElseThrow(() -> new IllegalArgumentException("Price not found"));
+
+        Optional<POItem> existingItemOpt = poItemRepository.findByPoHeaderAndGtin(header, product);
+
+        POItem poItem;
+        if (existingItemOpt.isPresent()) {
+            poItem = existingItemOpt.get();
+            Long newQty = poItem.getOrderQty() + dto.getOrderQty();
+            poItem.setOrderQty(newQty);
+            poItem.setTotal(price.getPurchasePrice() * newQty);
+        } else {
+            Long total = price.getPurchasePrice() * dto.getOrderQty();
+            poItem = POItem.builder()
+                    .itemNo(dto.getItemNo())
+                    .poHeader(header)
+                    .gtin(product)
+                    .price(price)
+                    .orderQty(dto.getOrderQty())
+                    .total(total)
+                    .expectedArrival(LocalDate.now().plusDays(3))
+                    .status(POStatus.PR)
+                    .build();
+        }
+
+        poItemRepository.save(poItem);
+        return toResponseDTO(poItem);
     }
 
+    /** 모든 헤더 조회 */
+    @Override
+    public List<POHeaderResponseDTO> findAll() {
+        return poHeaderRepository.findAll().stream()
+                .map(POHeaderResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /** 장바구니 상품 조회 */
+    @Override
+    public List<POItemResponseDTO> getAllItems(Long poId) {
+        return poItemRepository.findByPoHeader_PoId(poId)
+                .stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    /** 상품 수량 변경 */
+    @Override
+    public POItemResponseDTO updateItemQuantity(Long itemNo, POItemRequestDTO requestDTO) {
+        POItem item = poItemRepository.findByItemNoAndStatus(itemNo, POStatus.PR)
+                .orElseThrow(() -> new IllegalArgumentException("해당 아이템을 찾을 수 없습니다."));
+        if (requestDTO.getOrderQty() < 1) {
+            throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
+        }
+        item.setOrderQty(requestDTO.getOrderQty());
+        poItemRepository.save(item);
+        return toResponseDTO(item);
+    }
+
+    /** 상품 삭제 */
+    @Override
+    public void deleteItem(List<Long> itemNos) {
+        poItemRepository.deleteAllById(itemNos);
+    }
+
+    /** 장바구니 저장 */
+    @Override
+    public void saveCart(Long poId, String remarks) {
+        POHeader header = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 발주 헤더가 존재하지 않습니다."));
+        header.setStatus(POStatus.S);
+        header.setRemarks(remarks);
+        poHeaderRepository.save(header);
+    }
+
+    /** 저장된 장바구니 목록 */
+    @Override
+    public List<POHeaderResponseDTO> getSavedCartList() {
+        return poHeaderRepository.findByStatus(POStatus.S).stream()
+                .map(POHeaderResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /** 특정 장바구니 불러오기 */
+    @Override
+    public List<POItemResponseDTO> getSavedCartItems(Long poId) {
+        return poItemRepository.findByPoHeader_PoId(poId).stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    /** 저장된 장바구니 삭제 */
+    @Override
+    public void deletePO(Long poId) {
+        POHeader header = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+        poHeaderRepository.delete(header);
+    }
+
+    /** 발주 확정 */
+    @Override
+    public void confirmOrder(Long poId) {
+        POHeader header = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 발주가 존재하지 않습니다."));
+        header.setStatus(POStatus.PO); // 확정 상태로 변경
+        poHeaderRepository.save(header);
+    }
+
+    /** 입고 진행률 업데이트 */
     @Override
     public void updateReceiveProgress(Long poId) {
-
-        // 1️⃣ 발주 헤더 조회
-        POHeader poHeader = poHeaderRepository.findById(poId)
-                .orElseThrow(() -> new IllegalArgumentException("발주를 찾을 수 없습니다."));
-
-        // 2️⃣ 발주 아이템 조회
-        List<POItem> poItems = poItemRepository.findByPoHeader_PoId(poId);
-        if (poItems.isEmpty()) {
-            log.warn("해당 발주에 품목이 없습니다. poId={}", poId);
-            return;
-        }
-
-        // 3️⃣ 입고된 아이템 조회
-        List<GoodsReceiptItem> grItems = grItemRepo.findByHeader_PoHeader_PoId(poId);
-        long totalOrdered = poItems.stream().mapToLong(POItem::getOrderQty).sum();
-        long totalReceived = grItems.stream().mapToLong(GoodsReceiptItem::getQty).sum();
-
-        // 4️⃣ 상태 결정
-        POStatus newStatus;
-        if (totalReceived == 0) {
-            newStatus = POStatus.PO; // 아직 입고 없음 → 발주 상태 유지
-        } else if (totalReceived < totalOrdered) {
-            // 일부 입고 → PARTIAL_RECEIVED 상태 필요
-            try {
-                newStatus = POStatus.valueOf("PARTIAL_RECEIVED");
-            } catch (IllegalArgumentException e) {
-                log.warn("⚠️ Enum에 PARTIAL_RECEIVED 없음. 상태를 PO로 유지함.");
-                newStatus = POStatus.PO;
-            }
-        } else {
-            // 전량 입고 → FULLY_RECEIVED 상태 필요
-            try {
-                newStatus = POStatus.valueOf("FULLY_RECEIVED");
-            } catch (IllegalArgumentException e) {
-                log.warn("⚠️ Enum에 FULLY_RECEIVED 없음. 상태를 GI(출고 대기)로 변경함.");
-                newStatus = POStatus.GI;
-            }
-        }
-
-        // 5️⃣ 상태 업데이트 및 저장
-        poHeader.setStatus(newStatus);
-        poHeaderRepository.save(poHeader);
-
-        log.info("📦 발주 입고 진행도 갱신: poId={}, 주문수량={}, 입고수량={}, 상태={}",
-                poId, totalOrdered, totalReceived, newStatus);
+        // TODO: 실제 입고 처리 로직 추가
+        System.out.println("입고 진행률 갱신: " + poId);
     }
 
+    // ---------------------- 변환 헬퍼 ----------------------
+
+    private POItemResponseDTO toResponseDTO(POItem item) {
+        return POItemResponseDTO.builder()
+                .itemNo(item.getItemNo())
+                .gtin(item.getGtin().getGtin())
+                .productName(item.getGtin().getProductName())
+                .purchasePrice(item.getPrice().getPurchasePrice())
+                .orderQty(item.getOrderQty())
+                .total(item.getTotal())
+                .status(item.getStatus())
+                .build();
+    }
 }
-
-
-
