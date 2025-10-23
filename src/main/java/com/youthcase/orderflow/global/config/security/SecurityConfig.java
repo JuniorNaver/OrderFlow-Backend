@@ -82,6 +82,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pr/browse/**").permitAll()
                         .requestMatchers("/api/v1/pr/stores/**").permitAll()
                         .requestMatchers("/api/v1/pr/inventory/**").permitAll()
+                        .requestMatchers("/api/categories/**").permitAll()
                         .requestMatchers("/api/po/**").permitAll()
 
                         

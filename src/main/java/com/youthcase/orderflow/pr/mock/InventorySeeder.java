@@ -22,7 +22,7 @@ public class InventorySeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         // GTIN은 ProductSeeder에 있는 것과 맞춰서
-        inventoryService.receive("8801115115809", 30);
+        inventoryService.receive("8801115115809", 0);
         inventoryService.receive("8809929360583", 25);
         inventoryService.receive("8801128244077", 50);
         inventoryService.receive("3155250001592", 40);
