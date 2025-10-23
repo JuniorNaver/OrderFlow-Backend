@@ -28,8 +28,9 @@ public class GoodsReceiptItem {
     @Column(name = "ITEM_NO")
     private Long itemNo;  // ITEM_NO (PK)
 
+    @Builder.Default
     @Column(name = "QTY", nullable = false)
-    private Long qty;  // 수량
+    private Long qty = 0L;  // 수량
 
     @Column(name = "NOTE", length = 255)
     private String note; // 비고
@@ -47,13 +48,33 @@ public class GoodsReceiptItem {
     @Builder.Default
     private List<Lot> lots = new ArrayList<>();
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "EXPIRY_CALC_TYPE", nullable = false)
-    private GRExpiryType expiryCalcType;
+    private GRExpiryType expiryCalcType = GRExpiryType.MFG_BASED;
 
     @Column(name = "MFG_DATE")
     private LocalDate mfgDate;
 
     @Column(name = "EXP_DATE_MANUAL")
-    private LocalDate expDate;
+    private LocalDate expDateManual;
+
+    /**
+     * LOT 수량 자동 합계 업데이트
+     */
+    public void updateQtyFromLots() {
+        this.qty = this.lots.stream()
+                .mapToLong(Lot::getQty)
+                .sum();
+    }
+
+    /**
+     * LOT 추가 메서드 (연관관계 편의)
+     */
+    public void addLot(Lot lot) {
+        this.lots.add(lot);
+        lot.setGoodsReceiptItem(this);
+        updateQtyFromLots();
+    }
 }
+

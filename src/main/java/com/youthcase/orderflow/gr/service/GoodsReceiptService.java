@@ -154,10 +154,10 @@ public class GoodsReceiptService {
                     lot.setExpDate(item.getMfgDate().plusDays(product.getShelfLifeDays()));
 
                 } else if (calcType == GRExpiryType.MANUAL) {
-                    if (item.getExpDate() == null) {
+                    if (item.getExpDateManual() == null) {
                         throw new IllegalStateException("수동 입력 유통기한이 누락되었습니다: itemNo=" + item.getItemNo());
                     }
-                    lot.setExpDate(item.getExpDate());
+                    lot.setExpDate(item.getExpDateManual());
                 }
             }
 
