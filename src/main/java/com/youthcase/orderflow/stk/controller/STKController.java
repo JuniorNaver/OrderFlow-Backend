@@ -5,6 +5,7 @@ import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.dto.DisposalRequest;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
 import com.youthcase.orderflow.stk.dto.StockResponse;
+import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import java.util.Optional;
 public class STKController {
 
     private final STKService stkService;
+    private final STKRepository stkRepository;
 
     // --------------------------------------------------
     // 📊 대시보드 현황 API
@@ -96,12 +98,14 @@ public class STKController {
 
     // 6. 상품명 검색
     @GetMapping("/search")
-    public ResponseEntity<List<StockResponse>> searchByProductName(@RequestParam String name) {
-        List<StockResponse> results = stkService.searchByProductName(name)
-                .stream()
+    public List<StockResponse> searchByName(@RequestParam String name) {
+        // 상품 이름으로 재고 조회
+        List<STK> stocks = stkRepository.findByProduct_ProductNameContainingIgnoreCase(name);
+
+        // ✅ DTO 변환해서 반환
+        return stocks.stream()
                 .map(StockResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(results);
     }
 
     // 7. 위치 변경 필요 재고 목록 조회
