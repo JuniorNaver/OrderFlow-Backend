@@ -4,7 +4,6 @@ import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.master.store.repository.StoreRepository;
-import com.youthcase.orderflow.sd.sdPayment.repository.PaymentHeaderRepository;
 import com.youthcase.orderflow.sd.sdSales.domain.*;
 import com.youthcase.orderflow.sd.sdSales.dto.AddItemRequest;
 import com.youthcase.orderflow.sd.sdSales.dto.ConfirmOrderRequest;
@@ -35,7 +34,6 @@ public class SDServiceImpl implements SDService {
     private final SalesItemRepository salesItemRepository;
     private final ProductRepository productRepository;
     private final STKRepository stkRepository;
-    private final PaymentHeaderRepository paymentHeaderRepository;
     private final StoreRepository storeRepository;
 
     // ✅ 주문 생성

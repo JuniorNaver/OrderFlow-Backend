@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdRefund.service;
 
+import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.stk.domain.STK;
@@ -49,7 +50,7 @@ public class RefundInventoryService {
             newLot.setProduct(product);
             newLot.setExpDate(expDate);
             newLot.setQty((long) item.getSalesQuantity());
-            newLot.setStatus(Lot.LotStatus.RETURNED);
+            newLot.setStatus(LotStatus.RETURNED);
             newLot.setCreatedAt(OffsetDateTime.now());
             newLot.setUpdatedAt(OffsetDateTime.now());
             lotRepository.save(newLot);

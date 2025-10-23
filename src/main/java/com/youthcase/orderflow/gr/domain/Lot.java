@@ -1,12 +1,12 @@
 package com.youthcase.orderflow.gr.domain;
 
+import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 @Table(name = "LOT", indexes = {
         @Index(name="IX_LOT_PROD_EXP", columnList="GTIN, EXP_DATE"),
         @Index(name="IX_LOT_EXP", columnList="EXP_DATE"),
-        @Index(name="IX_LOT_GR_ITEM", columnList="MM_GR_ITEM") // ✅ 수정된 인덱스명
+        @Index(name="IX_LOT_GR_ITEM", columnList="ITEM_NO")
 })
 @Getter
 @Setter
@@ -43,8 +43,6 @@ public class Lot {
     @Column(name = "QTY", nullable = false)
     private Long qty;
 
-    public enum LotStatus { ACTIVE, ON_HOLD, CONSUMED, EXPIRED, DISPOSED, RETURNED }
-
     @Enumerated(EnumType.STRING)
     @Column(name = "STATUS", length = 20, nullable = false)
     private LotStatus status = LotStatus.ACTIVE;
@@ -57,7 +55,7 @@ public class Lot {
 
     // FK: GoodsReceiptHeader
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "GR_ITEM_ID", nullable = true)
+    @JoinColumn(name = "ITEM_No", nullable = true)
     private GoodsReceiptItem goodsReceiptItem; // Java 컨벤션에 따라 소문자로 시작하도록 변경
 
 

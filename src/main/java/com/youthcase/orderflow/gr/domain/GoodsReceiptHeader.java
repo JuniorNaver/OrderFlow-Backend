@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "MM_GR_HEADER")
+@Table(name = "GR_HEADER")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,7 +24,7 @@ public class GoodsReceiptHeader {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gr_header_seq_gen")
     @SequenceGenerator(
             name = "gr_header_seq_gen",
-            sequenceName = "MM_GR_HEADER_SEQ",
+            sequenceName = "GR_HEADER_SEQ",
             allocationSize = 1
     )
     @Column(name = "GR_HEADER_ID")
