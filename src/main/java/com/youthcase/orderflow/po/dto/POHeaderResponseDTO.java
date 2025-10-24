@@ -17,6 +17,7 @@ public class POHeaderResponseDTO {
     private Long totalAmount;
     private LocalDate actionDate;
     private String remarks;
+    private String externalId;
 
     public static POHeaderResponseDTO fromEntity(POHeader header) {
         return POHeaderResponseDTO.builder()
@@ -24,6 +25,7 @@ public class POHeaderResponseDTO {
                 .status(header.getStatus())
                 .totalAmount(header.getTotalAmount())
                 .remarks(header.getRemarks())
+                .externalId(header.getExternalId())
                 .build();
     }
 }

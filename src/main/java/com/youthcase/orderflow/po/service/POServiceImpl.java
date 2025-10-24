@@ -16,6 +16,8 @@ import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.po.repository.POItemRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -46,8 +48,7 @@ public class POServiceImpl implements POService {
     }
 
     /** POHeader 생성 */
-    private Long createNewPOHeader() {
-
+    public POHeaderResponseDTO createNewPOHeader() {
         // 바코드 번호 생성
         LocalDate today = LocalDate.now();
         String branchCode = "S003"; // TODO: 로그인 지점 코드로 변경
@@ -56,34 +57,37 @@ public class POServiceImpl implements POService {
         String datePart = today.format(DateTimeFormatter.BASIC_ISO_DATE);
         String externalId = datePart + branchCode + seq; // 예: 20251025S00301
 
-
-        Long totalAmount = calculateTotalAmountForHeader(1L);
-
         POHeader header = new POHeader();
         header.setStatus(POStatus.PR);
-        header.setTotalAmount(totalAmount);
-
         header.setActionDate(today);
         header.setExternalId(externalId);
 
         poHeaderRepository.save(header);
-        return header.getPoId();
+
+        Long totalAmount = calculateTotalAmountForHeader(header.getPoId());
+        header.setTotalAmount(totalAmount);
+
+        poHeaderRepository.save(header);
+
+        return POHeaderResponseDTO.builder()
+                .poId(header.getPoId())
+                .status(header.getStatus())
+                .totalAmount(header.getTotalAmount())
+                .actionDate(header.getActionDate())
+                .remarks(header.getRemarks())
+                .externalId(header.getExternalId())
+                .build();
     }
-
-
-
-
-
 
     // ---------------------- 서비스 구현 ----------------------
 
     /** 새 헤더 생성 + 아이템 추가 */
     @Override
-    public Long createHeaderAndItem(String gtin, POItemRequestDTO dto) {
-        Long poId = createNewPOHeader();
-        addPOItem(poId, dto, gtin);
-        return poId;
+    public POHeaderResponseDTO createHeaderAndItem(String gtin, POItemRequestDTO dto) {
+
+        return createNewPOHeader();
     }
+
 
     /** 기존 헤더에 아이템 추가 */
     @Override
