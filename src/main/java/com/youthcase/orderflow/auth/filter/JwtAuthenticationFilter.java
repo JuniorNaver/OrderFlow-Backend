@@ -6,66 +6,92 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component; // ⭐️ 추가됨 ⭐️
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
- * JWT 토큰을 검증하고 Security Context에 인증 정보를 설정하는 커스텀 필터입니다.
- * SecurityConfig에서 UsernamePasswordAuthenticationFilter 이전에 등록됩니다.
+ * ✅ JWT 인증 필터
+ * 인증이 필요하지 않은 경로는 필터를 건너뛰고,
+ * 인증이 필요한 경로에서만 JWT 검증 수행
  */
-@Component // ⭐️ Spring Bean으로 등록하여 SecurityConfig에서 주입받을 수 있게 함 ⭐️
+@Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
 
-    // HTTP 요청 헤더에서 JWT 토큰을 추출하는 데 사용되는 접두사
-    public static final String AUTHORIZATION_HEADER = "Authorization";
-    public static final String BEARER_PREFIX = "Bearer ";
+    /**
+     * ✅ 인증이 필요 없는 경로(화이트리스트)
+     */
+    private static final List<String> NO_AUTH_PATHS = List.of(
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/products",
+            "/api/products/",
+            "/api/v1/pr/browse",
+            "/api/v1/pr/stores",
+            "/api/v1/pr/inventory",
+            "/api/po",
+            "/api/gr",
+            "/api/sd",
+            "/api/payments",
+            "/api/receipts",
+            "/api/refunds",
+            "/api/stk"
+    );
 
     /**
-     * 실제 필터링 로직을 수행합니다.
-     * 모든 요청에서 토큰 정보를 검사하고 인증 객체를 SecurityContext에 저장합니다.
+     * ✅ 화이트리스트 경로는 필터를 적용하지 않음
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return NO_AUTH_PATHS.stream().anyMatch(path::startsWith);
+    }
 
-        String jwt = resolveToken(request);
+    /**
+     * ✅ JWT 검증 로직
+     */
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        if (StringUtils.hasText(jwt)) {
-            if (jwtProvider.validateToken(jwt)) {
-                // 3. 토큰이 유효하면 인증 객체(Authentication) 생성 및 SecurityContext에 저장
-                Authentication authentication = jwtProvider.getAuthentication(jwt);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
-                // 💡 유효하지 않은 토큰은 인증 객체를 제거하고, EntryPoint로 전달할 속성 설정
-                SecurityContextHolder.clearContext();
-                request.setAttribute("jwt_exception", "Invalid or Expired JWT Token");
+        String path = request.getRequestURI();
+        String token = resolveToken(request);
 
-                // ⭐️ [중요]: 유효하지 않은 토큰이지만 permitAll()이 아니기 때문에
-                // Spring Security가 401(AuthenticationEntryPoint)로 이동시킵니다.
+        if (token != null) {
+            try {
+                if (jwtProvider.validateToken(token)) {
+                    Authentication authentication = jwtProvider.getAuthentication(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("✅ Authenticated user: {}", authentication.getName());
+                }
+            } catch (Exception e) {
+                log.warn("⚠️ JWT validation failed for {}: {}", path, e.getMessage());
             }
+        } else {
+            log.trace("No JWT token found for path: {}", path);
         }
 
-        // 다음 필터로 진행
         filterChain.doFilter(request, response);
     }
 
     /**
-     * Request Header에서 토큰 정보를 꺼내오는 메서드
+     * ✅ Request Header에서 Bearer 토큰 추출
      */
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
-        // "Bearer " 접두사가 붙어있는지 확인하고, 토큰 값만 반환
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            return bearerToken.substring(BEARER_PREFIX.length());
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
         }
         return null;
     }

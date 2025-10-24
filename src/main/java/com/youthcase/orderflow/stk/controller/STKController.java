@@ -2,16 +2,14 @@ package com.youthcase.orderflow.stk.controller;
 
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.dto.DisposalRequest;
-import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
-import com.youthcase.orderflow.stk.dto.StockResponse;
+import com.youthcase.orderflow.stk.dto.*;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.stk.service.STKService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ 이 임포트가 추가되었는지 확인
 
 
 import java.util.List;
@@ -56,10 +54,12 @@ public class STKController {
         return ResponseEntity.ok(stocks);
     }
 
-    // 2. 재고 신규 등록
+    // 2. 재고 신규 등록 (⭐️ STK 엔티티 -> STKRequest DTO로 변경)
+    @Valid
     @PostMapping
-    public ResponseEntity<StockResponse> createStock(@RequestBody STK stock) {
-        STK createdStock = stkService.createStock(stock);
+    public ResponseEntity<StockResponse> createStock(@RequestBody STKRequestDTO request) { // ⭐️ DTO로 변경
+        // ⭐️ 서비스 레이어는 이제 STKRequest를 받아 내부에서 엔티티를 생성해야 합니다.
+        STK createdStock = stkService.createStockFromRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(StockResponse.fromEntity(createdStock));
     }
 
