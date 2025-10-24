@@ -37,24 +37,43 @@ public class POServiceImpl implements POService {
 
     // ---------------------- 공통 메서드 ----------------------
 
+    // 총 합계 수량 메서드
+    private Long calculateTotalAmountForHeader(Long poId){
+        List<POItem> items = poItemRepository.findByPoHeader_PoId(poId);
+        return items.stream()
+                .mapToLong(item -> item.getPrice().getPurchasePrice() * item.getOrderQty())
+                .sum();
+    }
+
     /** POHeader 생성 */
     private Long createNewPOHeader() {
+
+        // 바코드 번호 생성
         LocalDate today = LocalDate.now();
-        String branchCode = "S001"; // TODO: 로그인 지점 코드로 변경
+        String branchCode = "S003"; // TODO: 로그인 지점 코드로 변경
         long countToday = poHeaderRepository.countByActionDateAndBranchCode(today, branchCode);
         String seq = String.format("%02d", countToday + 1);
         String datePart = today.format(DateTimeFormatter.BASIC_ISO_DATE);
-        String externalId = datePart + branchCode + seq; // 예: 20251025S00101
+        String externalId = datePart + branchCode + seq; // 예: 20251025S00301
+
+
+        Long totalAmount = calculateTotalAmountForHeader(1L);
 
         POHeader header = new POHeader();
         header.setStatus(POStatus.PR);
-        header.setTotalAmount(0L);  // 이거 합계로 바꾸자.
+        header.setTotalAmount(totalAmount);
+
         header.setActionDate(today);
         header.setExternalId(externalId);
 
         poHeaderRepository.save(header);
         return header.getPoId();
     }
+
+
+
+
+
 
     // ---------------------- 서비스 구현 ----------------------
 
