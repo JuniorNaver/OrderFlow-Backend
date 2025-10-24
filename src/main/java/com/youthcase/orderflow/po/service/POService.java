@@ -13,7 +13,7 @@ public interface POService {
     POHeaderResponseDTO createNewPOHeader();
 
     /** 기존 헤더에 아이템 추가 */
-    POItemResponseDTO addPOItem(POStatus status, POItemRequestDTO dto, String gtin);
+//    POItemResponseDTO addPOItem(POStatus status, POItemRequestDTO dto, String gtin);
 
     /** 모든 발주 헤더 조회 */
     List<POHeaderResponseDTO> findAll();

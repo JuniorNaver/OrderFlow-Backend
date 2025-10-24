@@ -43,7 +43,7 @@ public class POItem {
     // 🔹 상품 코드 (FK → PRODUCT)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", referencedColumnName = "GTIN", nullable = false)
-    private Product gtin;
+    private Product product;
 
     // ────────────────────────────────
     // 🔹 수량 및 금액 필드
@@ -63,7 +63,7 @@ public class POItem {
     // 매입 단가
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PURCHASE_PRICE", nullable = false)
-    private Price price;
+    private Price purchasePrice;
 
     // 라인 금액 합계 (ORDER_QTY × PRICE)
     @Column(name = "TOTAL")
@@ -82,8 +82,8 @@ public class POItem {
     @PrePersist
     @PreUpdate
     public void calculateTotal() {
-        if (price != null && orderQty != null) {
-            this.total = price.getPurchasePrice().longValue() * orderQty;
+        if (purchasePrice != null && orderQty != null) {
+            this.total = purchasePrice.getPurchasePrice().longValue() * orderQty;
         }
     }
 
