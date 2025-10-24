@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.controller;
 
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
@@ -28,11 +29,11 @@ public class POController {
     /** ✅ 기존 헤더에 아이템 추가 */
     @PostMapping("/{poId}/items")
     public ResponseEntity<POItemResponseDTO> addPOItem(
-            @PathVariable Long poId,
+            @PathVariable POStatus status,
             @RequestBody POItemRequestDTO dto,
             @RequestParam String gtin
     ) {
-        POItemResponseDTO response = poService.addPOItem(poId, dto, gtin);
+        POItemResponseDTO response = poService.addPOItem(status, dto, gtin);
         return ResponseEntity.ok(response);
     }
 
