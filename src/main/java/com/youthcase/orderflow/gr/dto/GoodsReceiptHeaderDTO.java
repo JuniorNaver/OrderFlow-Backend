@@ -16,7 +16,9 @@ public class GoodsReceiptHeaderDTO {
     private String warehouseId;
     private Long poId;
     private String userId;
+
     private List<GoodsReceiptItemDTO> items;
+    private List<LotDTO> lots;
 
     public static GoodsReceiptHeaderDTO from(GoodsReceiptHeader entity) {
         return GoodsReceiptHeaderDTO.builder()
@@ -30,6 +32,9 @@ public class GoodsReceiptHeaderDTO {
                 .poId(entity.getPoHeader() != null ? entity.getPoHeader().getPoId() : null)
                 // ✅ 작성자: User 엔티티의 name을 사용 (또는 userId)
                 .userId(entity.getUser() != null ? entity.getUser().getName() : null)
+                .items(entity.getItems() != null
+                        ? entity.getItems().stream().map(GoodsReceiptItemDTO::from).toList()
+                        : List.of())
                 .build();
     }
 

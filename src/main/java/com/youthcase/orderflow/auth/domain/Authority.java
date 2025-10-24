@@ -21,7 +21,7 @@ public class Authority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "authority_id")
-    private Long id;
+    private Long authorityId;
 
     // 권한 식별자 (예: READ_PRODUCT, WRITE_PRODUCT)
     @Column(name = "authority", nullable = false, length = 50, unique = true)

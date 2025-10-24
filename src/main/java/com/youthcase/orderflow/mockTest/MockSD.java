@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.mockTest;
 
 import com.youthcase.orderflow.gr.domain.Lot;
+import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.product.domain.StorageMethod;
@@ -124,7 +125,7 @@ public class MockSD {
                         l.setExpDate(LocalDate.now().plusMonths(6));
                         l.setExpiryType(ExpiryType.NONE);
                         l.setQty(100L);
-                        l.setStatus(Lot.LotStatus.ACTIVE);
+                        l.setStatus(LotStatus.ACTIVE);
                         lotRepository.saveAndFlush(l);
                         System.out.println("✅ LOT 생성 완료: LOT_ID = " + l.getLotId());
                         return l;
@@ -139,7 +140,7 @@ public class MockSD {
                         .product(cola)
                         .warehouse(roomWarehouse)
                         .lot(lot)
-                        .quantity(100)
+                        .quantity(100L)
                         .status("ACTIVE")
                         .hasExpirationDate(false)
                         .build();

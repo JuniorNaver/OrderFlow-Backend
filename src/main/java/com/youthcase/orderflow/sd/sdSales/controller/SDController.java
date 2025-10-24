@@ -52,6 +52,16 @@ public class SDController {
         return ResponseEntity.ok(dto);
     }
 
+    //상품 삭제
+    @DeleteMapping("/{orderId}/delete-item/{itemId}")
+    public ResponseEntity<SalesHeaderDTO> deleteItemFromOrder(
+            @PathVariable Long orderId,
+            @PathVariable Long itemId
+    ) {
+        SalesHeaderDTO updated = sdService.deleteItemFromOrder(orderId, itemId);
+        return ResponseEntity.ok(updated);
+    }
+
     // ✅ 4. 주문별 아이템 조회
     @GetMapping("/{orderId}/items")
     public List<SalesItemDTO> getItemsByOrder(@PathVariable Long orderId) {
@@ -113,9 +123,9 @@ public class SDController {
     @PatchMapping("/items/{itemId}/quantity")
     public ResponseEntity<Void> updateItemQuantity(
             @PathVariable Long itemId,
-            @RequestBody Map<String, Integer> body
+            @RequestBody Map<String, Long> body
     ) {
-        int quantity = body.get("quantity");
+        Long quantity = body.get("quantity");
         sdService.updateItemQuantity(itemId, quantity);
         return ResponseEntity.ok().build();
     }

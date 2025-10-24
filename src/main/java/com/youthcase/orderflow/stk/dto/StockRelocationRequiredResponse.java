@@ -15,7 +15,7 @@ public class StockRelocationRequiredResponse {
     private String warehouseId;
 
     private LocalDate expiryDate;
-    private Integer quantity;
+    private Long quantity;
     private String issueReason;
 
     // 생성자 시그니처가 다음과 같이 변경됩니다:

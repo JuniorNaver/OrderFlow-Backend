@@ -17,6 +17,9 @@ public interface SDService {
     // ✅ 상품 추가
     SalesItemDTO addItemToOrder(AddItemRequest request);
 
+    // 상품삭제
+    SalesHeaderDTO deleteItemFromOrder(Long orderId, Long itemId);
+
     // ✅ 주문별 아이템 조회
     List<SalesItemDTO> getItemsByOrderId(Long orderId);
 
@@ -37,5 +40,5 @@ public interface SDService {
 
     List<SalesHeaderDTO> getHoldOrders();
 
-    void updateItemQuantity(Long itemId, int quantity);
+    void updateItemQuantity(Long itemId, Long quantity);
 }

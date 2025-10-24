@@ -29,7 +29,7 @@ public class PurchaseRequest {
 
     // 수량
     @Column(name = "QTY", nullable = false)
-    private int qty;
+    private Long qty;
 
     // 기대 입고일(선택)
     @Column(name = "EXPECTED_DATE")
@@ -44,7 +44,7 @@ public class PurchaseRequest {
     @JoinColumn(name = "REQUESTER_ID") // FK → MM_USER.USER_ID
     private com.youthcase.orderflow.auth.domain.User requester;
 
-    public static PurchaseRequest create(String storeId, String gtin, int qty, LocalDate expectedDate) {
+    public static PurchaseRequest create(String storeId, String gtin, Long qty, LocalDate expectedDate) {
         return PurchaseRequest.builder()
                 .storeId(storeId)
                 .gtin(gtin)

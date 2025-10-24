@@ -1,13 +1,12 @@
 package com.youthcase.orderflow.stk.service;
 
+import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import com.youthcase.orderflow.gr.domain.Lot;
+import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.dto.DisposalRequest;
-import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
-import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
-import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ AdjustmentRequest DTO 임포트
+import com.youthcase.orderflow.stk.dto.*;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.gr.repository.LotRepository;
@@ -30,8 +29,9 @@ public class STKServiceImpl implements STKService {
 
     private final STKRepository stkRepository;
     private final ProductRepository productRepository;
-    private final LotRepository lotRepository;
     private final WarehouseRepository warehouseRepository;
+    private final LotRepository lotRepository;
+    private final GoodsReceiptHeaderRepository grHeaderRepository;
 
     // --------------------------------------------------
     // 📊 대시보드 현황 API 구현
@@ -126,7 +126,7 @@ public class STKServiceImpl implements STKService {
     @Override
     public List<STK> getStockByProductGtin(String gtin) {
         // 재고가 0보다 큰 활성 재고 랏 목록을 유통기한 순으로 조회
-        return stkRepository.findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0);
+        return stkRepository.findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0L);
     }
 
     @Override
@@ -172,7 +172,7 @@ public class STKServiceImpl implements STKService {
     public List<STK> disposeExpiredStock(LocalDate targetDate) {
         List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(targetDate);
         for (STK stock : expiredStocks) {
-            stock.setQuantity(0);
+            stock.setQuantity(0L);
             stock.updateStatus("DISPOSED");
             stkRepository.save(stock);
         }
@@ -196,23 +196,23 @@ public class STKServiceImpl implements STKService {
         // ... (출고 차감 로직 생략 없이 유지)
         for (StockDeductionRequestDTO.DeductionItem item : requestDTO.getItems()) {
             String gtin = item.getGtin();
-            Integer requiredQuantity = item.getQuantity();
+            Long requiredQuantity = item.getQuantity();
 
-            List<STK> fifoStocks = stkRepository.findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0);
+            List<STK> fifoStocks = stkRepository.findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0L);
 
-            int remainingToDeduct = requiredQuantity;
+            Long remainingToDeduct = requiredQuantity;
 
             for (STK stock : fifoStocks) {
                 if (remainingToDeduct <= 0) break;
 
-                int stockQuantity = stock.getQuantity();
+                Long stockQuantity = stock.getQuantity();
 
                 if (stockQuantity >= remainingToDeduct) {
                     stock.setQuantity(stockQuantity - remainingToDeduct);
-                    remainingToDeduct = 0;
+                    remainingToDeduct = 0L;
                 } else {
                     remainingToDeduct -= stockQuantity;
-                    stock.setQuantity(0);
+                    stock.setQuantity(0L);
                     stock.updateStatus("INACTIVE");
                 }
 
@@ -232,7 +232,7 @@ public class STKServiceImpl implements STKService {
     @Override
     public STK findFirstAvailableByGtin(String gtin) {
         return stkRepository
-                .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0)
+                .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(gtin, 0L)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("해당 상품의 재고가 없습니다."));
@@ -245,24 +245,24 @@ public class STKServiceImpl implements STKService {
 
         for (DisposalRequest.DisposalItem item : request.getItems()) {
             Long lotId = item.getLotId();
-            int requestedQuantity = item.getQuantity();
+            Long requestedQuantity = item.getQuantity();
 
             // Lot ID로 활성 재고를 찾습니다.
-            Optional<STK> stkOptional = stkRepository.findByLot_LotIdAndQuantityGreaterThan(lotId, 0);
+            Optional<STK> stkOptional = stkRepository.findByLot_LotIdAndQuantityGreaterThan(lotId, 0L);
 
             if (stkOptional.isEmpty()) {
                 throw new NoSuchElementException("Lot ID " + lotId + "에 해당하는 활성 재고를 찾을 수 없습니다.");
             }
 
             STK stock = stkOptional.get();
-            int currentQuantity = stock.getQuantity();
+            Long currentQuantity = stock.getQuantity();
 
             if (requestedQuantity <= 0 || requestedQuantity > currentQuantity) {
                 throw new IllegalArgumentException("Lot ID " + lotId + "에 대한 폐기 요청 수량(" + requestedQuantity + ")이 유효하지 않습니다.");
             }
 
             // 재고 수량 감소 및 상태 변경
-            int newQuantity = currentQuantity - requestedQuantity;
+            Long newQuantity = currentQuantity - requestedQuantity;
             stock.setQuantity(newQuantity);
 
             if (newQuantity == 0) {
@@ -291,7 +291,7 @@ public class STKServiceImpl implements STKService {
         for (AdjustmentRequest.AdjustmentItem item : request.getItems()) {
 
             Long lotId = item.getLotId();
-            int targetQuantity = item.getTargetQuantity();
+            Long targetQuantity = item.getTargetQuantity();
 
             // Lot ID로 조정할 STK 재고 항목을 조회합니다. (재고가 0 이하라도 조회되어야 하므로 findByLot_LotId 사용)
             Optional<STK> stkOptional = stkRepository.findByLot_LotId(lotId);
@@ -326,7 +326,7 @@ public class STKServiceImpl implements STKService {
     @Override
     public List<STK> findStocksRequiringAdjustment() {
         // 0 이하의 수량을 가진 재고를 조회합니다.
-        return stkRepository.findByQuantityLessThanEqual(0);
+        return stkRepository.findByQuantityLessThanEqual(0L);
     }
 
     //GR
@@ -348,7 +348,7 @@ public class STKServiceImpl implements STKService {
         if (existingOpt.isPresent()) {
             // ✅ 기존 재고가 있으면 수량만 증가
             stk = existingOpt.get();
-            int newQty = stk.getQuantity() + qty.intValue();
+            Long newQty = stk.getQuantity() + qty.intValue();
             stk.setQuantity(newQty);
             stk.setLastUpdatedAt(LocalDateTime.now());
         } else {
@@ -358,7 +358,7 @@ public class STKServiceImpl implements STKService {
                     .product(product)
                     .lot(lot)
                     .goodsReceipt(null)
-                    .quantity(qty.intValue())
+                    .quantity(qty)
                     .hasExpirationDate(expDate != null)
                     .status("ACTIVE")
                     .lastUpdatedAt(LocalDateTime.now())
@@ -377,7 +377,7 @@ public class STKServiceImpl implements STKService {
         STK stk = stkRepository.findByWarehouseAndProductAndLot(warehouseId, gtin, lotNo)
                 .orElseThrow(() -> new IllegalArgumentException("해당 재고 없음"));
 
-        int remain = stk.getQuantity() - qty.intValue();
+        Long remain = stk.getQuantity() - qty.intValue();
         if (remain < 0) {
             throw new IllegalStateException("재고 수량 부족: " + stk.getProductName());
         }
@@ -388,5 +388,40 @@ public class STKServiceImpl implements STKService {
         if (remain == 0) stk.setStatus("EMPTY");
 
         stkRepository.save(stk);
+    }
+
+    // ⭐️ STKRequest DTO를 받아 STK 엔티티를 생성하고 저장하는 메서드 구현
+    @Override
+    public STK createStockFromRequest(STKRequestDTO request) {
+        // 1. DTO의 ID를 사용하여 필수 엔티티 조회 (FK 바인딩)
+        Product product = productRepository.findById(request.getProductGtin())
+                .orElseThrow(() -> new NoSuchElementException("상품(GTIN)을 찾을 수 없습니다: " + request.getProductGtin()));
+
+        Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
+                .orElseThrow(() -> new NoSuchElementException("창고를 찾을 수 없습니다: " + request.getWarehouseId()));
+
+        Lot lot = lotRepository.findById(request.getLotId())
+                .orElseThrow(() -> new NoSuchElementException("랏을 찾을 수 없습니다: " + request.getLotId()));
+
+        GoodsReceiptHeader grHeader = grHeaderRepository.findById(request.getGrHeaderId())
+                .orElseThrow(() -> new NoSuchElementException("입고 헤더를 찾을 수 없습니다: " + request.getGrHeaderId()));
+
+
+        // 2. STK.builder()를 사용하여 엔티티 생성
+        STK newStock = STK.builder()
+                .product(product)
+                .warehouse(warehouse)
+                .lot(lot)
+                .goodsReceipt(grHeader)
+
+                .quantity(request.getQuantity())
+                .status(request.getStatus())
+                .location(request.getLocation())
+                .hasExpirationDate(request.getHasExpirationDate())
+                .lastUpdatedAt(LocalDateTime.now())
+                .build();
+
+        // 3. 저장 및 반환
+        return stkRepository.save(newStock);
     }
 }

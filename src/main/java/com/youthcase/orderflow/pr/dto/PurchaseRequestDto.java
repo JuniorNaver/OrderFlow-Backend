@@ -6,7 +6,7 @@ public record PurchaseRequestDto(
         Long id,
         String storeId,
         String gtin,
-        int qty,
+        Long qty,
         LocalDate expectedDate,
         String status
 ) {}

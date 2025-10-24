@@ -13,7 +13,13 @@ import java.util.Optional;
 // 💡 User 엔티티의 PK(userId)가 String이므로 JpaRepository<User, String>를 유지합니다.
 public interface UserRepository extends JpaRepository<User, String> {
 
-    @Query("SELECT u FROM User u JOIN FETCH u.userRoles ur WHERE u.userId = :userId")
+    @Query("""
+            SELECT u
+            FROM User u
+            LEFT JOIN FETCH u.role r
+            LEFT JOIN FETCH u.store s
+            WHERE u.userId = :userId
+            """)
     Optional<User> findByUserIdWithRoles(@Param("userId") String userId);
 
     Optional<User> findByUserId(String userId);
