@@ -71,7 +71,10 @@ public class SecurityConfig {
                 // 2. HTTP Basic 인증 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)
 
-                // 3. 세션 관리 비활성화: JWT를 사용하므로 STATELESS로 설정
+                // ⭐️ 3. 폼 로그인 비활성화 추가 (매우 중요) ⭐️
+                .formLogin(AbstractHttpConfigurer::disable) // API 서버이므로 폼 로그인 사용 안 함
+
+                // 4. 세션 관리 비활성화: JWT를 사용하므로 STATELESS로 설정
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
