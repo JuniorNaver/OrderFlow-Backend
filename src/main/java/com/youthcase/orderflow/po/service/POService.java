@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.service;
 
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
@@ -11,11 +12,8 @@ public interface POService {
     /** POHeader 생성 */
     POHeaderResponseDTO createNewPOHeader();
 
-    /** POHeader + Item 생성 */
-    POHeaderResponseDTO createHeaderAndItem(String gtin, POItemRequestDTO dto);
-
     /** 기존 헤더에 아이템 추가 */
-    POItemResponseDTO addPOItem(Long poId, POItemRequestDTO poItemRequestDTO, String gtin);
+    POItemResponseDTO addPOItem(POStatus status, POItemRequestDTO dto, String gtin);
 
     /** 모든 발주 헤더 조회 */
     List<POHeaderResponseDTO> findAll();

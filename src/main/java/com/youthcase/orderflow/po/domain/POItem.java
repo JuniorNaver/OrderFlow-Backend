@@ -34,7 +34,7 @@ public class POItem {
     // 매입 단가
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PURCHASE_PRICE", nullable = false)
-    private Price price;
+    private Price purchasePrice;
 
     // 발주 수량
     @Column(name = "ORDER_QTY", nullable = false)
@@ -60,7 +60,7 @@ public class POItem {
     // 상품 고유 코드 (FK → PRODUCT)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GTIN", referencedColumnName = "GTIN", nullable = false)
-    private Product gtin;
+    private Product product;
 
     @Enumerated(EnumType.STRING)
     private POStatus status;

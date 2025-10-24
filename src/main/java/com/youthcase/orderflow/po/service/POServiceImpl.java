@@ -14,6 +14,7 @@ import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.po.repository.POItemRepository;
+import jakarta.transaction.Status;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,7 @@ public class POServiceImpl implements POService {
     private Long calculateTotalAmountForHeader(Long poId){
         List<POItem> items = poItemRepository.findByPoHeader_PoId(poId);
         return items.stream()
-                .mapToLong(item -> item.getPrice().getPurchasePrice() * item.getOrderQty())
+                .mapToLong(item -> item.getPurchasePrice().getPurchasePrice() * item.getOrderQty())
                 .sum();
     }
 
@@ -62,6 +63,11 @@ public class POServiceImpl implements POService {
         header.setActionDate(today);
         header.setExternalId(externalId);
 
+        //userId
+        User user = userRepository.findByUserId("admin01")
+                .orElseThrow();
+        header.setUser(user);
+
         poHeaderRepository.save(header);
 
         Long totalAmount = calculateTotalAmountForHeader(header.getPoId());
@@ -79,52 +85,45 @@ public class POServiceImpl implements POService {
                 .build();
     }
 
-    // ---------------------- 서비스 구현 ----------------------
-
-    /** 새 헤더 생성 + 아이템 추가 */
-    @Override
-    public POHeaderResponseDTO createHeaderAndItem(String gtin, POItemRequestDTO dto) {
-
-        return createNewPOHeader();
-    }
-
 
     /** 기존 헤더에 아이템 추가 */
     @Override
-    public POItemResponseDTO addPOItem(Long poId, POItemRequestDTO dto, String gtin) {
-        POHeader header = poHeaderRepository.findById(poId)
-                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+    public POItem addPOItem(POStatus status, POItemRequestDTO dto, String gtin) {
 
-        Product product = productRepository.findByGtin(gtin)
-                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
+        POHeader header = poHeaderRepository.findByStatus(status)
+                .orElseThrow(() -> new IllegalArgumentException("Status=pr 인 장바구니가 없습니다."));
 
         Price price = priceRepository.findByGtin(gtin)
                 .orElseThrow(() -> new IllegalArgumentException("Price not found"));
 
-        Optional<POItem> existingItemOpt = poItemRepository.findByPoHeaderAndGtin(header, product);
+        POStatus statusPR = POStatus.PR;
+        Optional<POItem> existingItemOpt = poItemRepository.findByStatusAndGtin(status, gtin);
 
-        POItem poItem;
         if (existingItemOpt.isPresent()) {
-            poItem = existingItemOpt.get();
+            // 이미 같은 GTIN이 존재하는 경우
+            POItem poItem = existingItemOpt.get();
             Long newQty = poItem.getOrderQty() + dto.getOrderQty();
             poItem.setOrderQty(newQty);
             poItem.setTotal(price.getPurchasePrice() * newQty);
+            return poItem;
         } else {
+            // 존재하지 않으면 새로 생성
             Long total = price.getPurchasePrice() * dto.getOrderQty();
-            poItem = POItem.builder()
+            POItem poItem = POItem.builder()
                     .itemNo(dto.getItemNo())
-                    .poHeader(header)
-                    .gtin(product)
-                    .price(price)
-                    .orderQty(dto.getOrderQty())
-                    .total(total)
                     .expectedArrival(LocalDate.now().plusDays(3))
+                    .purchasePrice(price)
+                    .orderQty(dto.getOrderQty())
+                    .pendingQty(dto.getOrderQty())
+                    .shippedQty(dto.getOrderQty())
+                    .total(total)
+                    .poHeader(header)
+                    .product(product)
                     .status(POStatus.PR)
                     .build();
+            return poItemRepository.save(poItem);
         }
 
-        poItemRepository.save(poItem);
-        return toResponseDTO(poItem);
     }
 
     /** 모든 헤더 조회 */
