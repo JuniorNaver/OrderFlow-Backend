@@ -40,5 +40,5 @@ public interface SDService {
 
     List<SalesHeaderDTO> getHoldOrders();
 
-    void updateItemQuantity(Long itemId, int quantity);
+    void updateItemQuantity(Long itemId, Long quantity);
 }

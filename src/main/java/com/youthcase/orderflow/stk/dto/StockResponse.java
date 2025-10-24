@@ -15,7 +15,7 @@ public class StockResponse {
 
     // 1. STK 고유 정보
     private Long stkId;
-    private Integer quantity;
+    private Long quantity;
     private String status;
 
     // 2. Product 정보

@@ -123,9 +123,9 @@ public class SDController {
     @PatchMapping("/items/{itemId}/quantity")
     public ResponseEntity<Void> updateItemQuantity(
             @PathVariable Long itemId,
-            @RequestBody Map<String, Integer> body
+            @RequestBody Map<String, Long> body
     ) {
-        int quantity = body.get("quantity");
+        Long quantity = body.get("quantity");
         sdService.updateItemQuantity(itemId, quantity);
         return ResponseEntity.ok().build();
     }

@@ -39,7 +39,7 @@ public class STK {
     private Boolean hasExpirationDate;
 
     @Column(name = "QUANTITY", nullable = false)
-    private Integer quantity; // ⭐️ setQuantity/getQuantity는 @Getter/@Setter가 처리합니다.
+    private Long quantity; // ⭐️ setQuantity/getQuantity는 @Getter/@Setter가 처리합니다.
 
     @Column(name = "LAST_UPDATED_AT")
     private LocalDateTime lastUpdatedAt;
@@ -77,7 +77,7 @@ public class STK {
     private Lot lot;
 
     @Builder
-    public STK(Boolean hasExpirationDate, Integer quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GoodsReceiptHeader goodsReceipt, Product product, Lot lot, Boolean isRelocationNeeded, String location) {
+    public STK(Boolean hasExpirationDate, Long quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GoodsReceiptHeader goodsReceipt, Product product, Lot lot, Boolean isRelocationNeeded, String location) {
         this.hasExpirationDate = hasExpirationDate;
         this.quantity = quantity;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -113,12 +113,12 @@ public class STK {
     // 📦 비즈니스 로직 메서드
     // --------------------------------------------------
 
-    public void updateQuantity(Integer newQuantity) {
+    public void updateQuantity(Long newQuantity) {
         this.quantity = newQuantity;
         this.lastUpdatedAt = LocalDateTime.now();
     }
 
-    public void updateInfo(Integer quantity, String status, LocalDateTime lastUpdatedAt) {
+    public void updateInfo(Long quantity, String status, LocalDateTime lastUpdatedAt) {
         this.quantity = quantity;
         this.status = status;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -152,7 +152,7 @@ public class STK {
         this.lastUpdatedAt = java.time.LocalDateTime.now();
     }
 
-    public static STK createForRefund(Product product, Lot lot, int quantity) {
+    public static STK createForRefund(Product product, Lot lot, Long quantity) {
         STK stk = new STK();
         stk.setProduct(product);
         stk.setLot(lot);

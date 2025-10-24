@@ -5,6 +5,6 @@ import java.time.LocalDate;
 
 public record PurchaseRequestCreateDto(
         String gtin,
-        int qty,
+        Long qty,
         LocalDate expectedDate // 선택값이면 null 허용
 ) {}

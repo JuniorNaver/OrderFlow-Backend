@@ -23,7 +23,7 @@ public class ConfirmOrderRequest {
     @AllArgsConstructor
     public static class ItemDTO {
         private String gtin;
-        private int quantity;
+        private Long quantity;
         private BigDecimal price;
     }
 }

@@ -81,12 +81,12 @@ public class SDServiceImpl implements SDService {
             throw new RuntimeException("COMPLETE 상태에서는 상품을 추가할 수 없습니다.");
         }
 
-        int totalActiveStock = stkRepository.sumQuantityByGtin(product.getGtin());
-        int reservedInThisOrder = salesItemRepository.sumQuantityByOrderAndGtin(request.getOrderId(), request.getGtin());
+        Long totalActiveStock = stkRepository.sumQuantityByGtin(product.getGtin());
+        Long reservedInThisOrder = salesItemRepository.sumQuantityByOrderAndGtin(request.getOrderId(), request.getGtin());
 
         SalesItem item = salesItemRepository.findByOrderIdAndGtin(request.getOrderId(), request.getGtin());
         if (item != null) {
-            int newQty = item.getSalesQuantity() + request.getSalesQuantity();
+            Long newQty = item.getSalesQuantity() + request.getSalesQuantity();
             item.setSalesQuantity(newQty);
             item.setSubtotal(item.getSdPrice().multiply(BigDecimal.valueOf(newQty)));
         } else {
@@ -165,17 +165,17 @@ public class SDServiceImpl implements SDService {
 
         // ✅ 각 아이템에 대해 STK 연결 + 재고 차감
         for (SalesItem item : header.getSalesItems()) {
-            int need = item.getSalesQuantity();
+            Long need = item.getSalesQuantity();
 
             List<STK> stocks = stkRepository
                     .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(
-                            item.getProduct().getGtin(), 0);
+                            item.getProduct().getGtin(), 0L);
 
             for (STK stk : stocks) {
                 if (need <= 0) break;
 
-                int available = stk.getQuantity();
-                int deduct = Math.min(available, need);
+                Long available = stk.getQuantity();
+                Long deduct = Math.min(available, need);
 
                 stk.setQuantity(available - deduct);
                 stkRepository.save(stk);
@@ -313,7 +313,7 @@ public class SDServiceImpl implements SDService {
 
     @Override
     @Transactional
-    public void updateItemQuantity(Long itemId, int quantity) {
+    public void updateItemQuantity(Long itemId, Long quantity) {
         SalesItem item = salesItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("판매 항목을 찾을 수 없습니다. ID=" + itemId));
 

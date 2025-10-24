@@ -21,10 +21,10 @@ public class InventoryService {
     // ───────── 조회 ─────────
 
     @Transactional(readOnly = true)
-    public int getAvailable(String gtin) {
+    public Long getAvailable(String gtin) {
         return inventoryRepository.findByProduct_Gtin(gtin)
                 .map(Inventory::getAvailable)
-                .orElse(0);
+                .orElse(0L);
     }
 
     @Transactional(readOnly = true)
@@ -45,8 +45,8 @@ public class InventoryService {
 
         inv = new Inventory();
         inv.setProduct(productRef);
-        inv.setOnHand(0);
-        inv.setReserved(0);
+        inv.setOnHand(0L);
+        inv.setReserved(0L);
         return inventoryRepository.save(inv);
     }
 
@@ -54,7 +54,7 @@ public class InventoryService {
 
     /** 재고 예약 (장바구니/주문hold) */
     @Transactional
-    public void reserve(String gtin, int qty) {
+    public void reserve(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = getOrCreate(gtin);
         if (inv.getAvailable() < qty) {
@@ -66,17 +66,17 @@ public class InventoryService {
 
     /** 예약 해제 (장바구니 취소 등) */
     @Transactional
-    public void release(String gtin, int qty) {
+    public void release(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = inventoryRepository.findByProduct_Gtin(gtin)
                 .orElseThrow(() -> new IllegalArgumentException("재고가 없습니다: " + gtin));
-        int newReserved = Math.max(0, inv.getReserved() - qty);
+        Long newReserved = Math.max(0L, inv.getReserved() - qty);
         inv.setReserved(newReserved);
     }
 
     /** 출고/판매 확정: 예약 → 실제 소진 */
     @Transactional
-    public void commit(String gtin, int qty) {
+    public void commit(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = inventoryRepository.findByProduct_Gtin(gtin)
                 .orElseThrow(() -> new IllegalArgumentException("재고가 없습니다: " + gtin));
@@ -93,7 +93,7 @@ public class InventoryService {
 
     /** 입고(수량 증가) */
     @Transactional
-    public void receive(String gtin, int qty) {
+    public void receive(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = getOrCreate(gtin);
         inv.setOnHand(inv.getOnHand() + qty);
@@ -101,8 +101,8 @@ public class InventoryService {
 
     /** 재고 수량 강제 설정(관리자용) */
     @Transactional
-    public void setOnHand(String gtin, int onHand) {
-        if (onHand < 0) onHand = 0;
+    public void setOnHand(String gtin, Long onHand) {
+        if (onHand < 0L) onHand = 0L;
         var inv = getOrCreate(gtin);
         inv.setOnHand(onHand);
         // reserved가 onHand보다 클 수 있으니, 비즈니스에 맞게 추가처리할지 결정
