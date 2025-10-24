@@ -1,13 +1,12 @@
 package com.youthcase.orderflow.stk.service;
 
+import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import com.youthcase.orderflow.gr.domain.Lot;
+import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.dto.DisposalRequest;
-import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
-import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
-import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ AdjustmentRequest DTO 임포트
+import com.youthcase.orderflow.stk.dto.*;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.gr.repository.LotRepository;
@@ -30,8 +29,9 @@ public class STKServiceImpl implements STKService {
 
     private final STKRepository stkRepository;
     private final ProductRepository productRepository;
-    private final LotRepository lotRepository;
     private final WarehouseRepository warehouseRepository;
+    private final LotRepository lotRepository;
+    private final GoodsReceiptHeaderRepository grHeaderRepository;
 
     // --------------------------------------------------
     // 📊 대시보드 현황 API 구현
@@ -388,5 +388,40 @@ public class STKServiceImpl implements STKService {
         if (remain == 0) stk.setStatus("EMPTY");
 
         stkRepository.save(stk);
+    }
+
+    // ⭐️ STKRequest DTO를 받아 STK 엔티티를 생성하고 저장하는 메서드 구현
+    @Override
+    public STK createStockFromRequest(STKRequestDTO request) {
+        // 1. DTO의 ID를 사용하여 필수 엔티티 조회 (FK 바인딩)
+        Product product = productRepository.findById(request.getProductGtin())
+                .orElseThrow(() -> new NoSuchElementException("상품(GTIN)을 찾을 수 없습니다: " + request.getProductGtin()));
+
+        Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
+                .orElseThrow(() -> new NoSuchElementException("창고를 찾을 수 없습니다: " + request.getWarehouseId()));
+
+        Lot lot = lotRepository.findById(request.getLotId())
+                .orElseThrow(() -> new NoSuchElementException("랏을 찾을 수 없습니다: " + request.getLotId()));
+
+        GoodsReceiptHeader grHeader = grHeaderRepository.findById(request.getGrHeaderId())
+                .orElseThrow(() -> new NoSuchElementException("입고 헤더를 찾을 수 없습니다: " + request.getGrHeaderId()));
+
+
+        // 2. STK.builder()를 사용하여 엔티티 생성
+        STK newStock = STK.builder()
+                .product(product)
+                .warehouse(warehouse)
+                .lot(lot)
+                .goodsReceipt(grHeader)
+
+                .quantity(request.getQuantity())
+                .status(request.getStatus())
+                .location(request.getLocation())
+                .hasExpirationDate(request.getHasExpirationDate())
+                .lastUpdatedAt(LocalDateTime.now())
+                .build();
+
+        // 3. 저장 및 반환
+        return stkRepository.save(newStock);
     }
 }

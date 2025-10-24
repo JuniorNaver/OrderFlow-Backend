@@ -1,10 +1,7 @@
 package com.youthcase.orderflow.stk.service;
 
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.dto.AdjustmentRequest;
-import com.youthcase.orderflow.stk.dto.DisposalRequest;
-import com.youthcase.orderflow.stk.dto.ProgressStatusDTO; // 👈 DTO import 추가
-import com.youthcase.orderflow.stk.dto.StockDeductionRequestDTO;
+import com.youthcase.orderflow.stk.dto.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate; // 👈 날짜 타입을 LocalDate로 통일
@@ -64,4 +61,6 @@ public interface STKService {
     //GR
     void increaseStock(String warehouseId, String gtin, Long qty, Long lotNo, LocalDate expDate);
     void decreaseStock(String warehouseId, String gtin, Long qty, Long lotNo, LocalDate expDate);
+
+    STK createStockFromRequest(STKRequestDTO request);
 }
