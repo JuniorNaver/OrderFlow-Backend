@@ -7,6 +7,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 📦 발주 헤더 엔티티
+ * - 장바구니(PR), 저장(S), 발주(PO) 등 발주 단위의 상위 엔티티
+ * - actionDate는 해당 상태(status)가 변경된 날짜를 의미함
+ *   ex) PR → 10/24 생성, S → 10/25 저장, PO → 10/26 승인
+ */
 @Entity
 @Table(name = "PO_HEADER")
 @Getter

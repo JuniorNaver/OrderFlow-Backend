@@ -40,7 +40,7 @@ public class STKRequestDTO {
 
     @NotNull(message = "수량은 필수입니다.")
     @Positive(message = "수량은 0보다 커야 합니다.")
-    private Integer quantity;
+    private Long quantity;
 
     @NotBlank(message = "재고 상태는 필수입니다.")
     private String status; // 예: "AVAILABLE", "DAMAGED", "HOLD"
