@@ -37,7 +37,7 @@ public class RefundInventoryService {
 
         if (stk != null) {
             // 2️⃣ 기존 LOT → 재고 증가
-            int newQty = stk.getQuantity() + item.getSalesQuantity();
+            Long newQty = stk.getQuantity() + item.getSalesQuantity();
             stk.setQuantity(newQty);
             stk.setLastUpdatedAt(java.time.LocalDateTime.now());
             stkRepository.save(stk);

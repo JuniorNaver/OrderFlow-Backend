@@ -12,6 +12,6 @@ import java.time.LocalDate;
 public class RefundItemDTO {
 
     private String gtin;         // ✅ 상품 바코드
-    private int quantity;        // ✅ 환불 수량
+    private Long quantity;        // ✅ 환불 수량
     private LocalDate expDate;   // ✅ 유통기한 (프론트에서 입력받음)
 }

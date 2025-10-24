@@ -4,6 +4,7 @@ import com.youthcase.orderflow.sd.sdRefund.domain.RefundReason;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -17,7 +18,7 @@ public class RefundRequest {
     private Long paymentId;
 
     @NotNull
-    private Integer cancelAmount;
+    private BigDecimal cancelAmount;
 
     @NotNull
     private RefundReason refundReason;  // ✅ Enum 타입

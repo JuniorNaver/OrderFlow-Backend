@@ -16,13 +16,13 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // --------------------------------------------------
 
     /** GTIN과 수량이 0보다 큰 활성 재고를 유통기한 순으로 조회 (FIFO 원칙) */
-    List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, int quantity);
+    List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, Long quantity);
 
     /** 특정 GTIN의 재고 하나를 조회 */
     Optional<STK> findTopByProduct_Gtin(String gtin);
 
     /** Lot ID로 수량이 0보다 큰 활성 재고 조회 (폐기 처리 시 사용) */
-    Optional<STK> findByLot_LotIdAndQuantityGreaterThan(Long lotId, int quantity);
+    Optional<STK> findByLot_LotIdAndQuantityGreaterThan(Long lotId, Long quantity);
 
     /** Lot ID로 STK 조회 (조정 처리 시 수량 0 이하도 조회하기 위해 사용) */
     Optional<STK> findByLot_LotId(Long lotId);
@@ -61,7 +61,7 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     /** * ⭐️ 수량 조정 대상 목록 조회: 수량이 지정된 값(예: 0) 이하인 재고 항목들을 조회합니다.
      * FIFO 위반 등으로 수량 불일치가 발생한 재고를 찾을 때 사용됩니다.
      */
-    List<STK> findByQuantityLessThanEqual(Integer quantity);
+    List<STK> findByQuantityLessThanEqual(Long quantity);
 
     // ⭐️ 특정 창고 ID의 활성 재고를 유통기한 순으로 조회 (FIFO 검사 목적)
     @Query("SELECT s FROM STK s JOIN s.lot l WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 AND s.status = 'ACTIVE' ORDER BY l.expDate ASC")
@@ -69,7 +69,7 @@ public interface STKRepository extends JpaRepository<STK, Long> {
 
     //GTIN 전체 재고 합계 구해주는 쿼리
     @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.product.gtin = :gtin AND s.status = 'ACTIVE'")
-    int sumQuantityByGtin(@Param("gtin") String gtin);
+    Long sumQuantityByGtin(@Param("gtin") String gtin);
 
     // ✅ 창고 + 상품 + LOT 기준으로 조회 (중복 방지)
     @Query("SELECT s FROM STK s " +

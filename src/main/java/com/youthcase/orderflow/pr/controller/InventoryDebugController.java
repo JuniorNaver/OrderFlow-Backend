@@ -38,7 +38,7 @@ public class InventoryDebugController {
     }
 
     @GetMapping("/available")
-    public int available(@RequestParam String gtin) {
+    public Long available(@RequestParam String gtin) {
         return inventoryService.getAvailable(gtin);
     }
 }

@@ -23,16 +23,16 @@ private Long id;
     private Product product;
 
     @Column(name = "ON_HAND", nullable = false)
-    private Integer onHand = 0;
+    private Long onHand = 0L;
 
     @Column(name = "RESERVED", nullable = false)
-    private Integer reserved = 0;
+    private Long reserved = 0L;
 
     @Version
     private Long version;
 
     @Transient
-    public int getAvailable() {
-        return (onHand != null ? onHand : 0) - (reserved != null ? reserved : 0);
+    public Long getAvailable() {
+        return (onHand != null ? onHand : 0L) - (reserved != null ? reserved : 0L);
     }
 }

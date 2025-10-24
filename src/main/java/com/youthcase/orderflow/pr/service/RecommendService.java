@@ -80,8 +80,8 @@ public class RecommendService {
         return new PRRecommendItemDto(
                 p.getGtin(),
                 p.getProductName(),
-                1, // 기본 제안 수량 (BI 연동 전)
-                p.getPrice() != null ? p.getPrice().intValue() : null,
+                1L, // 기본 제안 수량 (BI 연동 전)
+                p.getPrice(),
                 p.getStorageMethod(),
                 categoryName,
                 null, // reason

@@ -36,7 +36,7 @@ public class SelectionController {
     }
 
     @PatchMapping("/items/{gtin}")   // 수량 변경
-    public ResponseEntity<Void> change(@PathVariable String gtin, @RequestParam int qty, HttpServletRequest http) {
+    public ResponseEntity<Void> change(@PathVariable String gtin, @RequestParam Long qty, HttpServletRequest http) {
         selection.changeQty(owner(http), gtin, qty);
         return ResponseEntity.noContent().build();
     }

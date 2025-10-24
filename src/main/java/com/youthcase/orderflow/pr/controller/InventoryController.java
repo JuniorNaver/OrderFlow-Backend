@@ -16,7 +16,7 @@ public class InventoryController {
     private final InventoryService inv;
 
     //조회
-    record AvailDto(String gtin, int available) {}
+    record AvailDto(String gtin, Long available) {}
     @GetMapping("/inventory")
     public AvailDto available(@RequestParam String gtin){
         return new AvailDto(gtin, inv.getAvailable(gtin));
