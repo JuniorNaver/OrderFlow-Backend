@@ -75,7 +75,7 @@ public class StockStatusServiceImpl implements StockStatusService {
         for (List<STK> stocks : groupedStocks.values()) {
             for (int i = 0; i < stocks.size() - 1; i++) {
                 STK currentSTK = stocks.get(i);
-                Integer currentQty = currentSTK.getQuantity();
+                Long currentQty = currentSTK.getQuantity();
 
                 if (currentQty == null || currentQty <= 0) continue;
 
@@ -84,7 +84,7 @@ public class StockStatusServiceImpl implements StockStatusService {
 
                 for (int j = i + 1; j < stocks.size(); j++) {
                     STK laterSTK = stocks.get(j);
-                    Integer laterQty = laterSTK.getQuantity();
+                    Long laterQty = laterSTK.getQuantity();
 
                     if (laterQty == null || laterQty <= 0) continue;
 

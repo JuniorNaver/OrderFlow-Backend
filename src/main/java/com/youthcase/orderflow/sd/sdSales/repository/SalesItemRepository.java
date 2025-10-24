@@ -54,13 +54,13 @@ public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
     @Modifying(flushAutomatically = true)
     @Query("UPDATE SalesItem s SET s.salesQuantity = :qty, s.subtotal = :subtotal WHERE s.no = :itemId")
     int updateQuantity(@Param("itemId") Long itemId,
-                       @Param("qty") int qty,
+                       @Param("qty") Long qty,
                        @Param("subtotal") BigDecimal subtotal);
 
     // 특정 주문 내 특정 상품의 총 판매 수량
     @Query("SELECT COALESCE(SUM(si.salesQuantity), 0) FROM SalesItem si " +
             "WHERE si.salesHeader.orderId = :orderId AND si.product.gtin = :gtin")
-    int sumQuantityByOrderAndGtin(@Param("orderId") Long orderId,
+    Long sumQuantityByOrderAndGtin(@Param("orderId") Long orderId,
                                   @Param("gtin") String gtin);
 
 }

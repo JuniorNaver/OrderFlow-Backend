@@ -76,15 +76,7 @@ public class RefundProcessor {
 
         // ✅ 7️⃣ 환불 완료 후 재고 복원
         if (header.getRefundStatus() == RefundStatus.COMPLETED) {
-            header.getPaymentHeader()
-                    .getSalesHeader()
-                    .getSalesItems()
-                    .forEach(item -> {
-                        LocalDate expDate = (item.getStk() != null && item.getStk().getLot() != null)
-                                ? item.getStk().getLot().getExpDate()
-                                : LocalDate.now().plusMonths(6); // 기본 6개월 유통기한
-                        refundInventoryService.restoreStock(item, expDate);
-                    });
+            refundInventoryService.restoreStock(header);
         }
 
         log.info("✅ 환불 완료: refundId={}, status={}", header.getRefundId(), header.getRefundStatus());

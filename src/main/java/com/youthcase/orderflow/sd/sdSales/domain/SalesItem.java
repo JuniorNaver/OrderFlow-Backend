@@ -31,7 +31,7 @@ public class SalesItem {
 
     // ✅ 판매 수량 (SalesQuantity)
     @Column(name = "SALES_QUANTITY", nullable = false)
-    private int salesQuantity;
+    private Long salesQuantity;
 
     //한개 단위 상품 총액
     @Column(name = "SUBTOTAL", precision = 12, scale = 2, nullable = false)

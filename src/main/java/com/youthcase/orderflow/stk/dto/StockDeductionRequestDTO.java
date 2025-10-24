@@ -16,7 +16,7 @@ public class StockDeductionRequestDTO {
     public static class DeductionItem {
         private String gtin; // 상품 GTIN
         private String warehouseId; // 출고할 창고 ID
-        private Integer quantity; // 출고 수량
+        private Long quantity; // 출고 수량
         // 출고할 Lot ID를 명시할 수도 있습니다.
         // private Long lotId;
     }

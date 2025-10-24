@@ -9,6 +9,6 @@ import java.math.BigDecimal;
 public class AddItemRequest {
     private Long orderId;
     private String gtin;       // 상품 바코드
-    private int salesQuantity;
+    private Long salesQuantity;
     private BigDecimal price;
 }

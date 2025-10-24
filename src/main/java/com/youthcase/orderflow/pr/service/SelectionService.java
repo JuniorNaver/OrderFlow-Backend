@@ -20,7 +20,7 @@ public class SelectionService {
     public List<SelectionItemDto> list(String ownerId){
         return new ArrayList<>(store.getOrDefault(ownerId, Map.of()).values());
     }
-    public void changeQty(String ownerId, String gtin, int qty){
+    public void changeQty(String ownerId, String gtin, Long qty){
         var bag = store.getOrDefault(ownerId, Map.of());
         var cur = bag.get(gtin);
         if (cur == null) throw new NoSuchElementException("선택 없음: "+gtin);

@@ -16,13 +16,13 @@ public class InventoryController {
     private final InventoryService inv;
 
     //조회
-    record AvailDto(String gtin, int available) {}
+    record AvailDto(String gtin, Long available) {}
     @GetMapping("/inventory")
     public AvailDto available(@RequestParam String gtin){
         return new AvailDto(gtin, inv.getAvailable(gtin));
     }
 
-    record QtyReq(String gtin, @Min(1) int qty) {}
+    record QtyReq(String gtin, @Min(1) Long qty) {}
 
     @PostMapping("/inventory/reserve")
     @ResponseStatus(HttpStatus.NO_CONTENT)

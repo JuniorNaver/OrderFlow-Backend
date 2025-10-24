@@ -140,7 +140,7 @@ public class MockSD {
                         .product(cola)
                         .warehouse(roomWarehouse)
                         .lot(lot)
-                        .quantity(100)
+                        .quantity(100L)
                         .status("ACTIVE")
                         .hasExpirationDate(false)
                         .build();
