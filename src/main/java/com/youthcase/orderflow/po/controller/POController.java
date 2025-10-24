@@ -27,15 +27,15 @@ public class POController {
     }
 
     /** ✅ 기존 헤더에 아이템 추가 */
-    @PostMapping("/{poId}/items")
-    public ResponseEntity<POItemResponseDTO> addPOItem(
-            @PathVariable POStatus status,
-            @RequestBody POItemRequestDTO dto,
-            @RequestParam String gtin
-    ) {
-        POItemResponseDTO response = poService.addPOItem(status, dto, gtin);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/{poId}/items")
+//    public ResponseEntity<POItemResponseDTO> addPOItem(
+//            @PathVariable POStatus status,
+//            @RequestBody POItemRequestDTO dto,
+//            @RequestParam String gtin
+//    ) {
+//        POItemResponseDTO response = poService.addPOItem(status, dto, gtin);
+//        return ResponseEntity.ok(response);
+//    }
 
 
 

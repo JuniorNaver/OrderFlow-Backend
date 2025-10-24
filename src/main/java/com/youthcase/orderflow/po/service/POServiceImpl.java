@@ -85,46 +85,46 @@ public class POServiceImpl implements POService {
                 .build();
     }
 
-
-    /** pr인 헤더를 찾고 그 안에 gtin 겹치는 상품이 있는지 확인, 있다면 수량만 증가 */
-    @Override
-    public POItem addPOItem(POStatus status, POItemRequestDTO dto, String gtin) {
-
-        POHeader header = poHeaderRepository.findByStatus(status)
-                .orElseThrow(() -> new IllegalArgumentException("Status=pr 인 장바구니가 없습니다."));
-
-        Price price = priceRepository.findByGtin(gtin)
-                .orElseThrow(() -> new IllegalArgumentException("Price not found"));
-
-        POStatus statusPR = POStatus.PR;
-        Optional<POItem> existingItemOpt = poItemRepository.findByStatusAndGtin(statusPR, gtin);
-
-        if (existingItemOpt.isPresent()) {
-            // 이미 같은 GTIN 상품이 존재하는 경우
-            POItem poItem = existingItemOpt.get();
-            Long newQty = poItem.getOrderQty() + dto.getOrderQty();
-            poItem.setOrderQty(newQty);
-            poItem.setTotal(price.getPurchasePrice() * newQty);
-            return poItem;
-        } else {
-            // 존재하지 않으면 새로 생성
-            Long total = price.getPurchasePrice() * dto.getOrderQty();
-            POItem poItem = POItem.builder()
-                    .itemNo(dto.getItemNo())
-                    .expectedArrival(LocalDate.now().plusDays(3))   //여기엔 소요일 추가.
-                    .purchasePrice(price)
-                    .orderQty(dto.getOrderQty())
-                    .pendingQty(dto.getOrderQty())
-                    .shippedQty(dto.getOrderQty())
-                    .total(total)
-                    .poHeader(poheader)
-                    .product(Product)
-                    .status(POStatus.PR)
-                    .build();
-            return poItemRepository.save(poItem);
-        }
-
-    }
+//
+//    /** pr인 헤더를 찾고 그 안에 gtin 겹치는 상품이 있는지 확인, 있다면 수량만 증가 */
+//    @Override
+//    public POItemResponseDTO addPOItem(POStatus status, POItemRequestDTO dto, String gtin) {
+//
+//        POHeader header = poHeaderRepository.findByStatus(status)
+//                .orElseThrow(() -> new IllegalArgumentException("Status=pr 인 장바구니가 없습니다."));
+//
+//        Price price = priceRepository.findByGtin(gtin)
+//                .orElseThrow(() -> new IllegalArgumentException("Price not found"));
+//
+//        POStatus statusPR = POStatus.PR;
+//        Optional<POItem> existingItemOpt = poItemRepository.findByStatusAndGtin(statusPR, gtin);
+//
+//        if (existingItemOpt.isPresent()) {
+//            // 이미 같은 GTIN 상품이 존재하는 경우
+//            POItem poItem = existingItemOpt.get();
+//            Long newQty = poItem.getOrderQty() + dto.getOrderQty();
+//            poItem.setOrderQty(newQty);
+//            poItem.setTotal(price.getPurchasePrice() * newQty);
+//            return poItem;
+//        } else {
+//            // 존재하지 않으면 새로 생성
+//            Long total = price.getPurchasePrice() * dto.getOrderQty();
+//            POItem poItem = POItem.builder()
+//                    .itemNo(dto.getItemNo())
+//                    .expectedArrival(LocalDate.now().plusDays(3))   //여기엔 소요일 추가.
+//                    .purchasePrice(price)
+//                    .orderQty(dto.getOrderQty())
+//                    .pendingQty(dto.getOrderQty())
+//                    .shippedQty(dto.getOrderQty())
+//                    .total(total)
+//                    .poHeader(poheader)
+//                    .product(Product)
+//                    .status(POStatus.PR)
+//                    .build();
+//            return poItemRepository.save(poItem);
+//        }
+//
+//    }
 
     /** 모든 헤더 조회 */
     @Override
@@ -217,9 +217,9 @@ public class POServiceImpl implements POService {
     private POItemResponseDTO toResponseDTO(POItem item) {
         return POItemResponseDTO.builder()
                 .itemNo(item.getItemNo())
-                .gtin(item.getGtin().getGtin())
-                .productName(item.getGtin().getProductName())
-                .purchasePrice(item.getPrice().getPurchasePrice())
+                .gtin(item.getProduct().getGtin())
+                .productName(item.getProduct().getProductName())
+                .purchasePrice(item.getPurchasePrice())
                 .orderQty(item.getOrderQty())
                 .total(item.getTotal())
                 .status(item.getStatus())

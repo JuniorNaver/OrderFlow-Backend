@@ -20,11 +20,11 @@ public interface POItemRepository extends JpaRepository<POItem, Long> {
 
     //상품 no, 상태로 단일 상품 조회
     Optional<POItem> findByItemNoAndStatus(Long itemNo, POStatus status);
-
-    Optional<POItem> findByPoHeaderAndGtin(POHeader poHeader, Product gtin);
-
-    //gtin 으로 찾기
-    Optional<POItem> findByGtin(Product gtin);
+//
+//    Optional<POItem> findByPoHeaderAndGtin(POHeader poHeader, Product gtin);
+//
+//    //gtin 으로 찾기
+//    Optional<POItem> findByGtin(Product gtin);
 
 
     /** PR 상태인 헤더 중 동일 GTIN 상품이 있는지 확인 */
