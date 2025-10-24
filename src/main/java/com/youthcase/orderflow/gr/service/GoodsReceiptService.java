@@ -364,4 +364,5 @@ public class GoodsReceiptService {
 
         lotRepository.saveAll(lots);
     }
+
 }

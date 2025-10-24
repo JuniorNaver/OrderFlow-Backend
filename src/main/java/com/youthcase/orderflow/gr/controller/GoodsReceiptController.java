@@ -56,6 +56,7 @@ public class GoodsReceiptController {
         return ResponseEntity.ok(service.searchPOForGR(barcode));
     }
 
+    /** ✅ 7. 스캔 후 바로 입고 생성 + 확정 */
     @PostMapping("/scan-confirm")
     public ResponseEntity<GoodsReceiptHeaderDTO> createAndConfirm(@RequestBody Map<String, Long> req) {
         Long poId = req.get("poId");
