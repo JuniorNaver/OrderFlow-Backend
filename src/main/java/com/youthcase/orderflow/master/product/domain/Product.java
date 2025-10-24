@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
 
 import java.math.BigDecimal;
 
@@ -43,7 +44,7 @@ public class Product {
     private StorageMethod storageMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "KAN_CODE", nullable = false, referencedColumnName = "KAN_CODE")
+    @JoinColumn(name = "KAN_CODE", referencedColumnName = "KAN_CODE")
     private Category category;
 
     @Column(name="IMAGE_URL", length=500)

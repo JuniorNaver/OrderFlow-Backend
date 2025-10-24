@@ -29,6 +29,16 @@ public class Category {
     @Column(name = "SMALL_CATEGORY", length = 120)
     private String smallCategory; // 소분류
 
+    // 부모 - 자식 관계 명시
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "PARENT_KAN_CODE", referencedColumnName = "KAN_CODE",
+            foreignKey = @ForeignKey(name = "FK_CATEGORY_PARENT"))
+    private Category parent;
+
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private List<Category> children;
+
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Product> products; // 카테고리에 속한 상품들
