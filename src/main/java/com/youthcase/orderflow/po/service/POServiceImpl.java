@@ -64,7 +64,7 @@ public class POServiceImpl implements POService {
         header.setExternalId(externalId);
 
         //userId
-        User user = userRepository.findByUserId("admin01")
+        User user = userRepository.findByUserId("admin01")   // admin 에서 받아와야 한다.
                 .orElseThrow();
         header.setUser(user);
 
@@ -86,7 +86,7 @@ public class POServiceImpl implements POService {
     }
 
 
-    /** 기존 헤더에 아이템 추가 */
+    /** pr인 헤더를 찾고 그 안에 gtin 겹치는 상품이 있는지 확인, 있다면 수량만 증가 */
     @Override
     public POItem addPOItem(POStatus status, POItemRequestDTO dto, String gtin) {
 
@@ -97,10 +97,10 @@ public class POServiceImpl implements POService {
                 .orElseThrow(() -> new IllegalArgumentException("Price not found"));
 
         POStatus statusPR = POStatus.PR;
-        Optional<POItem> existingItemOpt = poItemRepository.findByStatusAndGtin(status, gtin);
+        Optional<POItem> existingItemOpt = poItemRepository.findByStatusAndGtin(statusPR, gtin);
 
         if (existingItemOpt.isPresent()) {
-            // 이미 같은 GTIN이 존재하는 경우
+            // 이미 같은 GTIN 상품이 존재하는 경우
             POItem poItem = existingItemOpt.get();
             Long newQty = poItem.getOrderQty() + dto.getOrderQty();
             poItem.setOrderQty(newQty);
@@ -111,14 +111,14 @@ public class POServiceImpl implements POService {
             Long total = price.getPurchasePrice() * dto.getOrderQty();
             POItem poItem = POItem.builder()
                     .itemNo(dto.getItemNo())
-                    .expectedArrival(LocalDate.now().plusDays(3))
+                    .expectedArrival(LocalDate.now().plusDays(3))   //여기엔 소요일 추가.
                     .purchasePrice(price)
                     .orderQty(dto.getOrderQty())
                     .pendingQty(dto.getOrderQty())
                     .shippedQty(dto.getOrderQty())
                     .total(total)
-                    .poHeader(header)
-                    .product(product)
+                    .poHeader(poheader)
+                    .product(Product)
                     .status(POStatus.PR)
                     .build();
             return poItemRepository.save(poItem);
