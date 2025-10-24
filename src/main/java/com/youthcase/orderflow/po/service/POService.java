@@ -8,8 +8,11 @@ import java.util.List;
 
 public interface POService {
 
+    /** POHeader 생성 */
+    POHeaderResponseDTO createNewPOHeader();
+
     /** POHeader + Item 생성 */
-    Long createHeaderAndItem(String gtin, POItemRequestDTO dto);
+    POHeaderResponseDTO createHeaderAndItem(String gtin, POItemRequestDTO dto);
 
     /** 기존 헤더에 아이템 추가 */
     POItemResponseDTO addPOItem(Long poId, POItemRequestDTO poItemRequestDTO, String gtin);

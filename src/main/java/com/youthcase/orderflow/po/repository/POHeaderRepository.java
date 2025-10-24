@@ -26,7 +26,7 @@ public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     @Query("UPDATE POHeader h SET h.status = :status WHERE h.poId = :poId")
     void updateStatus(@Param("poId") Long poId, @Param("status") POStatus status);
 
-    @Query("SELECT p FROM POHeader p LEFT JOIN FETCH p.items WHERE p.poBarcode = :barcode")
+    @Query("SELECT p FROM POHeader p LEFT JOIN FETCH p.items WHERE p.externalId = :barcode")
     Optional<POHeader> findByBarcodeWithItems(@Param("barcode") String barcode);
     /** 입고 스캔용 바코드 번호 */
     @Query("""

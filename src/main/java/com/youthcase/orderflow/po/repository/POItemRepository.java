@@ -16,11 +16,8 @@ public interface POItemRepository extends JpaRepository<POItem, Long> {
     //발주 id로 상품 조회
     List<POItem> findByPoHeader_PoId(Long poId);
 
-
-
     //상품 no, 상태로 단일 상품 조회
     Optional<POItem> findByItemNoAndStatus(Long itemNo, POStatus status);
-
 
     Optional<POItem> findByPoHeaderAndGtin(POHeader poHeader, Product gtin);
 }
