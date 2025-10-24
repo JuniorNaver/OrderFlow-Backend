@@ -40,7 +40,7 @@ public class POHeader {
     private POStatus status;
 
     // 매입총액
-    @Column(name = "TOTAL_AMOUNT", nullable = false)
+    @Column(name = "TOTAL_AMOUNT")
     private Long totalAmount;
 
     // 요청/승인 일자
