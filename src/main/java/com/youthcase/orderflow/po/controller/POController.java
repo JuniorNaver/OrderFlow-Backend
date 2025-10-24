@@ -24,11 +24,12 @@ public class POController {
             @RequestParam(required = false) String gtin,
             @RequestBody(required = false) POItemRequestDTO dto
     ) {
-        Long poId = (gtin != null && dto != null)
-                ? poService.createHeaderAndItem(gtin, dto)
-                : null;
+        Long poId = 0L;
+        if (gtin != null && dto != null){
+                poId = poService.createHeaderAndItem(gtin, dto);
+        }{
         return ResponseEntity.ok(Map.of("poId", poId));
-    }
+    }}
 
     /** ✅ 기존 헤더에 아이템 추가 */
     @PostMapping("/{poId}/items")
