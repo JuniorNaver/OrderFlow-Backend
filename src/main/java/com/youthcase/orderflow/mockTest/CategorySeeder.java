@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.mockTest.mock;
+package com.youthcase.orderflow.mockTest;
 
 import com.youthcase.orderflow.pr.domain.Category;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;

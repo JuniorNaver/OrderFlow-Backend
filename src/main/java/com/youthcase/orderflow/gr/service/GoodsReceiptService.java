@@ -13,6 +13,7 @@ import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.po.domain.POHeader;
+import com.youthcase.orderflow.po.domain.POItem;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
@@ -268,45 +269,13 @@ public class GoodsReceiptService {
 
         GoodsReceiptHeader saved = headerRepo.save(gr);
         // ✅ 재고 반영
-        for (Object item : po.getItems()) {
+        for (POItem item : po.getItems()) {
             try {
-                var clazz = item.getClass();
-
                 // 1️⃣ 상품 정보 꺼내기 (getProduct() or getGtin())
-                Object product = null;
-                try {
-                    product = clazz.getMethod("getProduct").invoke(item);
-                } catch (NoSuchMethodException e1) {
-                    try {
-                        product = clazz.getMethod("getGtin").invoke(item);
-                    } catch (NoSuchMethodException e2) {
-                        product = null;
-                    }
-                }
-
-                String gtin = null;
-                if (product != null) {
-                    try {
-                        gtin = (String) product.getClass().getMethod("getGtin").invoke(product);
-                    } catch (Exception e) {
-                        // product가 String일 수도 있으니까 그냥 캐스팅 시도
-                        gtin = product.toString();
-                    }
-                }
+                String gtin = item.getProduct().getGtin();
 
                 // 2️⃣ 수량 꺼내기 (getOrderQty() or getQty())
-                Long qty = 0L;
-                try {
-                    Object result = clazz.getMethod("getOrderQty").invoke(item);
-                    qty = (result instanceof Number) ? ((Number) result).longValue() : 0L;
-                } catch (NoSuchMethodException e1) {
-                    try {
-                        Object result = clazz.getMethod("getQty").invoke(item);
-                        qty = (result instanceof Number) ? ((Number) result).longValue() : 0L;
-                    } catch (NoSuchMethodException e2) {
-                        qty = 0L;
-                    }
-                }
+                Long qty = item.getOrderQty();
 
                 // 3️⃣ 실제 재고 반영
                 if (gtin != null && qty > 0) {
@@ -314,7 +283,8 @@ public class GoodsReceiptService {
                             gr.getWarehouse().getWarehouseId(),
                             gtin,
                             qty,
-                            null, null
+                            null,
+                            null
                     );
                 } else {
                     System.out.println("⚠️ GTIN 또는 수량이 유효하지 않아 스킵됨: " + item);

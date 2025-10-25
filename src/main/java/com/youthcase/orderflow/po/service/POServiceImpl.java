@@ -2,31 +2,29 @@ package com.youthcase.orderflow.po.service;
 
 import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.auth.repository.UserRepository;
-import com.youthcase.orderflow.master.price.domain.Price;
 import com.youthcase.orderflow.master.price.repository.PriceRepository;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
-import com.youthcase.orderflow.po.domain.POHeader;
-import com.youthcase.orderflow.po.domain.POItem;
-import com.youthcase.orderflow.po.domain.POStatus;
-import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
-import com.youthcase.orderflow.po.dto.POItemRequestDTO;
-import com.youthcase.orderflow.po.dto.POItemResponseDTO;
-import com.youthcase.orderflow.po.repository.POHeaderRepository;
-import com.youthcase.orderflow.po.repository.POItemRepository;
-import jakarta.transaction.Status;
-import jakarta.transaction.Transactional;
+import com.youthcase.orderflow.po.domain.*;
+import com.youthcase.orderflow.po.dto.*;
+import com.youthcase.orderflow.po.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * 🧩 POServiceImpl
+ * - 발주(PO) 프로세스의 핵심 비즈니스 로직 구현부
+ * - PR(준비) → S(저장) → PO(확정) → GI(출고) → FULLY_RECEIVED(입고완료) 단계 흐름 관리
+ * - PriceMaster 스냅샷 기반으로 당시 매입 단가를 고정 저장
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -38,131 +36,122 @@ public class POServiceImpl implements POService {
     private final PriceRepository priceRepository;
     private final UserRepository userRepository;
 
-    // ---------------------- 공통 메서드 ----------------------
-
-    // 총 합계 수량 메서드
-    private Long calculateTotalAmountForHeader(Long poId){
-        List<POItem> items = poItemRepository.findByPoHeader_PoId(poId);
-        return items.stream()
-                .mapToLong(item -> item.getPurchasePrice().getPurchasePrice() * item.getOrderQty())
-                .sum();
+    // ----------------------------------------------------------------------
+    // 🔹 공통: 헤더 총합 계산 (아이템 합계 기준)
+    // ----------------------------------------------------------------------
+    private BigDecimal calculateTotalAmountForHeader(Long poId) {
+        return poItemRepository.findByPoHeader_PoId(poId).stream()
+                .map(i -> i.getPurchasePrice().multiply(BigDecimal.valueOf(i.getOrderQty())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** POHeader 생성 */
-    public POHeaderResponseDTO createNewPOHeader() {
-        // 바코드 번호 생성
+    // ----------------------------------------------------------------------
+    // ✅ [1] 상품 추가 or 기존 항목 수량 갱신
+    // ----------------------------------------------------------------------
+    @Override
+    public POItemResponseDTO addOrCreatePOItem(String userId, POItemRequestDTO dto) {
+        // 사용자 조회
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+
+        // 현재 진행 중(PR) 장바구니 조회 (없으면 생성)
+        Long poId = getCurrentCartId();
+        POHeader header = (poId != null)
+                ? poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("PR 상태 헤더를 찾을 수 없습니다."))
+                : createNewPRHeader(user);
+
+        // 상품 및 매입가 스냅샷 조회
+        Product product = productRepository.findByGtin(dto.getGtin())
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다: " + dto.getGtin()));
+        BigDecimal purchasePrice = priceRepository.findPurchasePriceByGtin(dto.getGtin())
+                .orElseThrow(() -> new IllegalArgumentException("Price not found for GTIN: " + dto.getGtin()));
+
+        // 기존 동일 GTIN 존재 여부 확인 후 처리
+        POItem targetItem = poItemRepository.findByPoHeader_PoIdAndProduct_Gtin(header.getPoId(), dto.getGtin())
+                .map(item -> { // 존재 → 수량 증가 및 단가 갱신
+                    item.setOrderQty(item.getOrderQty() + dto.getOrderQty());
+                    item.setPurchasePrice(purchasePrice); // 매입가 스냅샷 갱신
+                    item.calculateTotal();
+                    return poItemRepository.save(item);
+                })
+                .orElseGet(() -> { // 신규 아이템
+                    POItem newItem = POItem.builder()
+                            .poHeader(header)
+                            .product(product)
+                            .orderQty(dto.getOrderQty())
+                            .pendingQty(dto.getOrderQty())
+                            .shippedQty(0L)
+                            .purchasePrice(purchasePrice)
+                            .expectedArrival(LocalDate.now().plusDays(3))
+                            .status(POStatus.PR)
+                            .build();
+                    newItem.calculateTotal();
+                    return poItemRepository.save(newItem);
+                });
+
+        // 헤더 총합 갱신
+        header.setTotalAmount(calculateTotalAmountForHeader(header.getPoId()));
+        poHeaderRepository.save(header);
+
+        return POItemResponseDTO.from(targetItem);
+    }
+
+    /** 신규 PR 헤더 생성 (공용 장바구니) */
+    private POHeader createNewPRHeader(User user) {
+        String branchCode = user.getStore().getStoreId();
         LocalDate today = LocalDate.now();
-        String branchCode = "S003"; // TODO: 로그인 지점 코드로 변경
         long countToday = poHeaderRepository.countByActionDateAndBranchCode(today, branchCode);
         String seq = String.format("%02d", countToday + 1);
-        String datePart = today.format(DateTimeFormatter.BASIC_ISO_DATE);
-        String externalId = datePart + branchCode + seq; // 예: 20251025S00301
+        String externalId = today.format(DateTimeFormatter.BASIC_ISO_DATE) + branchCode + seq;
 
         POHeader header = new POHeader();
+        header.setUser(user);
         header.setStatus(POStatus.PR);
         header.setActionDate(today);
         header.setExternalId(externalId);
-
-        //userId
-        User user = userRepository.findByUserId("admin01")   // admin 에서 받아와야 한다.
-                .orElseThrow();
-        header.setUser(user);
-
-        poHeaderRepository.save(header);
-
-        Long totalAmount = calculateTotalAmountForHeader(header.getPoId());
-        header.setTotalAmount(totalAmount);
-
-        poHeaderRepository.save(header);
-
-        return POHeaderResponseDTO.builder()
-                .poId(header.getPoId())
-                .status(header.getStatus())
-                .totalAmount(header.getTotalAmount())
-                .actionDate(header.getActionDate())
-                .remarks(header.getRemarks())
-                .externalId(header.getExternalId())
-                .build();
+        header.setTotalAmount(BigDecimal.ZERO);
+        return poHeaderRepository.save(header);
     }
 
-//
-//    /** pr인 헤더를 찾고 그 안에 gtin 겹치는 상품이 있는지 확인, 있다면 수량만 증가 */
-//    @Override
-//    public POItemResponseDTO addPOItem(POStatus status, POItemRequestDTO dto, String gtin) {
-//
-//        POHeader header = poHeaderRepository.findByStatus(status)
-//                .orElseThrow(() -> new IllegalArgumentException("Status=pr 인 장바구니가 없습니다."));
-//
-//        Price price = priceRepository.findByGtin(gtin)
-//                .orElseThrow(() -> new IllegalArgumentException("Price not found"));
-//
-//        POStatus statusPR = POStatus.PR;
-//        Optional<POItem> existingItemOpt = poItemRepository.findByStatusAndGtin(statusPR, gtin);
-//
-//        if (existingItemOpt.isPresent()) {
-//            // 이미 같은 GTIN 상품이 존재하는 경우
-//            POItem poItem = existingItemOpt.get();
-//            Long newQty = poItem.getOrderQty() + dto.getOrderQty();
-//            poItem.setOrderQty(newQty);
-//            poItem.setTotal(price.getPurchasePrice() * newQty);
-//            return poItem;
-//        } else {
-//            // 존재하지 않으면 새로 생성
-//            Long total = price.getPurchasePrice() * dto.getOrderQty();
-//            POItem poItem = POItem.builder()
-//                    .itemNo(dto.getItemNo())
-//                    .expectedArrival(LocalDate.now().plusDays(3))   //여기엔 소요일 추가.
-//                    .purchasePrice(price)
-//                    .orderQty(dto.getOrderQty())
-//                    .pendingQty(dto.getOrderQty())
-//                    .shippedQty(dto.getOrderQty())
-//                    .total(total)
-//                    .poHeader(poheader)
-//                    .product(Product)
-//                    .status(POStatus.PR)
-//                    .build();
-//            return poItemRepository.save(poItem);
-//        }
-//
-//    }
-
-    /** 모든 헤더 조회 */
+    // ----------------------------------------------------------------------
+    // ✅ [2] 조회 / 수정 / 삭제
+    // ----------------------------------------------------------------------
     @Override
     public List<POHeaderResponseDTO> findAll() {
         return poHeaderRepository.findAll().stream()
-                .map(POHeaderResponseDTO::fromEntity)
+                .map(POHeaderResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    /** 장바구니 상품 조회 */
     @Override
     public List<POItemResponseDTO> getAllItems(Long poId) {
-        return poItemRepository.findByPoHeader_PoId(poId)
-                .stream()
-                .map(this::toResponseDTO)
+        return poItemRepository.findByPoHeader_PoId(poId).stream()
+                .map(POItemResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    /** 상품 수량 변경 */
     @Override
     public POItemResponseDTO updateItemQuantity(Long itemNo, POItemRequestDTO requestDTO) {
         POItem item = poItemRepository.findByItemNoAndStatus(itemNo, POStatus.PR)
                 .orElseThrow(() -> new IllegalArgumentException("해당 아이템을 찾을 수 없습니다."));
-        if (requestDTO.getOrderQty() < 1) {
+        if (requestDTO.getOrderQty() < 1)
             throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
-        }
+
         item.setOrderQty(requestDTO.getOrderQty());
+        item.calculateTotal();
         poItemRepository.save(item);
-        return toResponseDTO(item);
+        return POItemResponseDTO.from(item);
     }
 
-    /** 상품 삭제 */
     @Override
     public void deleteItem(List<Long> itemNos) {
         poItemRepository.deleteAllById(itemNos);
     }
 
-    /** 장바구니 저장 */
+    // ----------------------------------------------------------------------
+    // ✅ [3] 장바구니 저장/불러오기/삭제
+    // ----------------------------------------------------------------------
     @Override
     public void saveCart(Long poId, String remarks) {
         POHeader header = poHeaderRepository.findById(poId)
@@ -172,23 +161,20 @@ public class POServiceImpl implements POService {
         poHeaderRepository.save(header);
     }
 
-    /** 저장된 장바구니 목록 */
     @Override
     public List<POHeaderResponseDTO> getSavedCartList() {
         return poHeaderRepository.findByStatus(POStatus.S).stream()
-                .map(POHeaderResponseDTO::fromEntity)
+                .map(POHeaderResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    /** 특정 장바구니 불러오기 */
     @Override
     public List<POItemResponseDTO> getSavedCartItems(Long poId) {
         return poItemRepository.findByPoHeader_PoId(poId).stream()
-                .map(this::toResponseDTO)
+                .map(POItemResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
-    /** 저장된 장바구니 삭제 */
     @Override
     public void deletePO(Long poId) {
         POHeader header = poHeaderRepository.findById(poId)
@@ -196,33 +182,51 @@ public class POServiceImpl implements POService {
         poHeaderRepository.delete(header);
     }
 
-    /** 발주 확정 */
+    // ----------------------------------------------------------------------
+    // ✅ [4] 상태 전환 로직 (S → PO → GI → FULLY_RECEIVED)
+    // ----------------------------------------------------------------------
     @Override
     public void confirmOrder(Long poId) {
         POHeader header = poHeaderRepository.findById(poId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 발주가 존재하지 않습니다."));
-        header.setStatus(POStatus.PO); // 확정 상태로 변경
+        header.setStatus(POStatus.PO);
         poHeaderRepository.save(header);
     }
 
-    /** 입고 진행률 업데이트 */
     @Override
     public void updateReceiveProgress(Long poId) {
-        // TODO: 실제 입고 처리 로직 추가
-        System.out.println("입고 진행률 갱신: " + poId);
+        POHeader header = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("POHeader not found: " + poId));
+
+        boolean allReceived = header.getItems().stream()
+                .allMatch(item -> item.getPendingQty() != null && item.getPendingQty() == 0);
+
+        header.setStatus(allReceived ? POStatus.FULLY_RECEIVED : POStatus.GI);
+        poHeaderRepository.save(header);
     }
 
-    // ---------------------- 변환 헬퍼 ----------------------
+    // ----------------------------------------------------------------------
+    // ✅ [5] 현재 PR 헤더 조회 (REQUIRES_NEW 트랜잭션)
+    // ----------------------------------------------------------------------
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Long getCurrentCartId() {
+        // 1️⃣ PR 상태 헤더 전체 조회 (최신순)
+        List<POHeader> prHeaders = poHeaderRepository.findRecentByStatus(POStatus.PR);
 
-    private POItemResponseDTO toResponseDTO(POItem item) {
-        return POItemResponseDTO.builder()
-                .itemNo(item.getItemNo())
-                .gtin(item.getProduct().getGtin())
-                .productName(item.getProduct().getProductName())
-                .purchasePrice(item.getPurchasePrice())
-                .orderQty(item.getOrderQty())
-                .total(item.getTotal())
-                .status(item.getStatus())
-                .build();
+        if (prHeaders.isEmpty()) {
+            return null; // PR 상태 없음
+        }
+
+        // 2️⃣ 최신 1건 추출(POStatus.PR은 항상 1건만 존재해야 함)
+        POHeader latest = prHeaders.get(0);
+
+        // 3️⃣ 나머지 PR 상태 헤더는 S 상태로 변경(POStatus.PR이 여러 건이 존재하는 경우, 최신 PR을 제외한 나머지 저장 처리)
+        if (prHeaders.size() > 1) {
+            poHeaderRepository.updateStatusExceptOne(POStatus.PR, POStatus.S, latest.getPoId());
+        }
+
+        // 4️⃣ 최신 헤더 ID 반환
+        return latest.getPoId();
     }
 }

@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.sd.sdReceipt.repository;
 
 import com.youthcase.orderflow.sd.sdReceipt.domain.Receipt;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;

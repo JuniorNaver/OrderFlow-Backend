@@ -4,7 +4,7 @@ import com.youthcase.orderflow.sd.sdRefund.domain.RefundHeader;
 import com.youthcase.orderflow.sd.sdRefund.domain.RefundStatus;
 import com.youthcase.orderflow.sd.sdRefund.dto.RefundResponse;
 import com.youthcase.orderflow.sd.sdRefund.strategy.RefundStrategy;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.mockTest.mock;
+package com.youthcase.orderflow.mockTest;
 
 import java.util.List;
 

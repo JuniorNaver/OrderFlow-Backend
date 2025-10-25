@@ -7,7 +7,6 @@ import com.youthcase.orderflow.master.store.dto.StoreResponseDTO;
 import com.youthcase.orderflow.master.store.service.StoreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class StoreController {
     @PostMapping
     public StoreResponseDTO create(@RequestBody StoreAdminRequestDTO dto) {
         Store store = storeService.createByAdmin(dto);
-        return StoreResponseDTO.fromEntity(store);
+        return StoreResponseDTO.from(store);
     }
 
     // ────────────────────────────────
@@ -37,7 +36,7 @@ public class StoreController {
     @GetMapping
     public List<StoreResponseDTO> findAll() {
         return storeService.findAll().stream()
-                .map(StoreResponseDTO::fromEntity)
+                .map(StoreResponseDTO::from)
                 .collect(Collectors.toList());
     }
 
@@ -47,7 +46,7 @@ public class StoreController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{storeId}")
     public StoreResponseDTO findById(@PathVariable String storeId) {
-        return StoreResponseDTO.fromEntity(storeService.findById(storeId));
+        return StoreResponseDTO.from(storeService.findById(storeId));
     }
 
     // ────────────────────────────────
@@ -59,7 +58,7 @@ public class StoreController {
             @PathVariable String storeId,
             @RequestBody StoreAdminRequestDTO dto
     ) {
-        return StoreResponseDTO.fromEntity(storeService.updateByAdmin(storeId, dto));
+        return StoreResponseDTO.from(storeService.updateByAdmin(storeId, dto));
     }
 
     // ────────────────────────────────
@@ -77,7 +76,7 @@ public class StoreController {
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('ENVIRONMENT_EDIT')")
     @GetMapping("/{storeId}/env")
     public StoreResponseDTO getStoreEnv(@PathVariable String storeId) {
-        return StoreResponseDTO.fromEntity(storeService.findById(storeId));
+        return StoreResponseDTO.from(storeService.findById(storeId));
     }
 
     // ────────────────────────────────
@@ -89,6 +88,6 @@ public class StoreController {
             @PathVariable String storeId,
             @RequestBody StoreEnvRequestDTO dto
     ) {
-        return StoreResponseDTO.fromEntity(storeService.updateEnv(storeId, dto));
+        return StoreResponseDTO.from(storeService.updateEnv(storeId, dto));
     }
 }
