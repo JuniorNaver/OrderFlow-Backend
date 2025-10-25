@@ -348,7 +348,7 @@ public class STKServiceImpl implements STKService {
         if (existingOpt.isPresent()) {
             // ✅ 기존 재고가 있으면 수량만 증가
             stk = existingOpt.get();
-            Long newQty = stk.getQuantity() + qty.intValue();
+            Long newQty = stk.getQuantity() + qty;
             stk.setQuantity(newQty);
             stk.setLastUpdatedAt(LocalDateTime.now());
         } else {
@@ -377,7 +377,7 @@ public class STKServiceImpl implements STKService {
         STK stk = stkRepository.findByWarehouseAndProductAndLot(warehouseId, gtin, lotNo)
                 .orElseThrow(() -> new IllegalArgumentException("해당 재고 없음"));
 
-        Long remain = stk.getQuantity() - qty.intValue();
+        Long remain = stk.getQuantity() - qty;
         if (remain < 0) {
             throw new IllegalStateException("재고 수량 부족: " + stk.getProductName());
         }

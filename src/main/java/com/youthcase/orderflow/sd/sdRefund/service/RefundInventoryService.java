@@ -42,10 +42,12 @@ public class RefundInventoryService {
                         String gtin = salesItem.getProduct().getGtin();
                         Product product = salesItem.getProduct();
 
-                        // ✅ salesQuantity를 Long으로 받기
-                        Long qty = salesItem.getSalesQuantity() != null
-                                ? salesItem.getSalesQuantity().longValue()
-                                : 0L;
+        if (stk != null) {
+            // 2️⃣ 기존 LOT → 재고 증가
+            Long newQty = stk.getQuantity() + item.getSalesQuantity();
+            stk.setQuantity(newQty);
+            stk.setLastUpdatedAt(java.time.LocalDateTime.now());
+            stkRepository.save(stk);
 
                         LocalDate expDate = (salesItem.getStk() != null && salesItem.getStk().getLot() != null)
                                 ? salesItem.getStk().getLot().getExpDate()

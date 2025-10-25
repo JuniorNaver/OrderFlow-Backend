@@ -86,7 +86,7 @@ public class SDServiceImpl implements SDService {
 
         SalesItem item = salesItemRepository.findByOrderIdAndGtin(request.getOrderId(), request.getGtin());
         if (item != null) {
-            Long newQty = item.getSalesQuantity() + request.getSalesQuantity();
+            Long newQty = item.getSalesQuantity() + request.getQuantity();
             item.setSalesQuantity(newQty);
             item.setSubtotal(item.getSdPrice().multiply(BigDecimal.valueOf(newQty)));
         } else {

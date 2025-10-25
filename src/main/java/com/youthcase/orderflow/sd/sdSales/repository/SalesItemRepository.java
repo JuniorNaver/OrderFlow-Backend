@@ -53,7 +53,7 @@ public interface SalesItemRepository extends JpaRepository<SalesItem, Long> {
     // ✅ 수량/소계 업데이트 (세션 유지)
     @Modifying(flushAutomatically = true)
     @Query("UPDATE SalesItem s SET s.salesQuantity = :qty, s.subtotal = :subtotal WHERE s.no = :itemId")
-    int updateQuantity(@Param("itemId") Long itemId,
+    Long updateQuantity(@Param("itemId") Long itemId,
                        @Param("qty") Long qty,
                        @Param("subtotal") BigDecimal subtotal);
 

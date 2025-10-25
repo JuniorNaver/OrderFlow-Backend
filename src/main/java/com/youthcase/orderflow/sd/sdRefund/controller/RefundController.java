@@ -89,7 +89,7 @@ public class RefundController {
         // ✅ 환불 생성
         RefundHeader header = RefundHeader.builder()
                 .paymentHeader(paymentHeader)
-                .refundAmount(BigDecimal.valueOf(request.getCancelAmount()))
+                .refundAmount(request.getCancelAmount())
                 .refundReason(request.getRefundReason())
                 .detailReason(request.getDetailReason())
                 .refundStatus(RefundStatus.REQUESTED)

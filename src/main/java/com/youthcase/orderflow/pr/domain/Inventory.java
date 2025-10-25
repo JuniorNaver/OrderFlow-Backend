@@ -33,6 +33,6 @@ private Long id;
 
     @Transient
     public Long getAvailable() {
-        return (onHand != null ? onHand : 0) - (reserved != null ? reserved : 0);
+        return (onHand != null ? onHand : 0L) - (reserved != null ? reserved : 0L);
     }
 }

@@ -34,7 +34,7 @@ public class SalesItemDTO {
         this.productName = productName;
         this.sdPrice = sdPrice;
         this.salesQuantity = salesQuantity;
-        this.stockQuantity = stockQuantity != null ? stockQuantity : 0;
+        this.stockQuantity = stockQuantity != null ? stockQuantity : 0L;
         this.subtotal = subtotal;
     }
 

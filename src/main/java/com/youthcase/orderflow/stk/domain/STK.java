@@ -128,7 +128,7 @@ public class STK {
         this.status = "INACTIVE";
     }
 
-    public void deductForDisposal(Integer amountToDeduct) {
+    public void deductForDisposal(Long amountToDeduct) {
         if (amountToDeduct == null || amountToDeduct <= 0) {
             throw new IllegalArgumentException("폐기 수량은 0보다 커야 합니다.");
         }
