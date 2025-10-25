@@ -92,9 +92,9 @@ public class SDServiceImpl implements SDService {
         } else {
             item = new SalesItem();
             item.setProduct(product);
-            item.setSalesQuantity(request.getSalesQuantity());
+            item.setSalesQuantity(request.getQuantity());
             item.setSdPrice(request.getPrice());
-            item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getSalesQuantity())));
+            item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
             item.setStk(null); // ✅ HOLD/PENDING 상태에서는 STK 연결 금지
             header.addSalesItem(item);
         }
