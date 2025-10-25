@@ -154,10 +154,10 @@ public class GoodsReceiptService {
                     lot.setExpDate(item.getMfgDate().plusDays(product.getShelfLifeDays()));
 
                 } else if (calcType == GRExpiryType.MANUAL) {
-                    if (item.getExpDate() == null) {
+                    if (item.getExpDateManual() == null) {
                         throw new IllegalStateException("수동 입력 유통기한이 누락되었습니다: itemNo=" + item.getItemNo());
                     }
-                    lot.setExpDate(item.getExpDate());
+                    lot.setExpDate(item.getExpDateManual());
                 }
             }
 
@@ -258,9 +258,9 @@ public class GoodsReceiptService {
 
         GoodsReceiptHeader gr = GoodsReceiptHeader.builder()
                 .poHeader(po)
-                .warehouse(po.getUser().getWorkspace() != null
-                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
-                        : null)
+//                .warehouse(po.getUser().getStore() != null
+//                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
+//                        : null)
                 .user(po.getUser())
                 .status(GoodsReceiptStatus.CONFIRMED)
                 .receiptDate(LocalDate.now())
@@ -335,10 +335,10 @@ public class GoodsReceiptService {
         var itemDTOs = po.getItems().stream()
                 .map(item -> POItemResponseDTO.builder()
                         .itemNo(item.getItemNo())
-                        .productName(item.getGtin().getProductName())
-                        .gtin(item.getGtin().getGtin())
+                        .productName(item.getProduct().getProductName())
+                        .gtin(item.getProduct().getGtin())
                         .expectedArrival(item.getExpectedArrival())
-                        .purchasePrice(item.getPrice() != null ? item.getPrice().getPurchasePrice() : null)
+                        .purchasePrice(item.getPurchasePrice() != null ? item.getPurchasePrice() : null)
                         .orderQty(item.getOrderQty())
                         .total(item.getTotal())
                         .status(item.getStatus())
@@ -364,4 +364,5 @@ public class GoodsReceiptService {
 
         lotRepository.saveAll(lots);
     }
+
 }

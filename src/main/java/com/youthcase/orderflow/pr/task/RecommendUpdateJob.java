@@ -17,7 +17,7 @@ public class RecommendUpdateJob {
     private final BIRecommendBatchService recommendBatchService;
 
     @Async
-    public void trigger(Long storeId) {
+    public void trigger(String storeId) {
         try {
             String from = LocalDate.now().minusDays(7).format(DateTimeFormatter.BASIC_ISO_DATE);
             String to = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);

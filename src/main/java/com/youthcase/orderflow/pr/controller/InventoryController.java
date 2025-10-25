@@ -22,7 +22,7 @@ public class InventoryController {
         return new AvailDto(gtin, inv.getAvailable(gtin));
     }
 
-    record QtyReq(String gtin, @Min(1) int qty) {}
+    record QtyReq(String gtin, @Min(1) Long qty) {}
 
     @PostMapping("/inventory/reserve")
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,6 +16,13 @@ import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
+
+    boolean existsByCategory_KanCode(String kanCode);
+
+    //상품 일괄 리콜
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "UPDATE PRODUCT SET KAN_CODE = :toKan WHERE KAN_CODE = :fromKan", nativeQuery = true)
+    int rehomeProducts(@Param("fromKan") String fromKan, @Param("toKan") String toKan);
 
     // 전체 조회(페이지) + 카테고리 같이 로딩
     @EntityGraph(attributePaths = "category")

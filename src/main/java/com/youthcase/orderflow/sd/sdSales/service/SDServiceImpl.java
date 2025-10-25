@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -91,9 +92,9 @@ public class SDServiceImpl implements SDService {
         } else {
             item = new SalesItem();
             item.setProduct(product);
-            item.setSalesQuantity(request.getQuantity());
+            item.setSalesQuantity(request.getSalesQuantity());
             item.setSdPrice(request.getPrice());
-            item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+            item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getSalesQuantity())));
             item.setStk(null); // ✅ HOLD/PENDING 상태에서는 STK 연결 금지
             header.addSalesItem(item);
         }
@@ -118,6 +119,38 @@ public class SDServiceImpl implements SDService {
     public List<SalesItemDTO> getItemsByOrderId(Long orderId) {
         return salesItemRepository.findItemsByHeaderId(orderId);
     }
+
+    @Override
+    @Transactional
+    public SalesHeaderDTO deleteItemFromOrder(Long orderId, Long itemId) {
+        SalesHeader header = salesHeaderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("주문을 찾을 수 없습니다."));
+
+        // ✅ 상태 검사
+        if (header.getSalesStatus() == SalesStatus.COMPLETED) {
+            throw new IllegalStateException("이미 확정된 주문은 수정할 수 없습니다.");
+        }
+
+        // ✅ 삭제 대상 찾기
+        SalesItem item = salesItemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("삭제할 상품이 존재하지 않습니다."));
+
+        // ✅ 헤더에서 아이템 제거 + Repository 삭제
+        header.getSalesItems().remove(item);
+        salesItemRepository.delete(item);
+
+        // ✅ 총액 재계산
+        BigDecimal newTotal = header.getSalesItems().stream()
+                .map(SalesItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        header.setTotalAmount(newTotal);
+        salesHeaderRepository.save(header);
+
+        log.info("🗑️ 상품 삭제 완료 — orderId={}, itemId={}, 새 총액={}", orderId, itemId, newTotal);
+
+        return SalesHeaderDTO.from(header);
+    }
+
 
     // ✅ 주문 확정 (결제 완료 시점)
     @Override
@@ -282,13 +315,28 @@ public class SDServiceImpl implements SDService {
     @Transactional
     public void updateItemQuantity(Long itemId, Long quantity) {
         SalesItem item = salesItemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("판매 항목을 찾을 수 없습니다. ID=" + itemId));
+                .orElseThrow(() -> new IllegalArgumentException("판매 항목을 찾을 수 없습니다. ID=" + itemId));
 
+        // 🔒 상태 확인
+        SalesHeader header = item.getSalesHeader();
+        if (header.getSalesStatus() == SalesStatus.COMPLETED) {
+            throw new IllegalStateException("확정된 주문의 수량은 수정할 수 없습니다.");
+        }
+
+        // ⚠️ 유효성 검사
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("수량은 1 이상이어야 합니다.");
+        }
+
+        // 💰 계산
+        BigDecimal price = Optional.ofNullable(item.getSdPrice())
+                .orElseThrow(() -> new IllegalStateException("단가 정보가 없습니다."));
         item.setSalesQuantity(quantity);
-        item.setSubtotal(item.getSdPrice().multiply(BigDecimal.valueOf(quantity)));
+        item.setSubtotal(price.multiply(BigDecimal.valueOf(quantity)));
 
-        salesItemRepository.save(item);
-        log.info("✏️ 수량 수정 완료 — itemId={}, 변경 수량={}, 변경 후 금액={}", itemId, quantity, item.getSubtotal());
+        log.info("✏️ 수량 수정 완료 — itemId={}, 변경 수량={}, 변경 후 금액={}",
+                itemId, quantity, item.getSubtotal());
     }
+
 
 }

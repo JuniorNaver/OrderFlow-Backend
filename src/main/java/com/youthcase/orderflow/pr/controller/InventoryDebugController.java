@@ -14,25 +14,25 @@ public class InventoryDebugController {
     private final InventoryService inventoryService;
 
     @PostMapping("/receive")
-    public String receive(@RequestParam String gtin, @RequestParam int qty) {
+    public String receive(@RequestParam String gtin, @RequestParam Long qty) {
         inventoryService.receive(gtin, qty);
         return "OK (receive) gtin=" + gtin + ", qty=" + qty;
     }
 
     @PostMapping("/reserve")
-    public String reserve(@RequestParam String gtin, @RequestParam int qty) {
+    public String reserve(@RequestParam String gtin, @RequestParam Long qty) {
         inventoryService.reserve(gtin, qty);
         return "OK (reserve) gtin=" + gtin + ", qty=" + qty;
     }
 
     @PostMapping("/release")
-    public String release(@RequestParam String gtin, @RequestParam int qty) {
+    public String release(@RequestParam String gtin, @RequestParam Long qty) {
         inventoryService.release(gtin, qty);
         return "OK (release) gtin=" + gtin + ", qty=" + qty;
     }
 
     @PostMapping("/commit")
-    public String commit(@RequestParam String gtin, @RequestParam int qty) {
+    public String commit(@RequestParam String gtin, @RequestParam Long qty) {
         inventoryService.commit(gtin, qty);
         return "OK (commit) gtin=" + gtin + ", qty=" + qty;
     }

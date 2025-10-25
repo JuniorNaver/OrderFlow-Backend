@@ -67,7 +67,7 @@ public class PaymentServiceImpl implements PaymentService {
             salesHeader.getSalesItems().forEach(item -> {
                 var stk = item.getStk();
                 if (stk != null) {
-                    Long newQty = Math.max(stk.getQuantity() - item.getSalesQuantity(), 0);
+                    Long newQty = Math.max(stk.getQuantity() - item.getSalesQuantity(), 0L);
                     stk.setQuantity(newQty);
                 }
             });

@@ -7,6 +7,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 📦 발주 헤더 엔티티
+ * - 장바구니(PR), 저장(S), 발주(PO) 등 발주 단위의 상위 엔티티
+ * - actionDate는 해당 상태(status)가 변경된 날짜를 의미함
+ *   ex) PR → 10/24 생성, S → 10/25 저장, PO → 10/26 승인
+ */
 @Entity
 @Table(name = "PO_HEADER")
 @Getter
@@ -34,7 +40,7 @@ public class POHeader {
     private POStatus status;
 
     // 매입총액
-    @Column(name = "TOTAL_AMOUNT", nullable = false)
+    @Column(name = "TOTAL_AMOUNT")
     private Long totalAmount;
 
     // 요청/승인 일자
@@ -57,9 +63,6 @@ public class POHeader {
     @OneToMany(mappedBy = "poHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<POItem> items = new ArrayList<>();
-
-    @Column(name = "PO_BARCODE", unique = true)
-    private String poBarcode;
 
 
 }

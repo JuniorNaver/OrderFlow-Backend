@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.po.controller;
 
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import com.youthcase.orderflow.po.dto.POItemRequestDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
@@ -18,28 +19,27 @@ public class POController {
 
     private final POService poService;
 
-    /** ✅ 신규 발주 생성 + 아이템 추가 */
+    /** ✅ POHeader만 생성 */
     @PostMapping("")
-    public ResponseEntity<Map<String, Long>> createPO(
-            @RequestParam(required = false) String gtin,
-            @RequestBody(required = false) POItemRequestDTO dto
-    ) {
-        Long poId = (gtin != null && dto != null)
-                ? poService.createHeaderAndAddItem(gtin, dto)
-                : null;
-        return ResponseEntity.ok(Map.of("poId", poId));
+    public ResponseEntity<POHeaderResponseDTO> createPOHeader() {
+        POHeaderResponseDTO response = poService.createNewPOHeader();
+        return ResponseEntity.ok(response);
     }
 
     /** ✅ 기존 헤더에 아이템 추가 */
-    @PostMapping("/{poId}/items")
-    public ResponseEntity<POItemResponseDTO> addPOItem(
-            @PathVariable Long poId,
-            @RequestBody POItemRequestDTO dto,
-            @RequestParam String gtin
-    ) {
-        POItemResponseDTO response = poService.addPOItem(poId, dto, gtin);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/{poId}/items")
+//    public ResponseEntity<POItemResponseDTO> addPOItem(
+//            @PathVariable POStatus status,
+//            @RequestBody POItemRequestDTO dto,
+//            @RequestParam String gtin
+//    ) {
+//        POItemResponseDTO response = poService.addPOItem(status, dto, gtin);
+//        return ResponseEntity.ok(response);
+//    }
+
+
+
+
 
     /** ✅ 장바구니 조회 */
     @GetMapping("/items")

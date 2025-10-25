@@ -2,15 +2,14 @@ package com.youthcase.orderflow.stk.controller;
 
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.dto.DisposalRequest;
-import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
-import com.youthcase.orderflow.stk.dto.StockResponse;
+import com.youthcase.orderflow.stk.dto.*;
+import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.stk.service.STKService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.youthcase.orderflow.stk.dto.AdjustmentRequest; // ⭐️ 이 임포트가 추가되었는지 확인
 
 
 import java.util.List;
@@ -24,6 +23,7 @@ import java.util.Optional;
 public class STKController {
 
     private final STKService stkService;
+    private final STKRepository stkRepository;
 
     // --------------------------------------------------
     // 📊 대시보드 현황 API
@@ -54,10 +54,12 @@ public class STKController {
         return ResponseEntity.ok(stocks);
     }
 
-    // 2. 재고 신규 등록
+    // 2. 재고 신규 등록 (⭐️ STK 엔티티 -> STKRequest DTO로 변경)
+    @Valid
     @PostMapping
-    public ResponseEntity<StockResponse> createStock(@RequestBody STK stock) {
-        STK createdStock = stkService.createStock(stock);
+    public ResponseEntity<StockResponse> createStock(@RequestBody STKRequestDTO request) { // ⭐️ DTO로 변경
+        // ⭐️ 서비스 레이어는 이제 STKRequest를 받아 내부에서 엔티티를 생성해야 합니다.
+        STK createdStock = stkService.createStockFromRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(StockResponse.fromEntity(createdStock));
     }
 
@@ -96,12 +98,14 @@ public class STKController {
 
     // 6. 상품명 검색
     @GetMapping("/search")
-    public ResponseEntity<List<StockResponse>> searchByProductName(@RequestParam String name) {
-        List<StockResponse> results = stkService.searchByProductName(name)
-                .stream()
+    public List<StockResponse> searchByName(@RequestParam String name) {
+        // 상품 이름으로 재고 조회
+        List<STK> stocks = stkRepository.findByProduct_ProductNameContainingIgnoreCase(name);
+
+        // ✅ DTO 변환해서 반환
+        return stocks.stream()
                 .map(StockResponse::fromEntity)
                 .toList();
-        return ResponseEntity.ok(results);
     }
 
     // 7. 위치 변경 필요 재고 목록 조회

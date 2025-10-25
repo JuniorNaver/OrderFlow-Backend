@@ -17,8 +17,10 @@ import java.util.Optional;
 public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     // 기본적인 save(), findById(), delete() 같은 CRUD 메서드는 JpaRepository가 제공하므로 추가할 필요 없음
 
-    /** 상태(status)로 발주 헤더 목록 조회 */
-    List<POHeader> findByStatus(POStatus status);
+    /** 상태로 헤더 목록 조회 (아이템을 누를 때 헤더를 추가할지, 넣을 헤더가 이미 있는지)*/
+    Optional<POHeader> findByStatus(POStatus status);
+
+
 
     /** 상태 업데이트 (예: PR → S 로 변경) */
     @Modifying
@@ -26,7 +28,7 @@ public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     @Query("UPDATE POHeader h SET h.status = :status WHERE h.poId = :poId")
     void updateStatus(@Param("poId") Long poId, @Param("status") POStatus status);
 
-    @Query("SELECT p FROM POHeader p LEFT JOIN FETCH p.items WHERE p.poBarcode = :barcode")
+    @Query("SELECT p FROM POHeader p LEFT JOIN FETCH p.items WHERE p.externalId = :barcode")
     Optional<POHeader> findByBarcodeWithItems(@Param("barcode") String barcode);
     /** 입고 스캔용 바코드 번호 */
     @Query("""
@@ -38,8 +40,6 @@ public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     long countByActionDateAndBranchCode(@Param("actionDate") LocalDate actionDate,
                                         @Param("branchCode") String branchCode);
 
-    // 로그인 사용자 기준으로, 상태가 PR인 가장 최근 헤더 1건
-    Optional<POHeader> findFirstByUser_UserIdAndStatusOrderByPoIdDesc(String userId, POStatus status);
 
 
 }

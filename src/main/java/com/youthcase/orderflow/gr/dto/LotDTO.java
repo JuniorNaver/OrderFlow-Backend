@@ -13,17 +13,21 @@ import java.time.LocalDate;
 public class LotDTO {
     private Long lotId;
     private String gtin;
-    private String productName;
-    private LocalDate expDate;
+    private String lotNo;
     private Long qty;
+    private LocalDate mfgDate;
+    private LocalDate expDate;
+    private String status;
 
-    public static LotDTO from(Lot lot) {
+    public static LotDTO from(Lot entity) {
         return LotDTO.builder()
-                .lotId(lot.getLotId())
-                .gtin(lot.getProduct() != null ? lot.getProduct().getGtin() : null)
-                .productName(lot.getProduct() != null ? lot.getProduct().getProductName() : null)
-                .expDate(lot.getExpDate())
-                .qty(lot.getQty())
+                .lotId(entity.getLotId())
+                .gtin(entity.getProduct() != null ? entity.getProduct().getGtin() : null)
+                .lotNo(entity.getLotNo())
+                .qty(entity.getQty())
+                .mfgDate(entity.getMfgDate())
+                .expDate(entity.getExpDate())
+                .status(entity.getStatus().name())
                 .build();
     }
 }

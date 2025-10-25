@@ -54,7 +54,7 @@ public class InventoryService {
 
     /** 재고 예약 (장바구니/주문hold) */
     @Transactional
-    public void reserve(String gtin, int qty) {
+    public void reserve(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = getOrCreate(gtin);
         if (inv.getAvailable() < qty) {
@@ -66,7 +66,7 @@ public class InventoryService {
 
     /** 예약 해제 (장바구니 취소 등) */
     @Transactional
-    public void release(String gtin, int qty) {
+    public void release(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = inventoryRepository.findByProduct_Gtin(gtin)
                 .orElseThrow(() -> new IllegalArgumentException("재고가 없습니다: " + gtin));
@@ -76,7 +76,7 @@ public class InventoryService {
 
     /** 출고/판매 확정: 예약 → 실제 소진 */
     @Transactional
-    public void commit(String gtin, int qty) {
+    public void commit(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = inventoryRepository.findByProduct_Gtin(gtin)
                 .orElseThrow(() -> new IllegalArgumentException("재고가 없습니다: " + gtin));
@@ -93,7 +93,7 @@ public class InventoryService {
 
     /** 입고(수량 증가) */
     @Transactional
-    public void receive(String gtin, int qty) {
+    public void receive(String gtin, Long qty) {
         if (qty <= 0) return;
         var inv = getOrCreate(gtin);
         inv.setOnHand(inv.getOnHand() + qty);

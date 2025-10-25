@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.stk.repository;
 
+import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.stk.domain.STK;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query; // ⭐️ sumActiveQuantity를 위해 필요할 수 있습니다.

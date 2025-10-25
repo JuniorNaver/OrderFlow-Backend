@@ -9,9 +9,9 @@
  * 💡 프론트엔드 연동 예시
  * React에서 추천 발주 섹션 띄우기 👇
  useEffect(() => {
-    axios.get(`/api/pr/stores/${storeId}/recommend`)
-      .then(res => setRecommendedOrders(res.data))
-      .catch(err => console.error(err));
+ axios.get(`/api/pr/stores/${storeId}/recommend`)
+ .then(res => setRecommendedOrders(res.data))
+ .catch(err => console.error(err));
  }, [storeId]);
  */
 package com.youthcase.orderflow.pr.controller;
@@ -38,9 +38,8 @@ import java.util.List;
 public class PurchaseRequestController {
 
     private final PurchaseRequestService service;
-    private final BIRecommendService recommendService;           // 📊 추천 발주 결과 조회 서비스
+    private final BIRecommendService recommendService;  // 📊 추천 발주 결과 조회 서비스
     private final RecommendUpdateJob recommendUpdateJob;
-
 
     /**
      * ✅ 발주 요청 생성 API
@@ -57,11 +56,9 @@ public class PurchaseRequestController {
             Authentication auth
     ) {
         var response = service.placeOrder(storeId, dto, auth);
-        Long internalId = toLongOrThrow(storeId);
-        recommendUpdateJob.trigger(internalId); // ✅ 이거 하나로 끝
+        recommendUpdateJob.trigger(storeId); // ✅ Long → String으로 변경된 trigger
         return response;
     }
-
 
     /**
      * 📊 추천 발주 결과 조회 API
@@ -85,22 +82,7 @@ public class PurchaseRequestController {
                 java.time.LocalDate.now()
                         .format(DateTimeFormatter.BASIC_ISO_DATE);
 
-        // 🔁 BI 쪽이 Long을 요구하므로 숫자 문자열일 경우에만 파싱
-        Long internalId = toLongOrThrow(storeId);
-        List<RecommendDTO> results = recommendService.getRecommendations(internalId, fromKey, toKey);
+        List<RecommendDTO> results = recommendService.getRecommendations(storeId, fromKey, toKey);
         return ResponseEntity.ok(results);
-
-            }
-    // ---- helper ----
-    private Long toLongOrThrow (String raw){
-        String s = (raw == null) ? "" : raw.trim();
-        if (!s.matches("^[0-9]+$")) {
-            throw new NotFoundException("점포 ID 형식 오류(숫자만 허용): " + raw);
-        }
-        try {
-            return Long.parseLong(s);
-        } catch (NumberFormatException e) {
-            throw new NotFoundException("점포 ID 변환 실패: " + raw);
-        }
     }
 }
