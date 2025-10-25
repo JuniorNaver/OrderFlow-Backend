@@ -2,13 +2,8 @@ package com.youthcase.orderflow.master.store.dto;
 
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.store.domain.StoreType;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Comment;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,7 +45,7 @@ public class StoreResponseDTO {
     private BigDecimal latitude;
 
     // ✅ Entity → DTO 변환
-    public static StoreResponseDTO fromEntity(Store store) {
+    public static StoreResponseDTO from(Store store) {
         StoreResponseDTO dto = new StoreResponseDTO();
         dto.setStoreId(store.getStoreId());
         dto.setStoreName(store.getStoreName());

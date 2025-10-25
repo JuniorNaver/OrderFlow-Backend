@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.mockTest.mock;
+package com.youthcase.orderflow.mockTest;
 
 import com.youthcase.orderflow.pr.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Component
 @Profile({"dev", "local"})
-@Order(3)
+@Order(4)
 @RequiredArgsConstructor
 public class InventorySeeder implements CommandLineRunner {
 

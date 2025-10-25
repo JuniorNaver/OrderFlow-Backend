@@ -11,7 +11,7 @@ import com.youthcase.orderflow.bi.domain.forecast.BIForecastResult;
 import com.youthcase.orderflow.bi.domain.recommend.BIRecommendResult;
 import com.youthcase.orderflow.bi.repository.forecast.BIForecastRepository;
 import com.youthcase.orderflow.bi.repository.recommend.BIRecommendRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

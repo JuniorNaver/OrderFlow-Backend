@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -22,7 +23,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"poHeader", "gtin"})
+@ToString(exclude = {"poHeader", "product"})
 public class POItem {
 
     // ────────────────────────────────
@@ -48,28 +49,23 @@ public class POItem {
     // ────────────────────────────────
     // 🔹 수량 및 금액 필드
     // ────────────────────────────────
-    // 발주 수량
     @Column(name = "ORDER_QTY", nullable = false)
     private Long orderQty;
 
-    // 미출 수량
     @Column(name = "PENDING_QTY")
     private Long pendingQty;
 
-    // 출고 수량
     @Column(name = "SHIPPED_QTY")
     private Long shippedQty;
 
-    // 매입 단가
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "PURCHASE_PRICE", nullable = false)
-    private Price purchasePrice;
+    // 해당 시점의 매입 단가 스냅샷
+    @Column(name = "PURCHASE_PRICE", precision = 12, scale = 2, nullable = false)
+    private BigDecimal purchasePrice;
 
-    // 라인 금액 합계 (ORDER_QTY × PRICE)
-    @Column(name = "TOTAL")
-    private Long total;
+    // ✅ 라인 금액 합계 (ORDER_QTY × PURCHASE_PRICE)
+    @Column(name = "TOTAL", precision = 15, scale = 2)
+    private BigDecimal total;
 
-    // 예상 도착 일자
     @Column(name = "EXPECTED_ARRIVAL")
     private LocalDate expectedArrival;
 
@@ -80,10 +76,9 @@ public class POItem {
     // 🔹 자동 계산 훅
     // ────────────────────────────────
     @PrePersist
-    @PreUpdate
     public void calculateTotal() {
         if (purchasePrice != null && orderQty != null) {
-            this.total = purchasePrice.getPurchasePrice().longValue() * orderQty;
+            this.total = purchasePrice.multiply(BigDecimal.valueOf(orderQty));
         }
     }
 
@@ -127,5 +122,4 @@ public class POItem {
             this.status = POStatus.GI; // 일부 출고
         }
     }
-
 }
