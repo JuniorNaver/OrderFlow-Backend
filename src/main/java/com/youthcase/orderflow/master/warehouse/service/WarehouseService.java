@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -75,7 +76,7 @@ public class WarehouseService {
     // ────────────────────────────────
     // 🔹 6. 점포별 창고 조회
     // ────────────────────────────────
-    public List<Warehouse> getWarehousesByStoreId(String storeId) {
-        return warehouseRepository.findByStore_StoreId(storeId);
+    public Optional<Warehouse> getWarehousesByStoreId(String storeId) {
+        return warehouseRepository.findFirstByStore_StoreId(storeId);
     }
 }

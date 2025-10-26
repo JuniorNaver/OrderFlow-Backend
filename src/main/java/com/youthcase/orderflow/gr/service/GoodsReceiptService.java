@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -258,45 +259,82 @@ public class GoodsReceiptService {
         POHeader po = poHeaderRepo.findById(poId)
                 .orElseThrow(() -> new IllegalArgumentException("발주 없음"));
 
+        // ✅ Warehouse 조회
+        var warehouse = warehouseRepo.findFirstByStore_StoreId(
+                po.getUser().getStore().getStoreId()
+        ).orElseThrow(() -> new IllegalArgumentException("해당 점포의 창고 없음"));
+
+        // ✅ GoodsReceiptHeader 생성
         GoodsReceiptHeader gr = GoodsReceiptHeader.builder()
                 .poHeader(po)
-//                .warehouse(po.getUser().getStore() != null
-//                        ? warehouseRepo.findById(po.getUser().getWorkspace()).orElseThrow()
-//                        : null)
+                .warehouse(warehouse)
                 .user(po.getUser())
                 .status(GoodsReceiptStatus.CONFIRMED)
                 .receiptDate(LocalDate.now())
                 .build();
 
         GoodsReceiptHeader saved = headerRepo.save(gr);
-        // ✅ 재고 반영
+
+        // ✅ 각 발주 아이템별 재고 반영
         for (POItem item : po.getItems()) {
             try {
-                // 1️⃣ 상품 정보 꺼내기 (getProduct() or getGtin())
                 String gtin = item.getProduct().getGtin();
-
-                // 2️⃣ 수량 꺼내기 (getOrderQty() or getQty())
                 Long qty = item.getOrderQty();
+                LocalDate expDate = null;
 
-                // 3️⃣ 실제 재고 반영
-                if (gtin != null && qty > 0) {
+                // ✅ 상품의 ExpiryType을 기반으로 GRExpiryType 매핑
+                GRExpiryType expiryType = switch (item.getProduct().getExpiryType()) {
+                    case NONE -> GRExpiryType.NONE;
+                    case USE_BY, BEST_BEFORE -> GRExpiryType.FIXED_DAYS;
+                };
+
+                // ✅ 유통기한 계산 로직
+                switch (expiryType) {
+                    case NONE -> expDate = null;
+                    case FIXED_DAYS -> {
+                        Integer shelfLife = item.getProduct().getShelfLifeDays();
+                        if (shelfLife != null && shelfLife > 0)
+                            expDate = LocalDate.now().plusDays(shelfLife);
+                    }
+                    case MANUAL -> expDate = item.getExpectedArrival(); // 수동 입력 가능 시
+                    case MFG_BASED -> {
+                        Integer shelfLife = item.getProduct().getShelfLifeDays();
+                        LocalDate mfgDate = item.getExpectedArrival(); // 예시
+                        if (mfgDate != null && shelfLife != null && shelfLife > 0)
+                            expDate = mfgDate.plusDays(shelfLife);
+                    }
+                }
+
+                // ✅ Lot 생성
+                Lot newLot = Lot.builder()
+                        .product(item.getProduct())
+                        .qty(qty)
+                        .expDate(expDate)
+                        .status(LotStatus.ACTIVE)
+                        .build();
+                lotRepository.save(newLot);
+
+                // ✅ 재고 반영
+                if (gtin != null && qty != null && qty > 0) {
                     stockService.increaseStock(
-                            gr.getWarehouse().getWarehouseId(),
+                            warehouse.getWarehouseId(),
                             gtin,
                             qty,
-                            null,
-                            null
+                            newLot.getLotId(),
+                            expDate
                     );
-                } else {
-                    System.out.println("⚠️ GTIN 또는 수량이 유효하지 않아 스킵됨: " + item);
                 }
 
             } catch (Exception e) {
                 System.out.println("⚠️ 재고 반영 중 오류 발생: " + e.getMessage());
             }
         }
+
         return GoodsReceiptHeaderDTO.from(saved);
     }
+
+
+
 
     @Transactional(readOnly = true)
     public POForGRDTO searchPOForGR(String barcode) {

@@ -5,11 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
 public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
 
     // ✅ Store FK 기준으로 조회
-    List<Warehouse> findByStore_StoreId(String storeId);
+//    List<Warehouse> findByStore_StoreId(String storeId);
+
+    // ✅ 점포(Store) ID 기준으로 첫 번째 창고 1개만 반환 (Optional)
+    Optional<Warehouse> findFirstByStore_StoreId(String storeId);
 }
