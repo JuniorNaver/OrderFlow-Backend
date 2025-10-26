@@ -149,17 +149,80 @@ public class POServiceImpl implements POService {
         poItemRepository.deleteAllById(itemNos);
     }
 
+
+
+
+
+
+
+
+
     // ----------------------------------------------------------------------
     // ✅ [3] 장바구니 저장/불러오기/삭제
     // ----------------------------------------------------------------------
+//    @Override
+//    public void saveCart(Long poId, String remarks) {
+//        POHeader header = poHeaderRepository.findById(poId)
+//                .orElseThrow(() -> new IllegalArgumentException("해당 발주 헤더가 존재하지 않습니다."));
+//        header.setStatus(POStatus.S);
+//        header.setRemarks(remarks);
+//        poHeaderRepository.save(header);
+//    }
+
     @Override
+    @Transactional
     public void saveCart(Long poId, String remarks) {
-        POHeader header = poHeaderRepository.findById(poId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 발주 헤더가 존재하지 않습니다."));
-        header.setStatus(POStatus.S);
-        header.setRemarks(remarks);
-        poHeaderRepository.save(header);
+        // 1️⃣ 원본 PR 조회
+        POHeader original = poHeaderRepository.findById(poId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 발주가 존재하지 않습니다."));
+
+        // 2️⃣ 새 externalId 생성 (기존 로직 재사용)
+        String branchCode = original.getUser().getStore().getStoreId();
+        LocalDate today = LocalDate.now();
+        long countToday = poHeaderRepository.countByActionDateAndBranchCode(today, branchCode);
+        String seq = String.format("%02d", countToday + 1);
+        String newExternalId = today.format(DateTimeFormatter.BASIC_ISO_DATE) + branchCode + seq;
+
+
+        // 2️⃣ Header 복제
+        POHeader headerCopy = POHeader.builder()
+                .status(POStatus.S)
+                .totalAmount(original.getTotalAmount())
+                .actionDate(original.getActionDate())
+                .user(original.getUser())
+                .externalId(newExternalId)  // 새로운 바코드 번호
+                .build();
+        headerCopy.setPoId(null);
+
+        headerCopy.setRemarks(remarks);
+        poHeaderRepository.save(headerCopy);
+
+
+
+        // 3️⃣ 원본 아이템 복제
+        List<POItem> originalItems = poItemRepository.findByPoHeader_PoId(poId);
+        for (POItem item : originalItems) {
+            POItem copy = POItem.builder()
+                    .poHeader(headerCopy)
+                    .product(item.getProduct())
+                    .orderQty(item.getOrderQty())
+                    .pendingQty(item.getPendingQty())
+                    .shippedQty(item.getShippedQty())
+                    .purchasePrice(item.getPurchasePrice())
+                    .total(item.getTotal())
+                    .expectedArrival(item.getExpectedArrival())
+                    .status(POStatus.S)
+                    .build();
+            poItemRepository.save(copy);
+        }
     }
+
+
+
+
+
+
+
 
     @Override
     public List<POHeaderResponseDTO> getSavedCartList() {
