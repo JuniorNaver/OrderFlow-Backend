@@ -25,6 +25,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -308,7 +309,11 @@ public class GoodsReceiptService {
                         .productName(item.getProduct().getProductName())
                         .gtin(item.getProduct().getGtin())
                         .expectedArrival(item.getExpectedArrival())
-                        .purchasePrice(item.getPurchasePrice() != null ? item.getPurchasePrice() : null)
+                        .purchasePrice(
+                                item.getPurchasePrice() != null
+                                        ? item.getPurchasePrice().getPurchasePrice() // ✅ Price 안의 BigDecimal 꺼냄
+                                        : BigDecimal.ZERO
+                        )
                         .orderQty(item.getOrderQty())
                         .total(item.getTotal())
                         .status(item.getStatus())

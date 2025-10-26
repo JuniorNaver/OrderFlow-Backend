@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.service;
 
+import com.youthcase.orderflow.master.price.repository.PriceRepository;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
@@ -36,6 +37,7 @@ public class SDServiceImpl implements SDService {
     private final ProductRepository productRepository;
     private final STKRepository stkRepository;
     private final StoreRepository storeRepository;
+    private final PriceRepository priceRepository;
 
     // ✅ 주문 생성
     @Override
@@ -77,6 +79,12 @@ public class SDServiceImpl implements SDService {
         Product product = productRepository.findByGtin(request.getGtin())
                 .orElseThrow(() -> new RuntimeException("상품 없음"));
 
+        BigDecimal unitPrice = priceRepository.findByGtin(request.getGtin())
+                .map(price -> (price.getSalePrice() != null)
+                        ? price.getSalePrice()
+                        : product.getPrice())
+                .orElseThrow(() -> new RuntimeException("가격 정보 없음: "+request.getGtin()));
+
         if (SalesStatus.COMPLETED.equals(header.getSalesStatus())) {
             throw new RuntimeException("COMPLETE 상태에서는 상품을 추가할 수 없습니다.");
         }
@@ -88,13 +96,13 @@ public class SDServiceImpl implements SDService {
         if (item != null) {
             Long newQty = item.getSalesQuantity() + request.getQuantity();
             item.setSalesQuantity(newQty);
-            item.setSubtotal(item.getSdPrice().multiply(BigDecimal.valueOf(newQty)));
+            item.setSubtotal(unitPrice.multiply(BigDecimal.valueOf(newQty)));
         } else {
             item = new SalesItem();
             item.setProduct(product);
             item.setSalesQuantity(request.getQuantity());
-            item.setSdPrice(request.getPrice());
-            item.setSubtotal(request.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+            item.setSdPrice(unitPrice);
+            item.setSubtotal(unitPrice.multiply(BigDecimal.valueOf(request.getQuantity())));
             item.setStk(null); // ✅ HOLD/PENDING 상태에서는 STK 연결 금지
             header.addSalesItem(item);
         }
@@ -109,8 +117,9 @@ public class SDServiceImpl implements SDService {
         SalesItemDTO dto = SalesItemDTO.from(item);
         dto.setStockQuantity(totalActiveStock);
 
-        log.info("🧾 addItemToOrder: orderId={}, status={}, gtin={}, totalActive={}, reservedInOrder={}",
-                header.getOrderId(), header.getSalesStatus(), product.getGtin(), totalActiveStock, reservedInThisOrder);
+        log.info("🧾 addItemToOrder: orderId={}, gtin={}, 단가={}, 재고={}",
+                header.getOrderId(), product.getGtin(), unitPrice, totalActiveStock);
+
 
         return dto;
     }
@@ -259,13 +268,13 @@ public class SDServiceImpl implements SDService {
             item.setProduct(product);
             item.setStk(null); // ✅ 재고 미지정
             item.setSalesQuantity(dto.getSalesQuantity());
-            item.setSdPrice(dto.getSdPrice());
-            item.setSubtotal(dto.getSdPrice().multiply(BigDecimal.valueOf(dto.getSalesQuantity())));
+            item.setSdPrice(dto.getUnitPrice());
+            item.setSubtotal(dto.getUnitPrice().multiply(BigDecimal.valueOf(dto.getSalesQuantity())));
             header.addSalesItem(item);
         }
 
         BigDecimal total = items.stream()
-                .map(i -> i.getSdPrice().multiply(BigDecimal.valueOf(i.getSalesQuantity())))
+                .map(i -> i.getUnitPrice().multiply(BigDecimal.valueOf(i.getSalesQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         header.setTotalAmount(total);
