@@ -26,11 +26,11 @@ public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
     // ✅ [1] 상태 기반 단일 조회
     // ----------------------------------------------------------------------
     /**
-     * 특정 상태(예: S, PO 등)에 해당하는 헤더 1건 조회
+     * 특정 상태(예: S, PO 등)에 해당하는 헤더 여러 건 조회
      * - 주로 "저장된 장바구니(S)" 조회 시 사용
      * - 사용처: POServiceImpl.getSavedCartList()
      */
-    Optional<POHeader> findByStatus(POStatus status);
+    List<POHeader> findByStatus(POStatus status);
 
 
     // ----------------------------------------------------------------------
