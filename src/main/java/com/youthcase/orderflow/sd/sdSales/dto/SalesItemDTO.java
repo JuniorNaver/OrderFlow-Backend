@@ -19,7 +19,7 @@ public class SalesItemDTO {
     private Long no;             // SalesItem.no
     private String gtin;         // Product.GTIN
     private String productName;  // 상품명
-    private BigDecimal sdPrice;  // 단가
+    private BigDecimal unitPrice;  // 단가
     private Long salesQuantity;   // 수량
     private Long stockQuantity;   // 표시용 재고
     private BigDecimal subtotal; // 소계 (단가 * 수량)
@@ -27,12 +27,12 @@ public class SalesItemDTO {
     // ✅ JPQL용 생성자 (Hibernate가 이걸 사용함)
     // SUM() 결과는 Long/Integer/BigDecimal 등으로 나올 수 있으므로 Number로 받음
     public SalesItemDTO(Long no, String gtin, String productName,
-                        BigDecimal sdPrice, Long salesQuantity,
+                        BigDecimal unitPrice, Long salesQuantity,
                         Long stockQuantity, BigDecimal subtotal) {
         this.no = no; // Hibernate는 no 필드로 인식
         this.gtin = gtin;
         this.productName = productName;
-        this.sdPrice = sdPrice;
+        this.unitPrice = unitPrice;
         this.salesQuantity = salesQuantity;
         this.stockQuantity = stockQuantity != null ? stockQuantity : 0L;
         this.subtotal = subtotal;

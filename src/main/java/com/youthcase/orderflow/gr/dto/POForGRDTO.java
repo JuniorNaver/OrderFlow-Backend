@@ -4,6 +4,7 @@ import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public class POForGRDTO {
 
     private Long poId;
     private String name; // 발주 담당자
-    private Long totalAmount;
+    private BigDecimal totalAmount;
     private String status;
     private List<POItemResponseDTO> items; // PO 모듈의 DTO 그대로 재사용
 

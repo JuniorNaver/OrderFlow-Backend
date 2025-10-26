@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.sd.sdSales.dto;
 
+import com.youthcase.orderflow.master.price.domain.Price;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ import java.util.List;
 public class ConfirmOrderRequest {
     private Long orderId;
     private List<ItemDTO> items;
-    private BigDecimal totalAmount; // ✅ 이거 추가!
+    private BigDecimal totalAmount;
 
     @Getter
     @Setter
@@ -24,6 +25,6 @@ public class ConfirmOrderRequest {
     public static class ItemDTO {
         private String gtin;
         private Long quantity;
-        private BigDecimal price;
+        private BigDecimal unitPrice;
     }
 }
