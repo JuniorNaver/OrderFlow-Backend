@@ -79,11 +79,8 @@ public class SDServiceImpl implements SDService {
         Product product = productRepository.findByGtin(request.getGtin())
                 .orElseThrow(() -> new RuntimeException("상품 없음"));
 
-        BigDecimal unitPrice = priceRepository.findByGtin(request.getGtin())
-                .map(price -> (price.getSalePrice() != null)
-                        ? price.getSalePrice()
-                        : product.getPrice())
-                .orElseThrow(() -> new RuntimeException("가격 정보 없음: "+request.getGtin()));
+        BigDecimal unitPrice = priceRepository.findSalePriceByGtin(request.getGtin())
+                .orElse(product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
 
         if (SalesStatus.COMPLETED.equals(header.getSalesStatus())) {
             throw new RuntimeException("COMPLETE 상태에서는 상품을 추가할 수 없습니다.");

@@ -311,7 +311,7 @@ public class GoodsReceiptService {
                         .expectedArrival(item.getExpectedArrival())
                         .purchasePrice(
                                 item.getPurchasePrice() != null
-                                        ? item.getPurchasePrice().getPurchasePrice() // ✅ Price 안의 BigDecimal 꺼냄
+                                        ? item.getPurchasePrice() // ✅ Price 안의 BigDecimal 꺼냄
                                         : BigDecimal.ZERO
                         )
                         .orderQty(item.getOrderQty())
