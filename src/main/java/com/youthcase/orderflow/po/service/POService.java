@@ -19,11 +19,15 @@ public interface POService {
     /** 특정 장바구니 내 상품 목록 조회 */
     List<POItemResponseDTO> getAllItems(Long poId);
 
+
+
     /** 상품 수량 변경 */
     POItemResponseDTO updateItemQuantity(Long itemNo, POItemRequestDTO requestDTO);
 
     /** 선택 상품 삭제 */
     void deleteItem(List<Long> itemNos);
+
+
 
     /** 장바구니 저장 (PR → S) */
     void saveCart(Long poId, String remarks);
@@ -36,6 +40,8 @@ public interface POService {
 
     /** 저장된 장바구니 삭제 */
     void deletePO(Long poId);
+
+
 
     /** 발주 확정 (S → PO) */
     void confirmOrder(Long poId);
