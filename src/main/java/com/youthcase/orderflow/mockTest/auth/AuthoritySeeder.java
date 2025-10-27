@@ -1,21 +1,22 @@
-package com.youthcase.orderflow.mockTest.init;
+package com.youthcase.orderflow.mockTest.auth;
 
 import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.domain.enums.AuthorityType;
 import com.youthcase.orderflow.auth.repository.AuthorityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
-@Order(2)
-public class AuthorityInitializer implements CommandLineRunner {
+@Profile({"dev", "local"})
+public class AuthoritySeeder{
 
     private final AuthorityRepository authorityRepository;
 
-    @Override
+    @Transactional
     public void run(String... args) {
         for (AuthorityType type : AuthorityType.values()) {
             authorityRepository.findByAuthority(type.name())

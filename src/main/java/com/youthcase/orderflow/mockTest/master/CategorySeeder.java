@@ -1,22 +1,19 @@
-package com.youthcase.orderflow.mockTest;
+package com.youthcase.orderflow.mockTest.master;
 
 import com.youthcase.orderflow.pr.domain.Category;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Profile({"dev", "local"})
-@Order(1)
 @RequiredArgsConstructor
-public class CategorySeeder implements CommandLineRunner {
+public class CategorySeeder {
     private final CategoryRepository repo;
 
-    @Override
     @Transactional
     public void run(String... args) {
         int inserted = 0;

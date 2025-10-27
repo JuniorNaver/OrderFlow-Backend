@@ -17,8 +17,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class WarehouseRequestDTO {
 
-    @NotBlank(message = "창고 ID는 필수입니다.")
-    private String warehouseId; // 수정 시 PathVariable로 대체 가능 (선택적으로 사용)
+    /**
+     * 🔹 수정용으로만 사용 (등록 시에는 자동 생성됨)
+     */
+    private String warehouseId; // Optional (등록 시 null 가능)
 
     @NotBlank(message = "창고 이름은 필수입니다.")
     private String warehouseName;
@@ -33,11 +35,11 @@ public class WarehouseRequestDTO {
     private String storeId;
 
     // ────────────────────────────────
-    // DTO → Entity 변환
+    // DTO → Entity 변환 (등록용)
     // ────────────────────────────────
     public Warehouse toEntity(Store store) {
+        // ID는 @PrePersist에서 자동 생성됨
         return Warehouse.builder()
-                .warehouseId(this.warehouseId)
                 .warehouseName(this.warehouseName)
                 .storageMethod(this.storageMethod)
                 .maxCapacity(this.maxCapacity)

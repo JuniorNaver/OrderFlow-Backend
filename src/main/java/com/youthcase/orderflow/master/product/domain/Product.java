@@ -54,10 +54,12 @@ public class Product {
     private String description;
 
     @Column(name = "ORDERABLE", nullable = false)
+    @Builder.Default
     private Boolean orderable = Boolean.TRUE; // 기본값: 발주 가능
 
     @Enumerated(EnumType.STRING)
     @Column(name = "EXPIRY_TYPE", length = 20)
+    @Builder.Default
     private ExpiryType expiryType = ExpiryType.NONE;
 
     @jakarta.validation.constraints.Min(0)

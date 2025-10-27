@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.master.warehouse.domain;
 
+import com.youthcase.orderflow.common.sequence.StringIdGenerator;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.product.domain.StorageMethod; // ✅ 동일 enum 참조
 import jakarta.persistence.*;
@@ -10,7 +11,14 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+/**
+ * 📦 Warehouse (창고 마스터)
+ * - 문자열 ID ("W001" 등) 자동 생성
+ * - Oracle 시퀀스(Warehouse_SEQ) + StringIdGenerator 기반
+ */
 @Data
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,7 +29,7 @@ public class Warehouse {
     // 🔹 기본 키
     // ────────────────────────────────
     @Id
-    @Column(name = "WAREHOUSE_ID", length = 50, nullable = false)
+    @Column(name = "WAREHOUSE_ID", length = 10, nullable = false)
     private String warehouseId;
 
     // ────────────────────────────────
@@ -64,14 +72,23 @@ public class Warehouse {
     // 🔹 생성자 (Builder)
     // ────────────────────────────────
     @Builder
-    public Warehouse(String warehouseId, String warehouseName, StorageMethod storageMethod,
+    public Warehouse(String warehouseName, StorageMethod storageMethod,
                      Double maxCapacity, Double currentCapacity, Store store) {
-        this.warehouseId = warehouseId;
         this.warehouseName = warehouseName;
         this.storageMethod = storageMethod;
         this.maxCapacity = maxCapacity;
         this.currentCapacity = currentCapacity;
         this.store = store;
+    }
+
+    // ────────────────────────────────
+    // 🔹 ID 자동 생성 (StringIdGenerator)
+    // ────────────────────────────────
+    @PrePersist
+    public void prePersist() {
+        if (this.warehouseId == null || this.warehouseId.isBlank()) {
+            this.warehouseId = WarehouseIdGenerator.generate(); // ✅ 정적 헬퍼 사용
+        }
     }
 
     // ────────────────────────────────
@@ -99,5 +116,23 @@ public class Warehouse {
         if (warehouseName != null && !warehouseName.isBlank()) this.warehouseName = warehouseName;
         if (storageMethod != null) this.storageMethod = storageMethod;
         if (maxCapacity != null && maxCapacity > 0) this.maxCapacity = maxCapacity;
+    }
+
+    // ────────────────────────────────
+    // 🔹 정적 내부 컴포넌트 (Spring Context 접근용)
+    // ────────────────────────────────
+    @Component
+    public static class WarehouseIdGenerator {
+
+        private static StringIdGenerator stringIdGenerator;
+
+        @Autowired
+        public WarehouseIdGenerator(StringIdGenerator generator) {
+            WarehouseIdGenerator.stringIdGenerator = generator;
+        }
+
+        public static String generate() {
+            return stringIdGenerator.generateId("W", "WAREHOUSE_SEQ");
+        }
     }
 }

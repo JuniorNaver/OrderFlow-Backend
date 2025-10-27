@@ -3,6 +3,7 @@ package com.youthcase.orderflow.gr.repository;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
 import com.youthcase.orderflow.gr.dto.GRListDTO;
 import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
+import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -102,5 +103,6 @@ public interface GoodsReceiptHeaderRepository extends JpaRepository<GoodsReceipt
             @Param("end") LocalDate end
     );
 
-
+    // POHeader 기준 조회
+    boolean existsByPoHeader(POHeader po);
 }

@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.mockTest;
+package com.youthcase.orderflow.mockTest.master;
 
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +19,8 @@ import java.util.List;
 @Slf4j
 @Component
 @Profile({"dev","local"})          // 운영 제외
-@Order(2)                          // CategorySeeder가 @Order(1)이라 가정
 @RequiredArgsConstructor
-public class ProductSeeder implements CommandLineRunner {
+public class ProductSeeder {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
@@ -38,7 +36,6 @@ public class ProductSeeder implements CommandLineRunner {
     ) {
     }
 
-    @Override
     @Transactional
     public void run(String... args) {
         // 필요한 만큼만 시작: 실온/라면, 냉장/우유, 냉동/만두

@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,14 +24,18 @@ import java.util.Optional;
 public interface POHeaderRepository extends JpaRepository<POHeader, Long> {
 
     // ----------------------------------------------------------------------
-    // ✅ [1] 상태 기반 단일 조회
+    // ✅ [1] 상태 기반 리스트 조회
     // ----------------------------------------------------------------------
     /**
      * 특정 상태(예: S, PO 등)에 해당하는 헤더 여러 건 조회
      * - 주로 "저장된 장바구니(S)" 조회 시 사용
      * - 사용처: POServiceImpl.getSavedCartList()
      */
+    // ✅ 단일 상태 조회
     List<POHeader> findByStatus(POStatus status);
+
+    // ✅ 다중 상태 조회 (in 절)
+    List<POHeader> findByStatusIn(Collection<POStatus> statuses);
 
 
     // ----------------------------------------------------------------------
