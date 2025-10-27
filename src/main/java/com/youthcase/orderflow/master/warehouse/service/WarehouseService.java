@@ -5,6 +5,7 @@ import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.master.warehouse.dto.WarehouseRequestDTO;
 import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
+import com.youthcase.orderflow.stk.repository.STKRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
     private final StoreRepository storeRepository;
+    private final WarehouseCapacityService capacityService;
 
     // ────────────────────────────────
     // 🔹 1. 창고 등록
@@ -37,6 +39,7 @@ public class WarehouseService {
     // 🔹 2. 전체 조회
     // ────────────────────────────────
     public List<Warehouse> getAllWarehouses() {
+        capacityService.updateAllWarehouseCapacities();
         return warehouseRepository.findAll();
     }
 
@@ -77,6 +80,7 @@ public class WarehouseService {
     // 🔹 6. 점포별 창고 조회
     // ────────────────────────────────
     public List<Warehouse> getWarehousesByStoreId(String storeId) {
+        capacityService.updateAllWarehouseCapacities();
         return warehouseRepository.findByStore_StoreId(storeId);
     }
 }

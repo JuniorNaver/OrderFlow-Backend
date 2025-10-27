@@ -1,21 +1,24 @@
 package com.youthcase.orderflow.stk.service;
 
+import com.youthcase.orderflow.master.warehouse.service.WarehouseCapacityService;
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import com.youthcase.orderflow.stk.dto.ProgressStatusDTO;
 import com.youthcase.orderflow.stk.dto.StockRelocationRequiredResponse;
 import com.youthcase.orderflow.stk.repository.STKRepository;
-import com.youthcase.orderflow.stk.mock.StockStatusMockData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
-// @Service 어노테이션을 사용하여 Spring Bean으로 등록하고 인터페이스를 구현합니다.
+/**
+ * 📊 StockStatusServiceImpl
+ * - 창고 적재 현황, 유통기한 임박 재고, FIFO 위배 재고 조회
+ * - MockData 제거 → 실제 DB 기반으로 연산
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,26 +26,67 @@ public class StockStatusServiceImpl implements StockStatusService {
 
     // 실제 DB 연동 시 필요
     private final STKRepository stkRepository;
-    // Mock Data 주입
-    private final StockStatusMockData mockData;
+    // ✅ 창고 용량 자동 갱신용
+    private final WarehouseCapacityService capacityService;
+
+    private static final List<StockStatus> STOCKED_STATUSES = WarehouseCapacityService.STOCKED_STATUSES;
+
 
     /**
-     * 1. 창고 적재 용량 현황 데이터를 Mock Data로 반환합니다.
+     * ✅ 1. 창고 적재 용량 현황 조회
+     * - STK 기반으로 각 창고별 CBM 총합을 계산하고,
+     * - WarehouseCapacityService를 통해 최신화된 상태로 반환합니다.
      */
     @Override
     public ProgressStatusDTO getCapacityStatus() {
-        // ⭐️ Mock Data 사용
-        return mockData.getMockCapacityStatus();
+        // 창고 전체 용량 최신화 (STK 반영)
+        capacityService.updateAllWarehouseCapacities();
+
+        // STK에서 실제 CBM 합산 데이터 조회
+        List<Object[]> cbmList = stkRepository.sumCbmByWarehouse(STOCKED_STATUSES);
+
+        double totalCapacity = cbmList.stream()
+                .mapToDouble(r -> ((Number) r[1]).doubleValue())
+                .sum();
+
+        // 전체 용량 대비 사용량 비율을 계산 (MockData 대체)
+        double usedCapacity = totalCapacity; // 현 시스템에선 창고 전체 합산 = 사용량
+        double maxCapacity = Math.max(usedCapacity * 1.3, 1.0); // 총용량 추정값 (예: 여유분 30%)
+
+        return new ProgressStatusDTO(
+                "창고 적재 용량 현황",
+                (long) maxCapacity,
+                (long) usedCapacity,
+                "CBM"
+        );
     }
 
     /**
-     * 2. 유통기한 임박 현황 데이터를 Mock Data로 반환합니다.
-     * @param days 임박 기준으로 삼을 일 수
+     * ✅ 2. 유통기한 임박 재고 현황 조회
+     * - 현재일 기준 `days`일 이내에 만료되는 재고를 합산합니다.
      */
     @Override
     public ProgressStatusDTO getExpiryStatus(int days) {
-        // ⭐️ Mock Data 사용
-        return mockData.getMockExpiryStatus(days);
+        LocalDate limitDate = LocalDate.now().plusDays(days);
+
+        // 유통기한 임박 재고 조회 (NEAR_EXPIRY 조회)
+        List<STK> nearExpiryStocks =
+                stkRepository.findNearExpiryActiveStock(limitDate, StockStatus.NEAR_EXPIRY);
+
+        long currentQuantity = nearExpiryStocks.stream()
+                .mapToLong(STK::getQuantity)
+                .sum();
+
+        long totalQuantity = Optional.ofNullable(
+                stkRepository.sumActiveQuantity(STOCKED_STATUSES)
+        ).orElse(0L);
+
+        return new ProgressStatusDTO(
+                "유통기한 임박 현황",
+                totalQuantity,
+                currentQuantity,
+                "개"
+        );
     }
 
     /**
@@ -54,7 +98,8 @@ public class StockStatusServiceImpl implements StockStatusService {
     public List<StockRelocationRequiredResponse> getRelocationRequiredStocks(String warehouseId) {
 
         // 1. 특정 창고의 활성 STK 리스트를 GTIN 및 유통기한 오름차순으로 정렬하여 조회
-        List<STK> orderedStocks = stkRepository.findActiveStocksForFifoCheck(warehouseId);
+        StockStatus targetStatus = StockStatus.ACTIVE;
+        List<STK> orderedStocks = stkRepository.findActiveStocksForFifoCheck(warehouseId, targetStatus);
 
         // 2. 제품 ID(GTIN)별로 그룹화
         Map<String, List<STK>> groupedStocks = orderedStocks.stream()
