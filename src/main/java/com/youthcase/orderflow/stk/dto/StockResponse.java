@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.stk.dto;
 
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -16,7 +17,7 @@ public class StockResponse {
     // 1. STK 고유 정보
     private Long stkId;
     private Long quantity;
-    private String status;
+    private StockStatus status; // ✅ String → Enum 변경
 
     // 2. Product 정보
     private String gtin;

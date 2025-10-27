@@ -12,11 +12,11 @@ import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import com.youthcase.orderflow.pr.domain.Category;
-import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
 import com.youthcase.orderflow.gr.repository.LotRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -141,7 +141,7 @@ public class MockSD {
                         .warehouse(roomWarehouse)
                         .lot(lot)
                         .quantity(100L)
-                        .status("ACTIVE")
+                        .status(StockStatus.ACTIVE)
                         .hasExpirationDate(false)
                         .build();
                 stkRepository.saveAndFlush(stock);

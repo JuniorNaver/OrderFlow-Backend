@@ -86,7 +86,7 @@ public class SDServiceImpl implements SDService {
             throw new RuntimeException("COMPLETE 상태에서는 상품을 추가할 수 없습니다.");
         }
 
-        Long totalActiveStock = stkRepository.sumQuantityByGtin(product.getGtin());
+        Long totalActiveStock = stkRepository.sumActiveQuantityByGtin(product.getGtin());
         Long reservedInThisOrder = salesItemRepository.sumQuantityByOrderAndGtin(request.getOrderId(), request.getGtin());
 
         SalesItem item = salesItemRepository.findByOrderIdAndGtin(request.getOrderId(), request.getGtin());
