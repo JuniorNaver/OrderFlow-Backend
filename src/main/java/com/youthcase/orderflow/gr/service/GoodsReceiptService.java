@@ -13,6 +13,7 @@ import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
 import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.product.domain.StorageMethod;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.po.domain.POHeader;
@@ -26,10 +27,14 @@ import com.youthcase.orderflow.po.service.POService;
 import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -55,30 +60,26 @@ public class GoodsReceiptService {
     private final STKService stockService; // 아래 인터페이스 참고
     private final POService poProgressService; // 발주 수령 진척도 갱신(선택)
 
+
+    /** ✅ 입고 생성 */
     public GoodsReceiptHeaderDTO create(GoodsReceiptHeaderDTO dto) {
         var user = userRepo.findById(dto.getUserId()).orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        var warehouse = warehouseRepo.findById(dto.getWarehouseId()).orElseThrow(() -> new IllegalArgumentException("창고 없음"));
         var poHeader = poHeaderRepo.findById(dto.getPoId()).orElseThrow(() -> new IllegalArgumentException("발주 없음"));
 
-        // 1) GTIN 목록 뽑아 한 번에 조회
         var gtins = dto.getItems() == null ? List.<String>of()
                 : dto.getItems().stream().map(GoodsReceiptItemDTO::getGtin).distinct().toList();
 
         var productMap = productRepo.findByGtinIn(gtins).stream()
                 .collect(Collectors.toMap(Product::getGtin, p -> p));
 
-        // 2) 매핑
-        GoodsReceiptHeader entity = mapper.toEntity(dto, user, warehouse, poHeader, productMap);
+        // 창고는 아이템별 자동 매핑하므로 header에는 대표만 세팅
+        var defaultWarehouse = warehouseRepo.findFirstByStore_StoreId(user.getStore().getStoreId())
+                .orElseThrow(() -> new IllegalArgumentException("점포에 창고 없음"));
 
-        // 3) 기본 상태값 세팅 (Enum 사용 시)
-        if (entity.getStatus() == null) {
-            entity.setStatus(GoodsReceiptStatus.RECEIVED);
-        }
-        if (entity.getReceiptDate() == null) {
-            entity.setReceiptDate(LocalDate.now());
-        }
+        GoodsReceiptHeader entity = mapper.toEntity(dto, user, defaultWarehouse, poHeader, productMap);
+        entity.setStatus(Optional.ofNullable(entity.getStatus()).orElse(GoodsReceiptStatus.RECEIVED));
+        entity.setReceiptDate(Optional.ofNullable(entity.getReceiptDate()).orElse(LocalDate.now()));
 
-        // 4) 저장 후 저장된 값 기준으로 반환
         GoodsReceiptHeader saved = headerRepo.save(entity);
         return mapper.toDTO(saved);
     }
@@ -108,228 +109,175 @@ public class GoodsReceiptService {
     }
 
     // ✅ 핵심: 입고 확정 → 재고 반영
+    /** ✅ 입고 확정 (StorageMethod별 창고 자동매핑 + LOT + STK 반영) */
     @Transactional
     public void confirmReceipt(Long grId) {
         GoodsReceiptHeader header = headerRepo.findWithItemsByGrHeaderId(grId)
                 .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
 
-        if (header.getStatus() == GoodsReceiptStatus.CONFIRMED) {
+        if (header.getStatus() == GoodsReceiptStatus.CONFIRMED)
             throw new IllegalStateException("이미 확정된 입고입니다.");
-        }
+        if (header.getStatus() != GoodsReceiptStatus.RECEIVED)
+            throw new IllegalStateException("입고 상태가 RECEIVED가 아닙니다.");
 
-        // ✅ 상태 검증
-        if (header.getStatus() != GoodsReceiptStatus.RECEIVED) {
-            throw new IllegalArgumentException("입고 상태가 RECEIVED가 아닙니다.");
-        }
+        Store store = header.getUser().getStore();
 
-        // ✅ 아이템 검증
-        for (GoodsReceiptItem item : header.getItems()) {
-            if (item.getQty() == null || item.getQty() <= 0) {
-                throw new IllegalArgumentException("입고 수량이 0 이하인 품목이 있습니다. itemNo=" + item.getItemNo());
-            }
-            if (item.getProduct() == null) {
-                throw new IllegalStateException("상품 매핑이 누락된 품목이 있습니다. itemNo=" + item.getItemNo());
-            }
-        }
-
-        // ✅ 창고 정보
-        String warehouseId = header.getWarehouse().getWarehouseId();
-
-        // ✅ LOT + 재고(STK) 반영
         for (GoodsReceiptItem item : header.getItems()) {
             Product product = item.getProduct();
+            if (item.getQty() == null || item.getQty() <= 0)
+                throw new IllegalArgumentException("입고 수량이 0 이하입니다. itemNo=" + item.getItemNo());
 
-            // 1️⃣ LOT 생성
+            // ✅ StorageMethod에 따른 창고 자동 매핑
+            StorageMethod method = product.getStorageMethod();
+            Warehouse warehouse = warehouseRepo
+                    .findByStore_StoreIdAndStorageMethod(store.getStoreId(), method)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 보관방식 창고 없음: " + method));
+
+            item.setWarehouse(warehouse); // 개별 아이템에 창고 세팅
+
+            // ✅ LOT 생성
             Lot lot = new Lot();
             lot.setProduct(product);
             lot.setQty(item.getQty());
             lot.setGoodsReceiptItem(item);
             lot.setExpiryType(product.getExpiryType());
 
-            // 상품 정책
             ExpiryType policy = product.getExpiryType();
             GRExpiryType calcType = item.getExpiryCalcType();
 
-            // 2️⃣ 유통기한 계산
             if (policy != ExpiryType.NONE && calcType != GRExpiryType.NONE) {
-
-                if (calcType == GRExpiryType.FIXED_DAYS && product.getShelfLifeDays() != null) {
+                if (calcType == GRExpiryType.FIXED_DAYS && product.getShelfLifeDays() != null)
                     lot.setExpDate(header.getReceiptDate().plusDays(product.getShelfLifeDays()));
-
-                } else if (calcType == GRExpiryType.MFG_BASED && product.getShelfLifeDays() != null) {
-                    if (item.getMfgDate() == null) {
-                        throw new IllegalStateException("제조일(MFG_DATE)이 필요합니다: itemNo=" + item.getItemNo());
-                    }
+                else if (calcType == GRExpiryType.MFG_BASED && product.getShelfLifeDays() != null) {
+                    if (item.getMfgDate() == null)
+                        throw new IllegalStateException("제조일이 필요합니다: itemNo=" + item.getItemNo());
                     lot.setExpDate(item.getMfgDate().plusDays(product.getShelfLifeDays()));
-
                 } else if (calcType == GRExpiryType.MANUAL) {
-                    if (item.getExpDateManual() == null) {
-                        throw new IllegalStateException("수동 입력 유통기한이 누락되었습니다: itemNo=" + item.getItemNo());
-                    }
+                    if (item.getExpDateManual() == null)
+                        throw new IllegalStateException("수동 유통기한 누락: itemNo=" + item.getItemNo());
                     lot.setExpDate(item.getExpDateManual());
                 }
             }
 
-            boolean exists = lotRepository.findByProduct_GtinAndExpDateAndStatus(product.getGtin(), lot.getExpDate(), LotStatus.ACTIVE).isPresent();
-            if (exists) throw new IllegalStateException("이미 동일 유통기한 LOT가 존재합니다.");
+            boolean exists = lotRepository
+                    .findByProduct_GtinAndExpDateAndStatus(product.getGtin(), lot.getExpDate(), LotStatus.ACTIVE)
+                    .isPresent();
+            if (exists)
+                throw new IllegalStateException("이미 동일 유통기한 LOT 존재: " + product.getGtin());
 
-            // 3️⃣ LOT 저장
             lotRepository.save(lot);
 
-            // 4️⃣ 재고 반영 (LOT 기반)
+            // ✅ 재고 반영
             stockService.increaseStock(
-                    warehouseId,
+                    warehouse.getWarehouseId(),
                     product.getGtin(),
                     item.getQty(),
-                    lot.getLotId(),   // LOT 연결
-                    lot.getExpDate()  // 유통기한 전달
+                    lot.getLotId(),
+                    lot.getExpDate()
             );
 
-            // ✅ 재고 로그 남기기 (STK는 건드리지 않음)
-            stkHistoryRepository.save(
-                    STKHistory.builder()
-                            .warehouseId(warehouseId)
-                            .product(product)
-                            .lotId(lot.getLotId())
-                            .actionType("IN") // 입고
-                            .changeQty(item.getQty())
-                            .note("입고 확정으로 자동 생성됨")
-                            .build()
-            );
+            // ✅ 입고 이력
+            stkHistoryRepository.save(STKHistory.builder()
+                    .warehouseId(warehouse.getWarehouseId())
+                    .product(product)
+                    .lotId(lot.getLotId())
+                    .actionType("IN")
+                    .changeQty(item.getQty())
+                    .note("입고 확정 (자동 창고 매핑)")
+                    .build());
         }
 
-        // ✅ GR 상태 전환
         header.setStatus(GoodsReceiptStatus.CONFIRMED);
         headerRepo.save(header);
 
-        // ✅ 발주 진척도 갱신
         poProgressService.updateReceiveProgress(header.getPoHeader().getPoId());
     }
 
 
-    // (선택) 확정 취소(Reverse)도 같은 패턴으로 만들 수 있음
+
+    // 발주 취소
     @Transactional
-    public void cancelConfirmedReceipt(Long id, String reason, User currentUser) {
-        Optional<GoodsReceiptHeader> optionalGR = headerRepo.findById(id);
-        GoodsReceiptHeader header;
+    public void cancelByPo(Long poId, String reason, User user) {
+        // 1️⃣ GR 존재 여부 확인
+        Optional<GoodsReceiptHeader> optionalGR = headerRepo.findByPoHeader_PoId(poId);
 
         if (optionalGR.isPresent()) {
-            // ✅ GR이 이미 존재 → 상태만 변경
-            header = optionalGR.get();
-            header.setStatus(GoodsReceiptStatus.CANCELED);
+            GoodsReceiptHeader gr = optionalGR.get();
+
+            switch (gr.getStatus()) {
+                case CONFIRMED -> throw new IllegalStateException("이미 확정된 입고는 취소할 수 없습니다.");
+                case CANCELED -> throw new IllegalStateException("이미 취소된 입고입니다.");
+                default -> {
+                    gr.setStatus(GoodsReceiptStatus.CANCELED);
+                    gr.setNote("취소 사유: " + reason);
+                    headerRepo.save(gr);
+                }
+            }
         } else {
-            // ✅ GR이 없으면 (PENDING 상태)
-            POHeader po = poHeaderRepo.findById(id)
-                    .orElseThrow(() -> new RuntimeException("발주 데이터를 찾을 수 없습니다."));
+            // 2️⃣ 아직 GR이 생성되지 않은 경우 (PENDING 상태)
+            POHeader po = poHeaderRepo.findById(poId)
+                    .orElseThrow(() -> new IllegalArgumentException("발주 데이터를 찾을 수 없습니다."));
 
-            // ✅ 현재 로그인한 유저의 Store 기반으로 첫번째 Warehouse 찾기(임시조치, 근본적으로 WAREHOUSE_ID가 헤더에 들어가면 안됨.
-            // TODO: WAREHOUSE_MASTER.WAREHOUSE_ID FK 컬럼을 GR_HEADER -> GR_ITEM으로 이동
-            Store store = currentUser.getStore();  // User 엔티티에 Store가 연관되어 있다고 가정
-            Warehouse warehouse = warehouseRepo.findFirstByStore_StoreId(store.getStoreId())
-                    .orElseThrow(() -> new RuntimeException("점포에 해당하는 창고를 찾을 수 없습니다."));
-
-            header = GoodsReceiptHeader.builder()
-                    .poHeader(po)
-                    .warehouse(warehouse)
-                    .user(currentUser)
-                    .receiptDate(LocalDate.now())
-                    .status(GoodsReceiptStatus.CANCELED)
-                    .note("PENDING 상태에서 취소됨: " + reason)
-                    .build();
-
-            headerRepo.save(header);
+            // 발주 자체를 취소 처리 (선택사항)
+            po.setStatus(POStatus.CANCELED);
+            poHeaderRepo.save(po);
         }
-
-        header.setNote(reason);
-        headerRepo.save(header);
     }
 
+    /** ✅ 발주 → 입고 자동 생성 및 확정 */
     @Transactional
     public GoodsReceiptHeaderDTO createAndConfirmFromPO(Long poId) {
-        // ✅ 1) 기존 GR 존재 여부 확인
-        Optional<GoodsReceiptHeader> existing = headerRepo.findByPoHeader_PoId(poId);
-        if (existing.isPresent()) {
-            // ❌ 단순 반환 → ✅ 예외 발생으로 변경
+        if (headerRepo.findByPoHeader_PoId(poId).isPresent())
             throw new IllegalStateException("이미 입고 처리된 발주입니다.");
-        }
 
-        // ✅ 2) 발주 조회
         POHeader po = poHeaderRepo.findById(poId)
                 .orElseThrow(() -> new IllegalArgumentException("발주 없음"));
+        Store store = po.getUser().getStore();
 
-        // ✅ 3) Warehouse 조회
-        var warehouse = warehouseRepo.findFirstByStore_StoreId(
-                po.getUser().getStore().getStoreId()
-        ).orElseThrow(() -> new IllegalArgumentException("해당 점포의 창고 없음"));
+        var defaultWarehouse = warehouseRepo.findFirstByStore_StoreId(store.getStoreId())
+                .orElseThrow(() -> new IllegalArgumentException("점포 창고 없음"));
 
-        // ✅ 4) GR 생성
         GoodsReceiptHeader gr = GoodsReceiptHeader.builder()
                 .poHeader(po)
-                .warehouse(warehouse)
                 .user(po.getUser())
                 .status(GoodsReceiptStatus.CONFIRMED)
                 .receiptDate(LocalDate.now())
                 .build();
-
         GoodsReceiptHeader saved = headerRepo.save(gr);
 
-        // ✅ 5) 재고 반영
         for (POItem item : po.getItems()) {
-            try {
-                String gtin = item.getProduct().getGtin();
-                Long qty = item.getOrderQty();
-                LocalDate expDate = null;
+            Product product = item.getProduct();
+            StorageMethod method = product.getStorageMethod();
 
-                // ✅ 상품의 ExpiryType을 기반으로 GRExpiryType 매핑
-                GRExpiryType expiryType = switch (item.getProduct().getExpiryType()) {
-                    case NONE -> GRExpiryType.NONE;
-                    case USE_BY, BEST_BEFORE -> GRExpiryType.FIXED_DAYS;
-                };
+            Warehouse warehouse = warehouseRepo
+                    .findByStore_StoreIdAndStorageMethod(store.getStoreId(), method)
+                    .orElseThrow(() -> new IllegalArgumentException("해당 보관방식 창고 없음: " + method));
 
-                // ✅ 유통기한 계산 로직
-                switch (expiryType) {
-                    case NONE -> expDate = null;
-                    case FIXED_DAYS -> {
-                        Integer shelfLife = item.getProduct().getShelfLifeDays();
-                        if (shelfLife != null && shelfLife > 0)
-                            expDate = LocalDate.now().plusDays(shelfLife);
-                    }
-                    case MANUAL -> expDate = item.getExpectedArrival();
-                    case MFG_BASED -> {
-                        Integer shelfLife = item.getProduct().getShelfLifeDays();
-                        LocalDate mfgDate = item.getExpectedArrival();
-                        if (mfgDate != null && shelfLife != null && shelfLife > 0)
-                            expDate = mfgDate.plusDays(shelfLife);
-                    }
-                }
+            LocalDate expDate = null;
+            if (product.getShelfLifeDays() != null && product.getShelfLifeDays() > 0)
+                expDate = LocalDate.now().plusDays(product.getShelfLifeDays());
 
-                // ✅ Lot 생성 및 저장
-                Lot newLot = Lot.builder()
-                        .product(item.getProduct())
-                        .qty(qty)
-                        .expDate(expDate)
-                        .status(LotStatus.ACTIVE)
-                        .build();
-                lotRepository.save(newLot);
+            Lot lot = Lot.builder()
+                    .product(product)
+                    .qty(item.getOrderQty())
+                    .expDate(expDate)
+                    .status(LotStatus.ACTIVE)
+                    .build();
+            lotRepository.save(lot);
 
-                // ✅ 재고 반영
-                if (gtin != null && qty != null && qty > 0) {
-                    stockService.increaseStock(
-                            warehouse.getWarehouseId(),
-                            gtin,
-                            qty,
-                            newLot.getLotId(),
-                            expDate
-                    );
-                }
-
-            } catch (Exception e) {
-                System.out.println("⚠️ 재고 반영 중 오류 발생: " + e.getMessage());
-            }
+            stockService.increaseStock(
+                    warehouse.getWarehouseId(),
+                    product.getGtin(),
+                    item.getOrderQty(),
+                    lot.getLotId(),
+                    expDate
+            );
         }
 
+        poProgressService.updateReceiveProgress(po.getPoId());
         return GoodsReceiptHeaderDTO.from(saved);
     }
+
 
 
 
@@ -379,26 +327,31 @@ public class GoodsReceiptService {
     @Transactional(readOnly = true)
     public List<GRListDTO> findAllWithPOStatus() {
         return headerRepo.findAllWithPOStatus(
-                POStatus.DELETED,     // 삭제된 발주 제외
+                POStatus.CANCELED,     // 삭제된 발주 제외
                 POStatus.S,       // 🧩 장바구니(임시저장) 상태 제외
                 GoodsReceiptStatus.PENDING // 입고대기 상태로 표시
         );// 🔸 2. 입고 기본 상태
     }
 
-    @Transactional
-    public void delete(Long id) {
-        GoodsReceiptHeader header = headerRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("입고 내역을 찾을 수 없습니다."));
+    // ✅ Service
+    @Transactional(readOnly = true)
+    public List<GRListDTO> searchGoodsReceipts(String query, LocalDate startDate, LocalDate endDate) {
+        if (startDate == null) startDate = LocalDate.now().minusDays(30);
+        if (endDate == null) endDate = LocalDate.now();
 
-        // ✅ 상태를 CANCEL로 전환
-        switch (header.getStatus()) {
-            case PENDING, RECEIVED -> {
-                header.setStatus(GoodsReceiptStatus.CANCELED);
-                headerRepo.save(header);
-            }
-            case CANCELED -> throw new IllegalStateException("이미 취소된 내역입니다.");
-            default -> throw new IllegalStateException("삭제 불가능한 상태입니다: " + header.getStatus());
+        if (query == null || query.isBlank()) {
+            return headerRepo.findByReceiptDateBetween(startDate, endDate)
+                    .stream()
+                    .map(GRListDTO::from)
+                    .toList();
         }
+
+        return headerRepo.searchByKeywordAndDate(query, startDate, endDate)
+                .stream()
+                .map(GRListDTO::from)
+                .toList();
     }
+
+
 
 }

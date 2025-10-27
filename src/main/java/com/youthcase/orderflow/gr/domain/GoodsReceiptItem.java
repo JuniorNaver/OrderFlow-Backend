@@ -2,6 +2,7 @@ package com.youthcase.orderflow.gr.domain;
 
 import com.youthcase.orderflow.gr.status.GRExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,6 +39,12 @@ public class GoodsReceiptItem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "GR_HEADER_ID", nullable = false)
     private GoodsReceiptHeader header;
+
+    // ✅ FK: 창고 (WAREHOUSE_MASTER)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "WAREHOUSE_ID", nullable = false)
+    private Warehouse warehouse;
+
 
     // ✅ FK: 상품 (PRODUCT)
     @ManyToOne(fetch = FetchType.LAZY)
