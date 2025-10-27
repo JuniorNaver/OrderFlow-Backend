@@ -18,10 +18,10 @@ public class GoodsReceiptController {
 
     private final GoodsReceiptService service;
 
-    /** ✅ 1. 전체 조회 */
+    /** ✅ 1. 입고 + 발주 상태 통합 조회 (입고대기 포함) */
     @GetMapping
-    public ResponseEntity<List<GoodsReceiptHeaderDTO>> getAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<?> getAllWithPOStatus() {
+        return ResponseEntity.ok(service.findAllWithPOStatus());
     }
 
     /** ✅ 2. 단건 조회 */
@@ -62,6 +62,13 @@ public class GoodsReceiptController {
         Long poId = req.get("poId");
         GoodsReceiptHeaderDTO dto = service.createAndConfirmFromPO(poId);
         return ResponseEntity.ok(dto);
+    }
+
+    /** ✅ 8. 입고 삭제 */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok().build();
     }
 
 

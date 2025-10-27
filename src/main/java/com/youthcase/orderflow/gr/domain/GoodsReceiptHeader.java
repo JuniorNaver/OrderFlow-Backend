@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "GR_HEADER")
+@Table(name = "GR_HEADER",
+        uniqueConstraints = {
+        @UniqueConstraint(name = "UK_GR_PO_ID", columnNames = {"PO_ID"})
+        })
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
