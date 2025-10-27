@@ -66,6 +66,7 @@ public class POItem {
     @Column(name = "TOTAL", precision = 15, scale = 2)
     private BigDecimal total;
 
+    // 예상 도착 일자
     @Column(name = "EXPECTED_ARRIVAL")
     private LocalDate expectedArrival;
 
@@ -92,7 +93,7 @@ public class POItem {
      * - 미출 수량 초기화
      * - 출고 수량 0으로 초기화
      */
-    public void confirmOrder() {
+    public void confirmOrder(LocalDate confirmDate) {
         this.status = POStatus.PO;
         this.pendingQty = this.orderQty;
         this.shippedQty = 0L;

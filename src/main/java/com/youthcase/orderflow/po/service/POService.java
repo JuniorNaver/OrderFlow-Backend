@@ -29,7 +29,7 @@ public interface POService {
 
 
 
-    /** 장바구니 저장 (PR → S) */
+    /** 장바구니 저장 (status=S 인 헤더, 아이템 한 행 복제) */
     void saveCart(Long poId, String remarks);
 
     /** 저장된 장바구니 목록 조회 */
@@ -37,6 +37,9 @@ public interface POService {
 
     /** 특정 저장 장바구니 불러오기 */
     List<POItemResponseDTO> getSavedCartItems(Long poId);
+
+    /** 불러오기 버튼을 누르면 status=PR인 헤더, 아이템 한 행 복제 */
+    Long loadCart(Long savedPoId);
 
     /** 저장된 장바구니 삭제 */
     void deletePO(Long poId);

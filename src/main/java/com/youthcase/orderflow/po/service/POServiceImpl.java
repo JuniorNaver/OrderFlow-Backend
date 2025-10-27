@@ -76,6 +76,14 @@ public class POServiceImpl implements POService {
                     return poItemRepository.save(item);
                 })
                 .orElseGet(() -> { // 신규 아이템
+
+                    // 예상 도착 일자 계산 (발주확정일 + )
+                    int leadDays = 1;
+                    if (product.getStorageMethod() != null) {
+                        leadDays = product.getStorageMethod().getLeadTimeDays();
+                    }
+                    LocalDate arrivalDate = header.getActionDate().plusDays(leadDays);
+
                     POItem newItem = POItem.builder()
                             .poHeader(header)
                             .product(product)
@@ -83,7 +91,7 @@ public class POServiceImpl implements POService {
                             .pendingQty(dto.getOrderQty())
                             .shippedQty(0L)
                             .purchasePrice(purchasePrice)
-                            .expectedArrival(LocalDate.now().plusDays(3))
+                            .expectedArrival(arrivalDate)     //소요일 계산
                             .status(POStatus.PR)
                             .build();
                     newItem.calculateTotal();
@@ -183,7 +191,6 @@ public class POServiceImpl implements POService {
         String seq = String.format("%02d", countToday + 1);
         String newExternalId = today.format(DateTimeFormatter.BASIC_ISO_DATE) + branchCode + seq;
 
-
         // 2️⃣ Header 복제
         POHeader headerCopy = POHeader.builder()
                 .status(POStatus.S)
@@ -197,9 +204,7 @@ public class POServiceImpl implements POService {
         headerCopy.setRemarks(remarks);
         poHeaderRepository.save(headerCopy);
 
-
-
-        // 3️⃣ 원본 아이템 복제
+        // 3️⃣ poItem 복제
         List<POItem> originalItems = poItemRepository.findByPoHeader_PoId(poId);
         for (POItem item : originalItems) {
             POItem copy = POItem.builder()
@@ -218,25 +223,77 @@ public class POServiceImpl implements POService {
     }
 
 
-
-
-
-
-
-
+    //저장된 헤더 불러오기
     @Override
     public List<POHeaderResponseDTO> getSavedCartList() {
         return poHeaderRepository.findByStatus(POStatus.S).stream()
                 .map(POHeaderResponseDTO::from)
                 .collect(Collectors.toList());
     }
-
+    //저장된 아이템 불러오기
     @Override
     public List<POItemResponseDTO> getSavedCartItems(Long poId) {
         return poItemRepository.findByPoHeader_PoId(poId).stream()
                 .map(POItemResponseDTO::from)
                 .collect(Collectors.toList());
     }
+
+
+    //저장을 불러올 때 status=pr 인 헤더, 아이템 1행 복제
+    @Override
+    @Transactional
+    public Long loadCart(Long savedPoId) {
+        // 1️⃣ 저장본(S) 헤더 조회
+        POHeader saved = poHeaderRepository.findById(savedPoId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 저장본이 존재하지 않습니다."));
+
+        // 2️⃣ 새 externalId 생성 (기존 규칙 재사용)
+        String branchCode = saved.getUser().getStore().getStoreId();
+        LocalDate today = LocalDate.now();
+        long countToday = poHeaderRepository.countByActionDateAndBranchCode(today, branchCode);
+        String seq = String.format("%02d", countToday + 1);
+        String newExternalId = today.format(DateTimeFormatter.BASIC_ISO_DATE) + branchCode + seq;
+
+        // 3️⃣ PR 헤더 복제 생성
+        POHeader prCopy = POHeader.builder()
+                .status(POStatus.PR)
+                .totalAmount(saved.getTotalAmount())
+                .actionDate(today)
+                .user(saved.getUser())
+                .externalId(newExternalId)
+                .remarks(saved.getRemarks())
+                .build();
+        poHeaderRepository.save(prCopy);
+
+        // 4️⃣ 아이템 복제
+        List<POItem> savedItems = poItemRepository.findByPoHeader_PoId(savedPoId);
+        for (POItem item : savedItems) {
+            POItem copy = POItem.builder()
+                    .poHeader(prCopy)
+                    .product(item.getProduct())
+                    .orderQty(item.getOrderQty())
+                    .pendingQty(item.getPendingQty())
+                    .shippedQty(item.getShippedQty())
+                    .purchasePrice(item.getPurchasePrice())
+                    .total(item.getTotal())
+                    .expectedArrival(item.getExpectedArrival())
+                    .status(POStatus.PR)
+                    .build();
+            poItemRepository.save(copy);
+        }
+
+        return prCopy.getPoId();
+    }
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void deletePO(Long poId) {
