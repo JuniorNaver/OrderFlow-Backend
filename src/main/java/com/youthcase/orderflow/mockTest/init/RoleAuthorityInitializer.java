@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.auth.init;
+package com.youthcase.orderflow.mockTest.init;
 
 import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.domain.Role;
