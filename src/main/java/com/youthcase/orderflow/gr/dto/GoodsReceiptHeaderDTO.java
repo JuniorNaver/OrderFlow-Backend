@@ -22,7 +22,7 @@ public class GoodsReceiptHeaderDTO {
 
     public static GoodsReceiptHeaderDTO from(GoodsReceiptHeader entity) {
         return GoodsReceiptHeaderDTO.builder()
-                .id(entity.getId())
+                .id(entity.getGrHeaderId())
                 .status(entity.getStatus())
                 .receiptDate(entity.getReceiptDate())
                 .note(entity.getNote())

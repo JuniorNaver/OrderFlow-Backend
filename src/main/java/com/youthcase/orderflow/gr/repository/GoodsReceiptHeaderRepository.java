@@ -18,7 +18,7 @@ public interface GoodsReceiptHeaderRepository extends JpaRepository<GoodsReceipt
      * 아이템을 함께 로드하는 입고헤더 조회 (지연 로딩 방지)
      */
     @EntityGraph(attributePaths = {"items", "warehouse", "poHeader", "user"})
-    Optional<GoodsReceiptHeader> findWithItemsById(Long id);
+    Optional<GoodsReceiptHeader> findWithItemsByGrHeaderId(Long grHeaderId);
 
     /**
      * 특정 창고 기준으로 입고내역 전체 조회
@@ -41,19 +41,48 @@ public interface GoodsReceiptHeaderRepository extends JpaRepository<GoodsReceipt
     List<GoodsReceiptHeader> findByStatus(GoodsReceiptStatus status);
 
     @Query("""
-        SELECT new com.youthcase.orderflow.gr.dto.GRListDTO(
-            po.poId,
-            po.externalId,
-            po.totalAmount,
-            po.user.name,
-            COALESCE(gr.status, com.youthcase.orderflow.gr.status.GoodsReceiptStatus.PENDING),
-            COALESCE(gr.receiptDate, po.actionDate)
+    SELECT new com.youthcase.orderflow.gr.dto.GRListDTO(
+        gr.grHeaderId,
+        po.poId,
+        po.externalId,
+        po.totalAmount,
+        COALESCE(SUM(i.orderQty), 0L),
+        u.name,
+        CASE
+            WHEN gr.status IS NOT NULL THEN gr.status
+            WHEN po.status IN (
+                com.youthcase.orderflow.po.domain.POStatus.PO,
+                com.youthcase.orderflow.po.domain.POStatus.GI,
+                com.youthcase.orderflow.po.domain.POStatus.PARTIAL_RECEIVED
+            ) THEN :pendingStatus
+            ELSE NULL
+        END,
+        COALESCE(gr.receiptDate, po.actionDate),
+        MAX(i.expectedArrival)
+    )
+    FROM POHeader po
+    LEFT JOIN po.items i
+    LEFT JOIN po.user u
+    LEFT JOIN GoodsReceiptHeader gr ON gr.poHeader.poId = po.poId
+    WHERE po.status NOT IN (:deletedStatus, :draftStatus)
+    AND (
+        gr.status IS NOT NULL
+        OR po.status IN (
+            com.youthcase.orderflow.po.domain.POStatus.PO, 
+            com.youthcase.orderflow.po.domain.POStatus.GI,
+            com.youthcase.orderflow.po.domain.POStatus.PARTIAL_RECEIVED
         )
-        FROM com.youthcase.orderflow.po.domain.POHeader po
-        LEFT JOIN com.youthcase.orderflow.gr.domain.GoodsReceiptHeader gr
-            ON gr.poHeader.poId = po.poId
-        WHERE po.status <> :deletedStatus
-        ORDER BY po.poId DESC
-    """)
-    List<GRListDTO> findAllWithPOStatus(@Param("deletedStatus") POStatus deletedStatus);
+    )
+    GROUP BY gr.grHeaderId, po.poId, po.externalId, po.totalAmount,
+             u.name, gr.status, gr.receiptDate, po.actionDate, po.status
+    ORDER BY po.poId DESC
+""")
+    List<GRListDTO> findAllWithPOStatus(
+            @Param("deletedStatus") POStatus deletedStatus,
+            @Param("draftStatus") POStatus draftStatus,
+            @Param("pendingStatus") GoodsReceiptStatus pendingStatus
+    );
+
+
+
 }

@@ -26,9 +26,15 @@ public class GoodsReceiptMapper {
     ) {
         if (dto == null) return null;
 
+        // ✅ 상태 우선순위: DTO > 기본값(PENDING)
+        GoodsReceiptStatus status =
+                dto.getStatus() != null
+                        ? dto.getStatus()
+                        : GoodsReceiptStatus.PENDING;
+
         GoodsReceiptHeader header = GoodsReceiptHeader.builder()
-                .id(dto.getId())
-                .status(GoodsReceiptStatus.RECEIVED)
+                .grHeaderId(dto.getId())
+                .status(status) // ✅ 수정된 부분
                 .receiptDate(dto.getReceiptDate())
                 .note(dto.getNote())
                 .user(user)
@@ -98,7 +104,7 @@ public class GoodsReceiptMapper {
                 .collect(Collectors.toList());
 
         return GoodsReceiptHeaderDTO.builder()
-                .id(entity.getId())
+                .id(entity.getGrHeaderId())
                 .status(entity.getStatus())
                 .receiptDate(entity.getReceiptDate())
                 .note(entity.getNote())
