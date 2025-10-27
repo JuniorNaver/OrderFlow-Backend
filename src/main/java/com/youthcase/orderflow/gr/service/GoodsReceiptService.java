@@ -14,6 +14,7 @@ import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
+import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.dto.POItemResponseDTO;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;
@@ -21,6 +22,7 @@ import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import com.youthcase.orderflow.po.service.POService;
 import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -257,15 +259,23 @@ public class GoodsReceiptService {
 
     @Transactional
     public GoodsReceiptHeaderDTO createAndConfirmFromPO(Long poId) {
+        // ✅ 1) 기존 GR 존재 여부 확인
+        Optional<GoodsReceiptHeader> existing = headerRepo.findByPoHeader_PoId(poId);
+        if (existing.isPresent()) {
+            // ❌ 단순 반환 → ✅ 예외 발생으로 변경
+            throw new IllegalStateException("이미 입고 처리된 발주입니다.");
+        }
+
+        // ✅ 2) 발주 조회
         POHeader po = poHeaderRepo.findById(poId)
                 .orElseThrow(() -> new IllegalArgumentException("발주 없음"));
 
-        // ✅ Warehouse 조회
+        // ✅ 3) Warehouse 조회
         var warehouse = warehouseRepo.findFirstByStore_StoreId(
                 po.getUser().getStore().getStoreId()
         ).orElseThrow(() -> new IllegalArgumentException("해당 점포의 창고 없음"));
 
-        // ✅ GoodsReceiptHeader 생성
+        // ✅ 4) GR 생성
         GoodsReceiptHeader gr = GoodsReceiptHeader.builder()
                 .poHeader(po)
                 .warehouse(warehouse)
@@ -276,7 +286,7 @@ public class GoodsReceiptService {
 
         GoodsReceiptHeader saved = headerRepo.save(gr);
 
-        // ✅ 각 발주 아이템별 재고 반영
+        // ✅ 5) 재고 반영
         for (POItem item : po.getItems()) {
             try {
                 String gtin = item.getProduct().getGtin();
@@ -297,16 +307,16 @@ public class GoodsReceiptService {
                         if (shelfLife != null && shelfLife > 0)
                             expDate = LocalDate.now().plusDays(shelfLife);
                     }
-                    case MANUAL -> expDate = item.getExpectedArrival(); // 수동 입력 가능 시
+                    case MANUAL -> expDate = item.getExpectedArrival();
                     case MFG_BASED -> {
                         Integer shelfLife = item.getProduct().getShelfLifeDays();
-                        LocalDate mfgDate = item.getExpectedArrival(); // 예시
+                        LocalDate mfgDate = item.getExpectedArrival();
                         if (mfgDate != null && shelfLife != null && shelfLife > 0)
                             expDate = mfgDate.plusDays(shelfLife);
                     }
                 }
 
-                // ✅ Lot 생성
+                // ✅ Lot 생성 및 저장
                 Lot newLot = Lot.builder()
                         .product(item.getProduct())
                         .qty(qty)
@@ -377,6 +387,24 @@ public class GoodsReceiptService {
                 .toList();
 
         lotRepository.saveAll(lots);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GRListDTO> findAllWithPOStatus() {
+        return headerRepo.findAllWithPOStatus(com.youthcase.orderflow.po.domain.POStatus.S);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        GoodsReceiptHeader header = headerRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("입고 내역을 찾을 수 없습니다."));
+
+        // ✅ 삭제 가능 상태만 허용
+        if (header.getStatus() == GoodsReceiptStatus.CONFIRMED) {
+            throw new IllegalStateException("확정된 입고는 삭제할 수 없습니다.");
+        }
+
+        headerRepo.delete(header);
     }
 
 }

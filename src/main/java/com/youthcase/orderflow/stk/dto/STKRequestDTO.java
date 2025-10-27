@@ -1,13 +1,11 @@
 package com.youthcase.orderflow.stk.dto;
 
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -42,8 +40,8 @@ public class STKRequestDTO {
     @Positive(message = "수량은 0보다 커야 합니다.")
     private Long quantity;
 
-    @NotBlank(message = "재고 상태는 필수입니다.")
-    private String status; // 예: "AVAILABLE", "DAMAGED", "HOLD"
+    @NotNull(message = "재고 상태는 필수입니다.")
+    private StockStatus status; // ✅ String → StockStatus 변경
 
     private Boolean hasExpirationDate = false; // 기본값 설정
 

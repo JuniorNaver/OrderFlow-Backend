@@ -57,4 +57,16 @@ public class GlobalExceptionHandler {
     // 3. [기타] JWT 토큰 관련 런타임 예외 처리 (선택적)
     // JWTProvider에서 발생하는 MalformedJwtException, ExpiredJwtException 등은
     // JwtAuthenticationFilter 내부에서 처리되어 401로 반환되므로, 여기서는 불필요할 수 있습니다.
+
+    //GR
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleConflict(IllegalStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGeneral(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류: " + e.getMessage());
+    }
 }
