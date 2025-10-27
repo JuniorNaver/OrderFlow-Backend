@@ -16,6 +16,23 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // 📦 재고 조회 및 FIFO (활성 재고)
     // --------------------------------------------------
 
+    @Query("""
+    SELECT s.warehouse.warehouseId,
+           COALESCE(SUM(
+             (s.quantity *
+              (s.product.widthMm * s.product.depthMm * s.product.heightMm) / 1000000000.0)
+           ), 0)
+    FROM STK s
+    WHERE s.status = 'ACTIVE'
+    GROUP BY s.warehouse.warehouseId
+    """)
+    List<Object[]> sumCbmByWarehouse();
+
+
+    // --------------------------------------------------
+    // 📦 재고 조회 및 FIFO (활성 재고)
+    // --------------------------------------------------
+
     /** GTIN과 수량이 0보다 큰 활성 재고를 유통기한 순으로 조회 (FIFO 원칙) */
     List<STK> findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(String gtin, Long quantity);
 

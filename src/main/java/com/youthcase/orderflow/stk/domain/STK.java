@@ -5,6 +5,7 @@ import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
+import com.youthcase.orderflow.stk.domain.enums.StockStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.LocalDate; // Lot의 expDate 필드를 위해 추가
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -44,8 +45,9 @@ public class STK {
     @Column(name = "LAST_UPDATED_AT")
     private LocalDateTime lastUpdatedAt;
 
-    @Column(name = "STATUS", length = 20)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "STATUS", length = 30, nullable = false)
+    private StockStatus status;
 
     // ⭐️ 위치 변경 필요 여부 필드
     @Column(name = "IS_RELOCATION_NEEDED")
@@ -77,7 +79,9 @@ public class STK {
     private Lot lot;
 
     @Builder
-    public STK(Boolean hasExpirationDate, Long quantity, LocalDateTime lastUpdatedAt, String status, Warehouse warehouse, GoodsReceiptHeader goodsReceipt, Product product, Lot lot, Boolean isRelocationNeeded, String location) {
+    public STK(Boolean hasExpirationDate, Long quantity, LocalDateTime lastUpdatedAt, StockStatus status,
+               Warehouse warehouse, GoodsReceiptHeader goodsReceipt, Product product, Lot lot,
+               Boolean isRelocationNeeded, String location) {
         this.hasExpirationDate = hasExpirationDate;
         this.quantity = quantity;
         this.lastUpdatedAt = lastUpdatedAt;
@@ -118,14 +122,15 @@ public class STK {
         this.lastUpdatedAt = LocalDateTime.now();
     }
 
-    public void updateInfo(Long quantity, String status, LocalDateTime lastUpdatedAt) {
+    // ✅ status를 enum 기반으로 변경
+    public void updateInfo(Long quantity, StockStatus status, LocalDateTime lastUpdatedAt) {
         this.quantity = quantity;
         this.status = status;
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
     public void markAsInactive() {
-        this.status = "INACTIVE";
+        this.status = StockStatus.INACTIVE;
     }
 
     public void deductForDisposal(Long amountToDeduct) {
@@ -140,16 +145,17 @@ public class STK {
         this.lastUpdatedAt = LocalDateTime.now();
 
         if (this.quantity == 0) {
-            this.status = "DISPOSED";
+            this.status = StockStatus.DISPOSED;
         }
     }
 
-    public void updateStatus(String newStatus) {
-        if (newStatus == null || newStatus.isBlank()) {
+    // ✅ 문자열 대신 enum 기반으로 변경
+    public void updateStatus(StockStatus newStatus) {
+        if (newStatus == null) {
             throw new IllegalArgumentException("새로운 재고 상태는 필수입니다.");
         }
         this.status = newStatus;
-        this.lastUpdatedAt = java.time.LocalDateTime.now();
+        this.lastUpdatedAt = LocalDateTime.now();
     }
 
     public static STK createForRefund(Product product, Lot lot, Long quantity) {
@@ -158,9 +164,8 @@ public class STK {
         stk.setLot(lot);
         stk.setQuantity(quantity);
         stk.setHasExpirationDate(lot != null && lot.getExpDate() != null);
-        stk.setStatus("RETURNED");
+        stk.setStatus(StockStatus.RETURNED);
         stk.setLastUpdatedAt(LocalDateTime.now());
         return stk;
     }
-
 }

@@ -76,7 +76,7 @@ public class WarehouseService {
     // ────────────────────────────────
     // 🔹 6. 점포별 창고 조회
     // ────────────────────────────────
-    public Optional<Warehouse> getWarehousesByStoreId(String storeId) {
-        return warehouseRepository.findFirstByStore_StoreId(storeId);
+    public List<Warehouse> getWarehousesByStoreId(String storeId) {
+        return warehouseRepository.findByStore_StoreId(storeId);
     }
 }
