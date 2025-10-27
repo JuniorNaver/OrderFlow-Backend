@@ -24,12 +24,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Configuration
 @RequiredArgsConstructor
+@Profile({"dev","local"})
+@Order(5)
 public class MockSD {
 
     private final StoreRepository storeRepository;

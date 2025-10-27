@@ -1,6 +1,7 @@
 package com.youthcase.orderflow.stk.repository;
 
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,21 +16,16 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // 📦 창고별 적재 용량 합계 (CBM 단위)
     // --------------------------------------------------
     @Query("""
-            SELECT s.warehouse.warehouseId,
-                   COALESCE(SUM(
-                     (s.quantity *
-                      (s.product.widthMm * s.product.depthMm * s.product.heightMm) / 1000000000.0)
-                   ), 0)
-            FROM STK s
-            WHERE s.status IN (
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.ACTIVE,
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.NEAR_EXPIRY,
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.EXPIRED,
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.RETURNED
-            )
-            GROUP BY s.warehouse.warehouseId
-            """)
-    List<Object[]> sumCbmByWarehouse();
+        SELECT s.warehouse.warehouseId,
+               COALESCE(SUM(
+                 (s.quantity *
+                  (s.product.widthMm * s.product.depthMm * s.product.heightMm) / 1000000000.0)
+               ), 0)
+        FROM STK s
+        WHERE s.status IN :stockedStatuses
+        GROUP BY s.warehouse.warehouseId
+    """)
+    List<Object[]> sumCbmByWarehouse(@Param("stockedStatuses") List<StockStatus> stockedStatuses);
 
     // --------------------------------------------------
     // 📦 재고 조회 및 FIFO (활성 재고)
@@ -67,23 +63,25 @@ public interface STKRepository extends JpaRepository<STK, Long> {
      */
     // STK 엔티티가 Lot 엔티티를 통해 유통기한(expDate)을 참조한다고 가정
     @Query("""
-            SELECT s FROM STK s JOIN s.lot l 
-            WHERE l.expDate < :date 
-              AND s.quantity > 0 
-              AND s.status = com.youthcase.orderflow.stk.domain.enums.StockStatus.EXPIRED
-            """)
-    List<STK> findExpiredActiveStockBefore(LocalDate date);
+        SELECT s FROM STK s JOIN s.lot l 
+        WHERE l.expDate < :date 
+          AND s.quantity > 0 
+          AND s.status = :targetStatus
+    """)
+    List<STK> findExpiredActiveStockBefore(@Param("date") LocalDate targetDate,
+                                           @Param("targetStatus") StockStatus targetStatus);
 
     /**
      * 특정 날짜까지 유통기한이 임박한 활성 재고 조회 (대시보드 현황)
      */
     @Query("""
-            SELECT s FROM STK s JOIN s.lot l 
-            WHERE l.expDate <= :limitDate 
-              AND s.quantity > 0 
-              AND s.status = com.youthcase.orderflow.stk.domain.enums.StockStatus.NEAR_EXPIRY
-            """)
-    List<STK> findNearExpiryActiveStock(LocalDate limitDate);
+        SELECT s FROM STK s JOIN s.lot l 
+        WHERE l.expDate <= :limitDate 
+          AND s.quantity > 0 
+          AND s.status = :targetStatus
+    """)
+    List<STK> findNearExpiryActiveStock(@Param("limitDate") LocalDate limitDate,
+                                        @Param("targetStatus") StockStatus targetStatus);
 
     /**
      * 위치 변경 필요 재고 조회
@@ -99,16 +97,11 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // 📊 전체 유효 재고 합계
     // --------------------------------------------------
     @Query("""
-            SELECT COALESCE(SUM(s.quantity), 0)
-            FROM STK s 
-            WHERE s.status IN (
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.ACTIVE,
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.NEAR_EXPIRY,
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.EXPIRED,
-                com.youthcase.orderflow.stk.domain.enums.StockStatus.RETURNED
-            )
-            """)
-    Long sumActiveQuantity();
+        SELECT COALESCE(SUM(s.quantity), 0)
+        FROM STK s 
+        WHERE s.status IN :stockedStatuses
+    """)
+    Long sumActiveQuantity(@Param("stockedStatuses") List<StockStatus> stockedStatuses);
 
     // --------------------------------------------------
     // ⚙️ 재고 조정 관련 (Quantity <= N)
@@ -121,38 +114,54 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     List<STK> findByQuantityLessThanEqual(Long quantity);
 
     @Query("""
-            SELECT s FROM STK s JOIN s.lot l 
-            WHERE s.warehouse.warehouseId = :warehouseId 
-              AND s.quantity > 0 
-              AND s.status = com.youthcase.orderflow.stk.domain.enums.StockStatus.ACTIVE
-            ORDER BY l.expDate ASC
-            """)
-    List<STK> findActiveStocksForFifoCheck(Long warehouseId);
+        SELECT s FROM STK s JOIN s.lot l 
+        WHERE s.warehouse.warehouseId = :warehouseId 
+          AND s.quantity > 0 
+          AND s.status = :targetStatus
+        ORDER BY l.expDate ASC
+    """)
+    List<STK> findActiveStocksForFifoCheck(@Param("warehouseId") String warehouseId,
+                                           @Param("targetStatus") StockStatus targetStatus);
 
     // --------------------------------------------------
     // 📦 상품별 전체 수량
     // --------------------------------------------------
     //GTIN 전체 재고 합계 구해주는 쿼리
     @Query("""
-            SELECT COALESCE(SUM(s.quantity), 0)
-            FROM STK s 
-            WHERE s.product.gtin = :gtin 
-              AND s.status IN (
-                  com.youthcase.orderflow.stk.domain.enums.StockStatus.ACTIVE,
-                  com.youthcase.orderflow.stk.domain.enums.StockStatus.NEAR_EXPIRY,
-                  com.youthcase.orderflow.stk.domain.enums.StockStatus.EXPIRED,
-                  com.youthcase.orderflow.stk.domain.enums.StockStatus.RETURNED
-              )
-            """)
-    Long sumActiveQuantityByGtin(@Param("gtin") String gtin);
+        SELECT COALESCE(SUM(s.quantity), 0)
+        FROM STK s 
+        WHERE s.product.gtin = :gtin 
+          AND s.status IN :stockedStatuses
+    """)
+    Long sumStockedQuantityByGtin(@Param("gtin") String gtin,
+                                  @Param("stockedStatuses") List<StockStatus> statuses);
 
     // ✅ 창고 + 상품 + LOT 기준으로 조회 (중복 방지)
     @Query("""
-            SELECT s FROM STK s 
-            WHERE s.warehouse.warehouseId = :warehouseId 
-              AND s.product.gtin = :gtin 
-              AND s.lot.lotId = :lotId
-            """)
-    Optional<STK> findByWarehouseAndProductAndLot(String warehouseId, String gtin, Long lotId);
+        SELECT s FROM STK s 
+        WHERE s.warehouse.warehouseId = :warehouseId 
+          AND s.product.gtin = :gtin 
+          AND s.lot.lotId = :lotId
+    """)
+    Optional<STK> findByWarehouseAndProductAndLot(@Param("warehouseId") String warehouseId,
+                                                  @Param("gtin") String gtin,
+                                                  @Param("lotId") Long lotId);
 
+    // --------------------------------------------------
+    // 🧩 재고 중복 확인 (창고 + 입고 + LOT 조합)
+    // --------------------------------------------------
+    boolean existsByWarehouse_WarehouseIdAndGoodsReceipt_IdAndLot_LotId(
+            String warehouseId,
+            Long goodsReceiptId,
+            Long lotId
+    );
+
+    // --------------------------------------------------
+    // 🧩 임시 재고 중복 확인 (창고 + 상품 + LOT + GR NULL)
+    // --------------------------------------------------
+    Optional<STK> findByWarehouse_WarehouseIdAndProduct_GtinAndLot_LotIdAndGoodsReceiptIsNull(
+            String warehouseId,
+            String gtin,
+            Long lotId
+    );
 }

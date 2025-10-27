@@ -13,6 +13,7 @@ import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesItemRepository;
 import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +87,11 @@ public class SDServiceImpl implements SDService {
             throw new RuntimeException("COMPLETE 상태에서는 상품을 추가할 수 없습니다.");
         }
 
-        Long totalActiveStock = stkRepository.sumActiveQuantityByGtin(product.getGtin());
+        List<StockStatus> vendibleStatuses = List.of(
+                StockStatus.ACTIVE, StockStatus.NEAR_EXPIRY, StockStatus.RETURNED
+        );
+
+        Long totalActiveStock = stkRepository.sumStockedQuantityByGtin(product.getGtin(), vendibleStatuses);
         Long reservedInThisOrder = salesItemRepository.sumQuantityByOrderAndGtin(request.getOrderId(), request.getGtin());
 
         SalesItem item = salesItemRepository.findByOrderIdAndGtin(request.getOrderId(), request.getGtin());

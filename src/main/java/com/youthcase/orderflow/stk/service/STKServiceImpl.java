@@ -5,6 +5,7 @@ import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
+import com.youthcase.orderflow.master.warehouse.service.WarehouseCapacityService;
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.domain.StockStatus;
 import com.youthcase.orderflow.stk.dto.*;
@@ -33,6 +34,8 @@ public class STKServiceImpl implements STKService {
     private final WarehouseRepository warehouseRepository;
     private final LotRepository lotRepository;
     private final GoodsReceiptHeaderRepository grHeaderRepository;
+    private final WarehouseCapacityService capacityService;
+
 
     // --------------------------------------------------
     // 📊 대시보드 현황 API 구현
@@ -46,10 +49,10 @@ public class STKServiceImpl implements STKService {
     @Override
     public ProgressStatusDTO getExpiryStatus(int days) {
         LocalDate limitDate = LocalDate.now().plusDays(days);
-        List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(limitDate);
+        List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(limitDate, StockStatus.NEAR_EXPIRY);
 
         Long currentQuantity = nearExpiryStocks.stream().mapToLong(STK::getQuantity).sum();
-        Long totalQuantity = stkRepository.sumActiveQuantity();
+        Long totalQuantity = stkRepository.sumActiveQuantity(WarehouseCapacityService.STOCKED_STATUSES);
 
         return new ProgressStatusDTO(
                 "유통기한 임박 현황",
@@ -144,20 +147,21 @@ public class STKServiceImpl implements STKService {
     @Override
     public List<STK> findExpiredStocks() {
         LocalDate today = LocalDate.now();
-        // 유통기한 만료된 활성 재고 목록을 조회하여 폐기 예정 목록으로 반환
-        return stkRepository.findExpiredActiveStockBefore(today);
+        StockStatus targetStatus = StockStatus.ACTIVE;
+        // 유통기한 만료된 ACTIVE 재고 목록을 조회하여 폐기 예정 목록으로 반환
+        return stkRepository.findExpiredActiveStockBefore(today, targetStatus);
     }
 
     // --------------------------------------------------
     // 🗑️ 폐기 및 출고 처리 로직
     // --------------------------------------------------
 
-    // ⭐️ markExpiredStock() 메서드 (STKService에 정의된 것으로 가정하고 @Override 유지)
     @Override
     @Transactional
     public List<STK> markExpiredStock() {
         LocalDate today = LocalDate.now();
-        List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(today);
+        StockStatus targetStatus = StockStatus.ACTIVE;
+        List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(today, targetStatus);
         for (STK stock : expiredStocks) {
             stock.updateStatus(StockStatus.EXPIRED);
             stkRepository.save(stock);
@@ -168,7 +172,8 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional
     public List<STK> disposeExpiredStock(LocalDate targetDate) {
-        List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(targetDate);
+        StockStatus targetStatus = StockStatus.ACTIVE;
+        List<STK> expiredStocks = stkRepository.findExpiredActiveStockBefore(targetDate, targetStatus);
         for (STK stock : expiredStocks) {
             stock.setQuantity(0L);
             stock.updateStatus(StockStatus.DISPOSED);
@@ -180,7 +185,8 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional
     public List<STK> markNearExpiryStock(LocalDate targetDate) {
-        List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(targetDate);
+        StockStatus targetStatus = StockStatus.ACTIVE;
+        List<STK> nearExpiryStocks = stkRepository.findNearExpiryActiveStock(targetDate,targetStatus);
         for (STK stock : nearExpiryStocks) {
             stock.updateStatus(StockStatus.NEAR_EXPIRY);
             stkRepository.save(stock);
@@ -270,6 +276,8 @@ public class STKServiceImpl implements STKService {
 
             stkRepository.save(stock);
             updatedStocks.add(stock);
+
+            capacityService.updateWarehouseCapacity(stock.getWarehouse().getWarehouseId());
         }
 
         return updatedStocks;
@@ -309,6 +317,7 @@ public class STKServiceImpl implements STKService {
 
                 stkRepository.save(stock);
                 updatedStocks.add(stock);
+                capacityService.updateWarehouseCapacity(stock.getWarehouse().getWarehouseId());
             }
         }
 
@@ -361,6 +370,9 @@ public class STKServiceImpl implements STKService {
         }
 
         stkRepository.save(stk);
+
+        // ✅ 입고 후 용량 증가 warehouse_master에 반영
+        capacityService.updateWarehouseCapacity(warehouseId);
     }
 
     @Override
@@ -381,6 +393,9 @@ public class STKServiceImpl implements STKService {
         if (remain == 0) stk.setStatus(StockStatus.EMPTY);
 
         stkRepository.save(stk);
+
+        // ✅ 출고 후 용량 감소 warehouse_master에 반영
+        capacityService.updateWarehouseCapacity(warehouseId);
     }
 
     // ⭐️ STKRequest DTO를 받아 STK 엔티티를 생성하고 저장하는 메서드 구현
