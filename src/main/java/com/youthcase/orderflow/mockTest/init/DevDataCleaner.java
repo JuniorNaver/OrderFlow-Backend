@@ -1,22 +1,21 @@
 package com.youthcase.orderflow.mockTest.init;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
- * 🧹 DevDataCleaner (확장 버전)
+ * 🧹 DevDataCleaner (JdbcTemplate 버전)
  * --------------------------------------------------------
- * - dev/local 환경에서 모든 시더 실행 전 전체 테이블 초기화
- * - FK 관계를 고려한 자식 → 부모 순서
- * - AUTH/MASTER/비즈니스 데이터 순서별 정리
+ * - dev/local 환경에서 모든 테이블 안전 초기화
+ * - FK 관계 고려: 자식 → 부모 순으로 삭제
+ * - Hibernate EntityManager 트랜잭션 문제 완전 회피
  * --------------------------------------------------------
  */
 @Slf4j
@@ -26,11 +25,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DevDataCleaner implements CommandLineRunner {
 
-    @PersistenceContext
-    private final EntityManager em;
+    private final JdbcTemplate jdbcTemplate;
 
+    /** 삭제 순서 — FK 의존 순서에 맞게 정렬 (자식 → 부모) */
     private static final List<String> DELETE_ORDER = List.of(
-            "SD_RECEIPT_ITEM",
+            "SD_RECEIPT",
             "REFUND_ITEM",
             "PAYMENT_ITEM",
             "SALES_ITEM",
@@ -52,7 +51,6 @@ public class DevDataCleaner implements CommandLineRunner {
             "PO_ITEM",
             "PO_HEADER",
             "MM_PR",
-            "PR_HEADER",
             "INVENTORY",
             "PRICE_MASTER",
             "PRODUCT",
@@ -76,14 +74,15 @@ public class DevDataCleaner implements CommandLineRunner {
     }
 
     /**
-     * 안전한 삭제 수행 (존재하지 않아도 예외 없이 로그만 출력)
+     * ✅ 안전한 삭제 수행
+     * - 존재하지 않거나 FK 제약 위반 시 경고만 출력하고 다음 테이블로 진행
      */
     private void safeDelete(String tableName) {
         try {
-            int count = em.createNativeQuery("DELETE FROM " + tableName).executeUpdate();
+            int count = jdbcTemplate.update("DELETE FROM " + tableName);
             log.info("🧩 Cleared table: {} ({} rows)", tableName, count);
         } catch (Exception e) {
-            log.warn("⚠️ Skip or failed to delete table [{}]: {}", tableName, e.getMessage());
+            log.warn("⚠️ Skip or failed to delete table [{}]: {}", tableName, e.getMessage(), e);
         }
     }
 }

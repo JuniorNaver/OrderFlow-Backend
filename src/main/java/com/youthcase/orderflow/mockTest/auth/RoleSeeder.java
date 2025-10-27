@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 서버 구동 시 RoleType Enum을 기반으로 Role 테이블 자동 동기화
@@ -14,11 +15,11 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile({"dev", "local"})
-public class RoleSeeder implements CommandLineRunner {
+public class RoleSeeder {
 
     private final RoleRepository roleRepository;
 
-    @Override
+    @Transactional
     public void run(String... args) {
 
         for (RoleType type : RoleType.values()) {

@@ -25,7 +25,6 @@ public class SequenceInitializer implements CommandLineRunner {
     private EntityManager entityManager;
 
     @Override
-    @Transactional
     public void run(String... args) {
         log.info("🔧 Checking required Oracle sequences...");
         createSequenceIfNotExists("WAREHOUSE_SEQ");

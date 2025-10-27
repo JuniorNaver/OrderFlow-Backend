@@ -1,9 +1,10 @@
 package com.youthcase.orderflow.mockTest.stk;
 
-import com.youthcase.orderflow.gr.domain.Lot;
-import com.youthcase.orderflow.gr.repository.LotRepository;
+import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
+import com.youthcase.orderflow.gr.domain.GoodsReceiptItem;
+import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
+import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
-import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import com.youthcase.orderflow.stk.domain.STK;
 import com.youthcase.orderflow.stk.domain.StockStatus;
 import com.youthcase.orderflow.stk.repository.STKRepository;
@@ -17,88 +18,103 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
 
 /**
- * 📦 StockSeeder
+ * 📦 StockSeeder (입고 아이템 기준)
  * --------------------------------------------------------
- * - LOT 기반으로 MM_STOCK 데이터 생성
- * - 각 LOT은 Warehouse 및 Product와 연결됨
- * - 수량 및 상태는 LOT 기준으로 결정
+ * - GR_HEADER(status = RECEIVED) 기준으로 STK 생성
+ * - 각 GoodsReceiptItem 단위로 MM_STOCK 생성
+ * - LOT은 있으면 연결, 없으면 null
  * --------------------------------------------------------
  */
 @Slf4j
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class StockSeeder implements CommandLineRunner {
+public class StockSeeder {
 
-    private final LotRepository lotRepository;
-    private final WarehouseRepository warehouseRepository;
+    private final GoodsReceiptHeaderRepository grHeaderRepository;
     private final STKRepository stkRepository;
 
-    private final Random random = new Random();
-
-    @Override
     @Transactional
     public void run(String... args) {
-        log.info("📦 [StockSeeder] Start creating MM_STOCK based on LOT...");
+        log.info("📦 [StockSeeder] Start creating STK based on GoodsReceiptItem...");
 
-        List<Warehouse> warehouses = warehouseRepository.findAll();
-        if (warehouses.isEmpty()) {
-            log.warn("⚠️ [StockSeeder] No warehouse found — skipping stock creation.");
-            return;
-        }
+        // ✅ 1️⃣ RECEIVED 상태의 GR_HEADER만 조회
+        List<GoodsReceiptHeader> receivedHeaders =
+                grHeaderRepository.findByStatus(GoodsReceiptStatus.RECEIVED);
 
-        List<Lot> lots = lotRepository.findAll();
-        if (lots.isEmpty()) {
-            log.warn("⚠️ [StockSeeder] No LOT found — skipping stock creation.");
+        if (receivedHeaders.isEmpty()) {
+            log.warn("⚠️ [StockSeeder] No RECEIVED GR_HEADER found — skipping stock creation.");
             return;
         }
 
         int inserted = 0;
+        int skipped = 0;
 
-        for (Lot lot : lots) {
-            Warehouse warehouse = warehouses.get(random.nextInt(warehouses.size()));
+        // ✅ 2️⃣ 각 GR_HEADER → GR_ITEM 순회
+        for (GoodsReceiptHeader header : receivedHeaders) {
+            List<GoodsReceiptItem> items = header.getItems();
+            if (items == null || items.isEmpty()) continue;
 
-            Long qty = lot.getQty() != null ? lot.getQty() : 0L;
-            if (qty <= 0) continue;
+            for (GoodsReceiptItem item : items) {
+                Warehouse warehouse = item.getWarehouse();
+                if (warehouse == null) {
+                    log.warn("⚠️ GR_ITEM({}) has no warehouse, skipping.", item.getItemNo());
+                    continue;
+                }
 
-            StockStatus status = resolveStatus(lot, qty);
+                // ✅ 중복 방지
+                if (stkRepository.existsByWarehouse_WarehouseIdAndGoodsReceipt_GrHeaderIdAndLot_LotId(
+                        warehouse.getWarehouseId(),
+                        header.getGrHeaderId(),
+                        item.getLots() != null ? item.getLots().getFirst().getLotId() : null)) {
+                    skipped++;
+                    log.debug("⚠️ Duplicate skipped: GR={}, ITEM={}, WAREHOUSE={}",
+                            header.getGrHeaderId(), item.getItemNo(), warehouse.getWarehouseId());
+                    continue;
+                }
 
-            STK stk = STK.builder()
-                    .hasExpirationDate(lot.getExpDate() != null)
-                    .quantity(qty)
-                    .lastUpdatedAt(LocalDateTime.now())
-                    .status(status)
-                    .warehouse(warehouse)
-                    .goodsReceipt(lot.getGoodsReceiptItem() != null
-                            ? lot.getGoodsReceiptItem().getHeader()
-                            : null)
-                    .product(lot.getProduct())
-                    .lot(lot)
-                    .isRelocationNeeded(false)
-                    .location(warehouse.getWarehouseName() + "-A01")
-                    .build();
+                Long qty = item.getQty() != null ? item.getQty() : 0L;
+                if (qty <= 0) continue;
 
-            stkRepository.save(stk);
-            inserted++;
+                StockStatus status = resolveStatus(item);
+
+                STK stk = STK.builder()
+                        .hasExpirationDate(item.getLots() != null && item.getLots().getFirst().getExpDate() != null)
+                        .quantity(qty)
+                        .lastUpdatedAt(LocalDateTime.now())
+                        .status(status)
+                        .warehouse(warehouse)
+                        .goodsReceipt(header)
+                        .product(item.getProduct())
+                        .lot(item.getLots().getFirst())
+                        .isRelocationNeeded(false)
+                        .location(warehouse.getWarehouseName() + "-A01")
+                        .build();
+
+                stkRepository.save(stk);
+                inserted++;
+                log.info("🧩 STK created: GR_ITEM={}, QTY={}, STATUS={}",
+                        item.getItemNo(), qty, status);
+            }
         }
 
-        log.info("✅ [StockSeeder] Created {} STK records from {} LOTs.", inserted, lots.size());
+        log.info("✅ [StockSeeder] Created {} STK records ({} skipped).", inserted, skipped);
     }
 
     /**
-     * 📊 LOT 기준 상태 판별
+     * 📊 LOT 또는 유통기한 기준으로 재고 상태 판별
      */
-    private StockStatus resolveStatus(Lot lot, Long qty) {
-        if (qty == 0) return StockStatus.EMPTY;
+    private StockStatus resolveStatus(GoodsReceiptItem item) {
+        if (item.getQty() == null || item.getQty() == 0)
+            return StockStatus.EMPTY;
 
-        LocalDate exp = lot.getExpDate();
-        if (exp != null) {
-            long remain = lot.getRemainDays();
-            if (remain < 0) return StockStatus.EXPIRED;
-            if (remain <= 7) return StockStatus.NEAR_EXPIRY;
+        if (item.getLots() != null && item.getLots().getFirst().getExpDate() != null) {
+            LocalDate exp = item.getLots().getFirst().getExpDate();
+            long remainDays = item.getLots().getFirst().getRemainDays();
+            if (remainDays < 0) return StockStatus.EXPIRED;
+            if (remainDays <= 7) return StockStatus.NEAR_EXPIRY;
         }
 
         return StockStatus.ACTIVE;

@@ -11,10 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class CategorySeeder implements CommandLineRunner {
+public class CategorySeeder {
     private final CategoryRepository repo;
 
-    @Override
     @Transactional
     public void run(String... args) {
         int inserted = 0;

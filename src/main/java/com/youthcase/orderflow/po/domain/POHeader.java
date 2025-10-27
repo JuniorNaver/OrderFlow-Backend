@@ -37,7 +37,7 @@ public class POHeader {
 
     // 상태 (PR: 발주 요청, PO: 발주 완료, S: 저장, D: 취소 등)
     @Enumerated(EnumType.STRING)
-    @Column(name = "STATUS", length = 10, nullable = false)
+    @Column(name = "STATUS", length = 30, nullable = false)
     private POStatus status;
 
     // 매입 총액 (합계)

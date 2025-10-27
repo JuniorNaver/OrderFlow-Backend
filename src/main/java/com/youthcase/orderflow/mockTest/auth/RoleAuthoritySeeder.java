@@ -9,7 +9,9 @@ import com.youthcase.orderflow.auth.repository.RoleAuthMappingRepository;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,13 +20,14 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class RoleAuthoritySeeder implements CommandLineRunner {
+@Profile({"dev", "local"})
+public class RoleAuthoritySeeder {
 
     private final RoleRepository roleRepository;
     private final AuthorityRepository authorityRepository;
     private final RoleAuthMappingRepository roleAuthMappingRepository;
 
-    @Override
+    @Transactional
     public void run(String... args) {
         Role admin = roleRepository.findByRoleId("ROLE_ADMIN").orElseThrow();
         List<Authority> authorities = authorityRepository.findAll();

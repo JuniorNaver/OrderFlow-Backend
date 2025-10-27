@@ -6,16 +6,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class InventorySeeder implements CommandLineRunner {
+public class InventorySeeder {
 
     private final InventoryService inventoryService;
 
-    @Override
+    @Transactional
     public void run(String... args) {
         // GTIN은 ProductSeeder에 있는 것과 맞춰서
         inventoryService.receive("8801115115809", 30L);

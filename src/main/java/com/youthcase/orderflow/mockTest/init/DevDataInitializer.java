@@ -1,30 +1,30 @@
 package com.youthcase.orderflow.mockTest.init;
 
-import com.youthcase.orderflow.mockTest.*;
 import com.youthcase.orderflow.mockTest.auth.*;
-import com.youthcase.orderflow.mockTest.gr.*;
 import com.youthcase.orderflow.mockTest.master.*;
+import com.youthcase.orderflow.mockTest.po.POSeeder;
 import com.youthcase.orderflow.mockTest.pr.*;
-import com.youthcase.orderflow.mockTest.sd.*;
+import com.youthcase.orderflow.mockTest.gr.*;
 import com.youthcase.orderflow.mockTest.stk.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 🚀 DevDataInitializer
  * --------------------------------------------------------
  * - dev/local 환경 전체 데이터 시더 실행기
- * - FK 의존 순서 기반 실행 (Cleaner → Auth → Master → User → Inventory → Stock)
- * - GR/LOT/STK 시더 분리로 실제 물류 흐름 반영
+ * - FK 의존 순서 기반 실행
+ * - Cleaner → Auth → Master → User → Inventory → GR → LOT → STOCK
  * --------------------------------------------------------
  */
 @Slf4j
 @Component
 @Profile({"dev", "local"})
+@Order(99)
 @RequiredArgsConstructor
 public class DevDataInitializer implements CommandLineRunner {
 
@@ -43,59 +43,62 @@ public class DevDataInitializer implements CommandLineRunner {
     // ====== USER ======
     private final AppUserSeeder appUserSeeder;
 
-    // ====== INVENTORY / GR / LOT / STOCK ======
+    // ====== INVENTORY / PO / GR / LOT / STOCK ======
     private final InventorySeeder inventorySeeder;
+    private final POSeeder poSeeder;
     private final GoodsReceiptSeeder goodsReceiptSeeder;
     private final LotSeeder lotSeeder;
     private final StockSeeder stockSeeder;
 
     @Override
-    @Transactional
     public void run(String... args) {
         log.info("🚀 [DevDataInitializer] Starting full mock data initialization...");
 
         try {
-            // 0️⃣ 초기화 전 데이터 정리 (선택)
-            log.info("🧹 Cleaning existing data before seeding...");
-            // DevDataCleaner가 별도로 Order(0)에서 실행되므로 중복 호출은 생략 가능
 
-            // 1️⃣ AUTH & ROLE
-            log.info("🔐 [1/6] Seeding authorities and roles...");
+            // 1️⃣ AUTH (권한, 역할, 매핑)
+            log.info("🔐 [1/9] Seeding authorities and roles...");
             authoritySeeder.run();
             roleSeeder.run();
             roleAuthoritySeeder.run();
 
-            // 2️⃣ MASTER (Store / Warehouse / Category / Product / Price)
-            log.info("🏪 [2/6] Seeding master data (Store, Warehouse, Product, Price)...");
+            // 2️⃣ MASTER (기준 정보)
+            log.info("🏪 [2/9] Seeding master data (Store, Warehouse, Category, Product, Price)...");
             storeSeeder.run();
             warehouseSeeder.run();
             categorySeeder.run();
             productSeeder.run();
             priceSeeder.run();
 
-            // 3️⃣ USER
-            log.info("👤 [3/6] Seeding user accounts...");
+            // 3️⃣ USER (계정)
+            log.info("👤 [3/9] Seeding app users...");
             appUserSeeder.run();
 
             // 4️⃣ INVENTORY
-            log.info("📦 [4/6] Seeding inventory data...");
+            log.info("📦 [4/9] Seeding inventory data...");
             inventorySeeder.run();
 
-            // 5️⃣ 입고 → LOT → 재고
-            log.info("🚚 [5/6] Seeding GR (Goods Receipt)...");
+            // 5️⃣ PO (발주)
+            log.info("🧾 [5/9] Seeding purchase orders (PO_HEADER / PO_ITEM)...");
+            poSeeder.run();
+
+            // 6️⃣ GOODS RECEIPT
+            log.info("🚚 [6/9] Seeding GR (Goods Receipt)...");
             goodsReceiptSeeder.run();
 
-            log.info("📋 [5/6-2] Seeding LOT records...");
+            // 7️⃣ LOT
+            log.info("📋 [7/9] Seeding LOT records (ExpiryType-aware)...");
             lotSeeder.run();
 
-            log.info("🏗️ [5/6-3] Seeding MM_STOCK based on LOT...");
+            // 8️⃣ STOCK
+            log.info("🏗️ [8/9] Seeding MM_STOCK based on LOT...");
             stockSeeder.run();
 
             log.info("✅ [DevDataInitializer] All seeders executed successfully.");
 
         } catch (Exception e) {
-            log.error("❌ [DevDataInitializer] Seeding failed: {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+            log.error("❌ [DevDataInitializer] Seeding failed at runtime: {}", e.getMessage(), e);
+            throw new RuntimeException("Data seeding failed: " + e.getMessage(), e);
         }
     }
 }

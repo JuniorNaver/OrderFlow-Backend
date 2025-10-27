@@ -30,7 +30,7 @@ import java.util.List;
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class PriceSeeder implements CommandLineRunner {
+public class PriceSeeder {
 
     private final ProductRepository productRepository;
     private final PriceRepository priceRepository;
@@ -38,7 +38,6 @@ public class PriceSeeder implements CommandLineRunner {
     @PersistenceContext
     private EntityManager em;
 
-    @Override
     @Transactional
     public void run(String... args) {
         List<Product> products = productRepository.findAll();

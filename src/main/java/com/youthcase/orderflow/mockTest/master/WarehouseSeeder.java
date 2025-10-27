@@ -23,12 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class WarehouseSeeder implements CommandLineRunner {
+public class WarehouseSeeder {
 
     private final WarehouseRepository warehouseRepository;
     private final StoreRepository storeRepository;
 
-    @Override
     @Transactional
     public void run(String... args) {
         log.info("🏗️ [WarehouseSeeder] Creating default warehouses (forced insert)...");

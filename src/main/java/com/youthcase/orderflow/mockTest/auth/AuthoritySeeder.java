@@ -7,15 +7,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
 @Profile({"dev", "local"})
-public class AuthoritySeeder implements CommandLineRunner {
+public class AuthoritySeeder{
 
     private final AuthorityRepository authorityRepository;
 
-    @Override
+    @Transactional
     public void run(String... args) {
         for (AuthorityType type : AuthorityType.values()) {
             authorityRepository.findByAuthority(type.name())

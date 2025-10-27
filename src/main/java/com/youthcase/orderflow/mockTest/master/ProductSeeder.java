@@ -20,7 +20,7 @@ import java.util.List;
 @Component
 @Profile({"dev","local"})          // 운영 제외
 @RequiredArgsConstructor
-public class ProductSeeder implements CommandLineRunner {
+public class ProductSeeder {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
@@ -36,7 +36,6 @@ public class ProductSeeder implements CommandLineRunner {
     ) {
     }
 
-    @Override
     @Transactional
     public void run(String... args) {
         // 필요한 만큼만 시작: 실온/라면, 냉장/우유, 냉동/만두
