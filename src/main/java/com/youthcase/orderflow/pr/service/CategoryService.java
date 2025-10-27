@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,24 +49,37 @@ public class CategoryService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Category not Found: " + kanCode));
 
-        // 2) 리홈 대상(99999999) 존재확인 (Seeder로 생성되어 있어야 함)
-        if (!categoryRepository.existsByKanCode(DEFAULT_KAN)) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "기본 카테고리(" + DEFAULT_KAN + ")가 존재하지 않습니다.");
+        // 2) 상품 존재 시 삭제 금지
+        if (productRepository.existsByCategory_KanCode(kanCode)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "해당 카테고리에 상품이 있어 삭제할 수 없습니다.");
         }
 
-        // 3) 상품리홈 (네이티브 벌크 업데이트로 빠르게)
-        productRepository.rehomeProducts(kanCode, DEFAULT_KAN);
-
-        //4) 자식 카테고리 리홈 (parent FK가 있을때만 - Repository 시그니처 기준)
+        // 3) 자식 카테고리 존재 시 삭제 금지
         if (categoryRepository.existsByParent_KanCode(kanCode)) {
-            categoryRepository.rehomeChildren(kanCode, DEFAULT_KAN);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "하위 카테고리가 있어 삭제할 수 없습니다.");
         }
+
+        // 4) 진짜 삭제
         try {
             categoryRepository.delete(target);
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "하위에 데이터가 있어 삭제할 수 없습니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "연관 데이터로 인해 삭제할 수 없습니다.");
         }
+    }
+
+    // ✅ 추가: 카테고리별 대표 상품명 Top-N을 배치로 조회
+    @Transactional(readOnly = true)
+    public Map<String, List<String>> getProductSamplesByCategories(List<String> kanCodes, Integer limit) {
+        if (kanCodes == null || kanCodes.isEmpty()) return Collections.emptyMap();
+        int top = (limit == null || limit <= 0) ? 2 : Math.min(limit, 10);
+
+        List<ProductRepository.CategoryProductSampleProjection> rows =
+                productRepository.findCategoryProductSamples(kanCodes, top);
+
+        return rows.stream().collect(Collectors.groupingBy(
+                ProductRepository.CategoryProductSampleProjection::getKanCode,
+                LinkedHashMap::new,
+                Collectors.mapping(ProductRepository.CategoryProductSampleProjection::getProductName, Collectors.toList())
+        ));
     }
 }

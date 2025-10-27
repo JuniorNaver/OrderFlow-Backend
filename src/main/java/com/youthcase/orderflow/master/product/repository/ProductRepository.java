@@ -159,6 +159,34 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 """)
     List<SimpleProductRow> findSimpleByCategoryKan(@Param("kan") String kan);
 
+    // 카테고리별 대표상품
+    public interface CategoryProductSampleProjection {
+        String getKanCode();
+        String getProductName();;
+    }
+
+    @Query(value = """
+        SELECT T.KAN_CODE      AS kanCode,
+               T.PRODUCT_NAME  AS productName
+        FROM (
+          SELECT p.KAN_CODE,
+                 p.PRODUCT_NAME,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY p.KAN_CODE
+                   ORDER BY p.PRODUCT_NAME ASC
+                 ) AS RN
+          FROM PRODUCT p
+          WHERE p.KAN_CODE IN (:kanCodes)
+        ) T
+        WHERE T.RN <= :limit
+        ORDER BY T.KAN_CODE, T.PRODUCT_NAME
+        """, nativeQuery = true)
+    List<CategoryProductSampleProjection> findCategoryProductSamples(
+            @Param("kanCodes") List<String> kanCodes,
+            @Param("limit") int limit
+    );
+
+
     default List<Product> findRecommendable(List<String> cats, List<StorageMethod> zones) {
         boolean catsEmpty = (cats == null || cats.isEmpty());
         boolean zonesEmpty = (zones == null || zones.isEmpty());
