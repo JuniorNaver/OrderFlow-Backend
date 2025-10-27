@@ -222,9 +222,10 @@ public class GoodsReceiptService {
             POHeader po = poHeaderRepo.findById(id)
                     .orElseThrow(() -> new RuntimeException("발주 데이터를 찾을 수 없습니다."));
 
-            // ✅ 현재 로그인한 유저의 Store 기반으로 Warehouse 찾기
+            // ✅ 현재 로그인한 유저의 Store 기반으로 첫번째 Warehouse 찾기(임시조치, 근본적으로 WAREHOUSE_ID가 헤더에 들어가면 안됨.
+            // TODO: WAREHOUSE_MASTER.WAREHOUSE_ID FK 컬럼을 GR_HEADER -> GR_ITEM으로 이동
             Store store = currentUser.getStore();  // User 엔티티에 Store가 연관되어 있다고 가정
-            Warehouse warehouse = warehouseRepo.findByStore_StoreId(store.getStoreId())
+            Warehouse warehouse = warehouseRepo.findFirstByStore_StoreId(store.getStoreId())
                     .orElseThrow(() -> new RuntimeException("점포에 해당하는 창고를 찾을 수 없습니다."));
 
             header = GoodsReceiptHeader.builder()
