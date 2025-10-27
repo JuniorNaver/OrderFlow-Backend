@@ -1,11 +1,13 @@
 package com.youthcase.orderflow.gr.controller;
 
+import com.youthcase.orderflow.auth.domain.User;
+import com.youthcase.orderflow.gr.dto.GRListDTO;
 import com.youthcase.orderflow.gr.dto.GoodsReceiptHeaderDTO;
 import com.youthcase.orderflow.gr.dto.POForGRDTO;
 import com.youthcase.orderflow.gr.service.GoodsReceiptService;
-import com.youthcase.orderflow.po.dto.POHeaderResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +22,7 @@ public class GoodsReceiptController {
 
     /** ✅ 1. 입고 + 발주 상태 통합 조회 (입고대기 포함) */
     @GetMapping
-    public ResponseEntity<?> getAllWithPOStatus() {
+    public ResponseEntity<List<GRListDTO>> getAllWithPOStatus() {
         return ResponseEntity.ok(service.findAllWithPOStatus());
     }
 
@@ -36,18 +38,32 @@ public class GoodsReceiptController {
         return ResponseEntity.ok(service.create(dto));
     }
 
-    /** ✅ 4. 입고 확정 */
+    /** ✅ 4. 입고 확정 (status → RECEIVED) */
     @PostMapping("/{id}/confirm")
-    public ResponseEntity<Void> confirm(@PathVariable Long id) {
-        service.confirmReceipt(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> confirm(@PathVariable Long id) {
+        try {
+            service.confirmReceipt(id);
+            return ResponseEntity.ok(Map.of("message", "입고가 확정되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
-    /** ✅ 5. 입고 확정 취소 */
-    @PostMapping("/{id}/cancel")
-    public ResponseEntity<Void> cancel(@PathVariable Long id, @RequestParam(required = false) String reason) {
-        service.cancelConfirmedReceipt(id, reason == null ? "no reason" : reason);
-        return ResponseEntity.ok().build();
+    /** ✅ 5. 입고 확정 취소 (status → CANCELED) */
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelConfirmed(
+            @AuthenticationPrincipal User currentUser,  // ✅ 로그인한 사용자 정보 주입
+            @PathVariable Long id,
+            @RequestParam(required = false) String reason
+    ) {
+        try {
+            service.cancelConfirmedReceipt(id, reason == null ? "no reason" : reason, currentUser); // ✅ 3번째 인자 전달
+            return ResponseEntity.ok(Map.of("message", "입고가 취소되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 
     /** ✅ 6. 바코드 스캔 → 발주 조회 + 품목 리스트 반환 */
@@ -66,10 +82,14 @@ public class GoodsReceiptController {
 
     /** ✅ 8. 입고 삭제 */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.delete(id);
+            return ResponseEntity.ok(Map.of("message", "입고가 삭제되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
-
-
 }
+

@@ -31,7 +31,7 @@ public class GoodsReceiptHeader {
             allocationSize = 1
     )
     @Column(name = "GR_HEADER_ID")
-    private Long id;  // 입고내역ID (PK)
+    private Long grHeaderId;  // 입고내역ID (PK)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "STATUS", nullable = false)

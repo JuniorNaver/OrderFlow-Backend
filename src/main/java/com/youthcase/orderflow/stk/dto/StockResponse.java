@@ -31,7 +31,7 @@ public class StockResponse {
 
     public static StockResponse fromEntity(STK s) {
         // null 체크를 포함하여 안전하게 연관 정보를 추출합니다.
-        Long grHeaderId = s.getGoodsReceipt() != null ? s.getGoodsReceipt().getId() : null;
+        Long grHeaderId = s.getGoodsReceipt() != null ? s.getGoodsReceipt().getGrHeaderId() : null;
 
         return StockResponse.builder()
                 // STK 정보

@@ -11,7 +11,7 @@ public interface GoodsReceiptItemRepository extends JpaRepository<GoodsReceiptIt
     /**
      * 입고헤더 ID 기준으로 하위 아이템 조회
      */
-    List<GoodsReceiptItem> findByHeader_Id(Long grHeaderId);
+    List<GoodsReceiptItem> findByHeader_GrHeaderId(Long grHeaderId);
 
     /**
      * 특정 GTIN 기준으로 입고아이템 전체 조회

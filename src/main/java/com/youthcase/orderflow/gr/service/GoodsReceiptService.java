@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.gr.service;
 
+import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.gr.domain.*;
 import com.youthcase.orderflow.gr.dto.*;
 import com.youthcase.orderflow.gr.mapper.GoodsReceiptMapper;
@@ -12,6 +13,8 @@ import com.youthcase.orderflow.gr.status.GoodsReceiptStatus;
 import com.youthcase.orderflow.gr.status.LotStatus;
 import com.youthcase.orderflow.master.product.domain.ExpiryType;
 import com.youthcase.orderflow.master.product.domain.Product;
+import com.youthcase.orderflow.master.store.domain.Store;
+import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.po.domain.POHeader;
 import com.youthcase.orderflow.po.domain.POItem;
 import com.youthcase.orderflow.po.domain.POStatus;
@@ -24,6 +27,7 @@ import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,13 +92,13 @@ public class GoodsReceiptService {
 
     @Transactional(readOnly = true)
     public GoodsReceiptHeaderDTO findById(Long id) {
-        GoodsReceiptHeader header = headerRepo.findWithItemsById(id)
+        GoodsReceiptHeader header = headerRepo.findWithItemsByGrHeaderId(id)
                 .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
 
         var dto = mapper.toDTO(header);
 
         List<LotDTO> lots = lotRepository
-                .findByGoodsReceiptItem_HeaderId(id)
+                .findByGoodsReceiptItem_Header_GrHeaderId(id)
                 .stream()
                 .map(LotDTO::from)
                 .toList();
@@ -106,7 +110,7 @@ public class GoodsReceiptService {
     // ✅ 핵심: 입고 확정 → 재고 반영
     @Transactional
     public void confirmReceipt(Long grId) {
-        GoodsReceiptHeader header = headerRepo.findWithItemsById(grId)
+        GoodsReceiptHeader header = headerRepo.findWithItemsByGrHeaderId(grId)
                 .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
 
         if (header.getStatus() == GoodsReceiptStatus.CONFIRMED) {
@@ -204,56 +208,39 @@ public class GoodsReceiptService {
 
 
     // (선택) 확정 취소(Reverse)도 같은 패턴으로 만들 수 있음
-    public void cancelConfirmedReceipt(Long grId, String reason) {
-        GoodsReceiptHeader header = headerRepo.findWithItemsById(grId)
-                .orElseThrow(() -> new IllegalArgumentException("입고 데이터 없음"));
+    @Transactional
+    public void cancelConfirmedReceipt(Long id, String reason, User currentUser) {
+        Optional<GoodsReceiptHeader> optionalGR = headerRepo.findById(id);
+        GoodsReceiptHeader header;
 
-        if (header.getStatus() != GoodsReceiptStatus.CONFIRMED) {
-            throw new IllegalStateException(
-                    "확정 상태가 아니어서 취소할 수 없습니다. (status=" + header.getStatus() + ")"
-            );
+        if (optionalGR.isPresent()) {
+            // ✅ GR이 이미 존재 → 상태만 변경
+            header = optionalGR.get();
+            header.setStatus(GoodsReceiptStatus.CANCELED);
+        } else {
+            // ✅ GR이 없으면 (PENDING 상태)
+            POHeader po = poHeaderRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("발주 데이터를 찾을 수 없습니다."));
+
+            // ✅ 현재 로그인한 유저의 Store 기반으로 Warehouse 찾기
+            Store store = currentUser.getStore();  // User 엔티티에 Store가 연관되어 있다고 가정
+            Warehouse warehouse = warehouseRepo.findByStore_StoreId(store.getStoreId())
+                    .orElseThrow(() -> new RuntimeException("점포에 해당하는 창고를 찾을 수 없습니다."));
+
+            header = GoodsReceiptHeader.builder()
+                    .poHeader(po)
+                    .warehouse(warehouse)
+                    .user(currentUser)
+                    .receiptDate(LocalDate.now())
+                    .status(GoodsReceiptStatus.CANCELED)
+                    .note("PENDING 상태에서 취소됨: " + reason)
+                    .build();
+
+            headerRepo.save(header);
         }
 
-        String warehouseId = header.getWarehouse().getWarehouseId();
-        // 재고 차감
-        for (GoodsReceiptItem item : header.getItems()) {
-
-            if (item.getQty() <= 0) {
-                throw new IllegalArgumentException("입고 취소 수량이 0 이하일 수 없습니다.");
-            }
-            stockService.decreaseStock(
-                    warehouseId,
-                    item.getProduct().getGtin(),
-                    item.getQty(),
-                    null, null
-            );
-
-            stkHistoryRepository.save(
-                    STKHistory.builder()
-                            .warehouseId(warehouseId)
-                            .product(item.getProduct())
-                            .lotId(null) // LOT는 연결 안 함
-                            .actionType("OUT") // 확정취소
-                            .changeQty(item.getQty())
-                            .performedBy(header.getUser())
-                            .note("입고 확정 취소로 자동 생성됨")
-                            .build()
-            );
-        }
-
-        // 상태 전환
-        // header.setStatus(GoodsReceiptStatus.CANCELED);
-        header.setStatus(GoodsReceiptStatus.CANCELED);
-        header.setNote(
-                (header.getNote() == null ? "" : header.getNote() + " | ")
-                        + "Canceled: " + reason
-        );
+        header.setNote(reason);
         headerRepo.save(header);
-
-        // 발주 진척도 롤백
-        poProgressService.updateReceiveProgress(header.getPoHeader().getPoId());
-
-
     }
 
     @Transactional
@@ -390,7 +377,11 @@ public class GoodsReceiptService {
 
     @Transactional(readOnly = true)
     public List<GRListDTO> findAllWithPOStatus() {
-        return headerRepo.findAllWithPOStatus(com.youthcase.orderflow.po.domain.POStatus.S);
+        return headerRepo.findAllWithPOStatus(
+                POStatus.DELETED,     // 삭제된 발주 제외
+                POStatus.S,       // 🧩 장바구니(임시저장) 상태 제외
+                GoodsReceiptStatus.PENDING // 입고대기 상태로 표시
+        );// 🔸 2. 입고 기본 상태
     }
 
     @Transactional
@@ -398,12 +389,15 @@ public class GoodsReceiptService {
         GoodsReceiptHeader header = headerRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("입고 내역을 찾을 수 없습니다."));
 
-        // ✅ 삭제 가능 상태만 허용
-        if (header.getStatus() == GoodsReceiptStatus.CONFIRMED) {
-            throw new IllegalStateException("확정된 입고는 삭제할 수 없습니다.");
+        // ✅ 상태를 CANCEL로 전환
+        switch (header.getStatus()) {
+            case PENDING, RECEIVED -> {
+                header.setStatus(GoodsReceiptStatus.CANCELED);
+                headerRepo.save(header);
+            }
+            case CANCELED -> throw new IllegalStateException("이미 취소된 내역입니다.");
+            default -> throw new IllegalStateException("삭제 불가능한 상태입니다: " + header.getStatus());
         }
-
-        headerRepo.delete(header);
     }
 
 }
