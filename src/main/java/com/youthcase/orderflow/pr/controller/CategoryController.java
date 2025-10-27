@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.pr.controller;
 
+import com.youthcase.orderflow.master.product.repository.ProductRepository;
 import com.youthcase.orderflow.pr.domain.Category;
 import com.youthcase.orderflow.pr.service.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -44,4 +46,10 @@ public class CategoryController {
     public void deleteCategory(@PathVariable String kanCode) {
         categoryService.deleteCategory(kanCode);
     }
+
+    @PostMapping("/product-samples")
+    public Map<String, List<String>> getProductSamples(@RequestBody ProductSampleReq req) {
+        return categoryService.getProductSamplesByCategories(req.kanCodes(), req.limit());
+    }
+    public record ProductSampleReq(List<String> kanCodes, Integer limit) {}
 }
