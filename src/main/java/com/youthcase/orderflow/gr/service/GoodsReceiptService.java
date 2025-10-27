@@ -61,6 +61,7 @@ public class GoodsReceiptService {
         var productMap = productRepo.findByGtinIn(gtins).stream()
                 .collect(Collectors.toMap(Product::getGtin, p -> p));
 
+
         // 2) 매핑
         GoodsReceiptHeader entity = mapper.toEntity(dto, user, warehouse, poHeader, productMap);
 

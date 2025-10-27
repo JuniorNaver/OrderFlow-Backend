@@ -28,5 +28,5 @@ public interface StockStatusService {
      * @param warehouseId 재고를 확인할 창고 또는 지점 ID
      * @return 위치 변경이 필요한 재고 리스트
      */
-    List<StockRelocationRequiredResponse> getRelocationRequiredStocks(Long warehouseId);
+    List<StockRelocationRequiredResponse> getRelocationRequiredStocks(String warehouseId);
 }

@@ -51,7 +51,7 @@ public class StockStatusServiceImpl implements StockStatusService {
      * @return 위치 변경이 필요한 재고 DTO 리스트
      */
     @Override
-    public List<StockRelocationRequiredResponse> getRelocationRequiredStocks(Long warehouseId) {
+    public List<StockRelocationRequiredResponse> getRelocationRequiredStocks(String warehouseId) {
 
         // 1. 특정 창고의 활성 STK 리스트를 GTIN 및 유통기한 오름차순으로 정렬하여 조회
         List<STK> orderedStocks = stkRepository.findActiveStocksForFifoCheck(warehouseId);

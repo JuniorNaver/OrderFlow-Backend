@@ -1,6 +1,5 @@
 package com.youthcase.orderflow.stk.repository;
 
-import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.stk.domain.STK;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query; // ⭐️ sumActiveQuantity를 위해 필요할 수 있습니다.
@@ -38,11 +37,11 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     /** 특정 날짜 이전에 유통기한이 만료된 활성 재고 조회 (폐기 목록/실행) */
     // STK 엔티티가 Lot 엔티티를 통해 유통기한(expDate)을 참조한다고 가정
     @Query("SELECT s FROM STK s JOIN s.lot l WHERE l.expDate < :date AND s.quantity > 0 AND s.status = 'ACTIVE'")
-    List<STK> findExpiredActiveStockBefore(LocalDate date);
+    List<STK> findExpiredActiveStockBefore(@Param("date") LocalDate date);
 
     /** 특정 날짜까지 유통기한이 임박한 활성 재고 조회 (대시보드 현황) */
     @Query("SELECT s FROM STK s JOIN s.lot l WHERE l.expDate <= :limitDate AND s.quantity > 0 AND s.status = 'ACTIVE'")
-    List<STK> findNearExpiryActiveStock(LocalDate limitDate);
+    List<STK> findNearExpiryActiveStock(@Param("limitDate") LocalDate limitDate);
 
     /** 위치 변경 필요 재고 조회 */
     List<STK> findByIsRelocationNeededTrue();
@@ -66,7 +65,7 @@ public interface STKRepository extends JpaRepository<STK, Long> {
 
     // ⭐️ 특정 창고 ID의 활성 재고를 유통기한 순으로 조회 (FIFO 검사 목적)
     @Query("SELECT s FROM STK s JOIN s.lot l WHERE s.warehouse.warehouseId = :warehouseId AND s.quantity > 0 AND s.status = 'ACTIVE' ORDER BY l.expDate ASC")
-    List<STK> findActiveStocksForFifoCheck(Long warehouseId);
+    List<STK> findActiveStocksForFifoCheck(@Param("warehouseId") String warehouseId);
 
     //GTIN 전체 재고 합계 구해주는 쿼리
     @Query("SELECT COALESCE(SUM(s.quantity), 0) FROM STK s WHERE s.product.gtin = :gtin AND s.status = 'ACTIVE'")
@@ -77,6 +76,15 @@ public interface STKRepository extends JpaRepository<STK, Long> {
             "WHERE s.warehouse.warehouseId = :warehouseId " +
             "AND s.product.gtin = :gtin " +
             "AND s.lot.lotId = :lotId")
-    Optional<STK> findByWarehouseAndProductAndLot(String warehouseId, String gtin, Long lotId);
+    Optional<STK> findByWarehouseAndProductAndLot(@Param("warehouseId") String warehouseId,
+                                                  @Param("gtin") String gtin,
+                                                  @Param("lotId") Long lotId);
+
+    Optional<STK> findByWarehouse_WarehouseIdAndProduct_GtinAndLot_LotIdAndGoodsReceiptIsNull( String warehouseId, String gtin, Long lotId);
+
+    // 확정 재고 존재 여부 체크 (전환 충돌 방지)
+    boolean existsByWarehouse_WarehouseIdAndGoodsReceipt_IdAndLot_LotId(
+            String warehouseId, Long grHeaderId, Long lotId);
+
 
 }
