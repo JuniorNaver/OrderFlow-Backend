@@ -45,11 +45,6 @@ public class GoodsReceiptHeader {
     @Column(name = "NOTE", length = 255)
     private String note; // 비고
 
-    // ✅ FK: 창고 (WAREHOUSE_MASTER)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "WAREHOUSE_ID", nullable = false)
-    private Warehouse warehouse;
-
     // ✅ FK: 발주내역 (PO_HEADER)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PO_ID", nullable = false)

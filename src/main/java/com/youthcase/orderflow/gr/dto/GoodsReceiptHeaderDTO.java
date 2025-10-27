@@ -26,8 +26,6 @@ public class GoodsReceiptHeaderDTO {
                 .status(entity.getStatus())
                 .receiptDate(entity.getReceiptDate())
                 .note(entity.getNote())
-                // 창고 ID
-                .warehouseId(entity.getWarehouse() != null ? entity.getWarehouse().getWarehouseId() : null)
                 // 발주 ID
                 .poId(entity.getPoHeader() != null ? entity.getPoHeader().getPoId() : null)
                 // ✅ 작성자: User 엔티티의 name을 사용 (또는 userId)

@@ -16,6 +16,9 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
     // ✅ Store FK 기준으로 조회
     List<Warehouse> findByStore_StoreId(String storeId);
 
+    // ✅ 점포 + 보관 방식별 단건 조회
+    Optional<Warehouse> findByStore_StoreIdAndStorageMethod(String storeId, StorageMethod storageMethod);
+
     // ✅ 점포(Store) ID 기준으로 첫 번째 창고 1개만 반환 (Optional)
     Optional<Warehouse> findFirstByStore_StoreId(String storeId);
 

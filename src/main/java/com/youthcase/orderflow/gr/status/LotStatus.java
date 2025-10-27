@@ -6,5 +6,6 @@ public enum LotStatus {
     CONSUMED,   //이미 사용됨
     EXPIRED,    //유통기한 경과
     DISPOSED,   //폐기 완료
-    RETURNED    //반품으로 회수된 재고
+    RETURNED,    //반품으로 회수된 재고
+    CANCELED
 }

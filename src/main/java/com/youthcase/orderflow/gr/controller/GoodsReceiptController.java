@@ -6,10 +6,12 @@ import com.youthcase.orderflow.gr.dto.GoodsReceiptHeaderDTO;
 import com.youthcase.orderflow.gr.dto.POForGRDTO;
 import com.youthcase.orderflow.gr.service.GoodsReceiptService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -50,20 +52,15 @@ public class GoodsReceiptController {
         }
     }
 
-    /** ✅ 5. 입고 확정 취소 (status → CANCELED) */
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelConfirmed(
-            @AuthenticationPrincipal User currentUser,  // ✅ 로그인한 사용자 정보 주입
-            @PathVariable Long id,
-            @RequestParam(required = false) String reason
+    /** ✅ 5. 입고 취소 (status → CANCELED) */
+    @PutMapping("/{poId}/cancel")
+    public ResponseEntity<Void> cancelByPoId(
+            @PathVariable Long poId,
+            @RequestParam(required = false, defaultValue = "no reason") String reason,
+            @AuthenticationPrincipal User user
     ) {
-        try {
-            service.cancelConfirmedReceipt(id, reason == null ? "no reason" : reason, currentUser); // ✅ 3번째 인자 전달
-            return ResponseEntity.ok(Map.of("message", "입고가 취소되었습니다."));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", e.getMessage()));
-        }
+        service.cancelByPo(poId, reason, user);
+        return ResponseEntity.ok().build();
     }
 
     /** ✅ 6. 바코드 스캔 → 발주 조회 + 품목 리스트 반환 */
@@ -80,16 +77,15 @@ public class GoodsReceiptController {
         return ResponseEntity.ok(dto);
     }
 
-    /** ✅ 8. 입고 삭제 */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        try {
-            service.delete(id);
-            return ResponseEntity.ok(Map.of("message", "입고가 삭제되었습니다."));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", e.getMessage()));
-        }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<GRListDTO>> searchGoodsReceipts(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        List<GRListDTO> results = service.searchGoodsReceipts(query, startDate, endDate);
+        return ResponseEntity.ok(results);
     }
 }
 
