@@ -1,5 +1,6 @@
 package com.youthcase.orderflow.master.warehouse.repository;
 
+import com.youthcase.orderflow.master.product.domain.StorageMethod;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.youthcase.orderflow.master.store.domain.Store;
@@ -19,6 +20,8 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
     Optional<Warehouse> findFirstByStore_StoreId(String storeId);
 
     Optional<Warehouse> findByStore(Store store);
+
+    List<Warehouse> findByStorageMethod(StorageMethod storageMethod);
 }
 
 

@@ -1,25 +1,21 @@
-package com.youthcase.orderflow.mockTest;
+package com.youthcase.orderflow.mockTest.pr;
 
 import com.youthcase.orderflow.pr.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
 @Profile({"dev", "local"})
-@Order(4)
 @RequiredArgsConstructor
 public class InventorySeeder implements CommandLineRunner {
 
     private final InventoryService inventoryService;
 
     @Override
-    @Transactional
     public void run(String... args) {
         // GTIN은 ProductSeeder에 있는 것과 맞춰서
         inventoryService.receive("8801115115809", 30L);

@@ -1,148 +1,101 @@
 package com.youthcase.orderflow.mockTest.init;
 
-import com.youthcase.orderflow.auth.domain.Role;
-import com.youthcase.orderflow.auth.domain.User;
-import com.youthcase.orderflow.auth.domain.enums.RoleType;
-import com.youthcase.orderflow.auth.repository.RoleRepository;
-import com.youthcase.orderflow.auth.repository.UserRepository;
-import com.youthcase.orderflow.master.store.domain.Store;
-import com.youthcase.orderflow.master.store.domain.StoreType;
-import com.youthcase.orderflow.master.store.repository.StoreRepository;
+import com.youthcase.orderflow.mockTest.*;
+import com.youthcase.orderflow.mockTest.auth.*;
+import com.youthcase.orderflow.mockTest.gr.*;
+import com.youthcase.orderflow.mockTest.master.*;
+import com.youthcase.orderflow.mockTest.pr.*;
+import com.youthcase.orderflow.mockTest.sd.*;
+import com.youthcase.orderflow.mockTest.stk.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
 /**
- * 개발 환경 초기 데이터 설정
- * - 기본 점포 / 관리자 / 점장 / 점원 계정 생성
- * - 단일 Role 구조 (User → Role)
+ * 🚀 DevDataInitializer
+ * --------------------------------------------------------
+ * - dev/local 환경 전체 데이터 시더 실행기
+ * - FK 의존 순서 기반 실행 (Cleaner → Auth → Master → User → Inventory → Stock)
+ * - GR/LOT/STK 시더 분리로 실제 물류 흐름 반영
+ * --------------------------------------------------------
  */
+@Slf4j
 @Component
+@Profile({"dev", "local"})
 @RequiredArgsConstructor
-@Order(4)
 public class DevDataInitializer implements CommandLineRunner {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final StoreRepository storeRepository;
-    private final PasswordEncoder passwordEncoder;
+    // ====== AUTH ======
+    private final AuthoritySeeder authoritySeeder;
+    private final RoleSeeder roleSeeder;
+    private final RoleAuthoritySeeder roleAuthoritySeeder;
+
+    // ====== MASTER ======
+    private final StoreSeeder storeSeeder;
+    private final WarehouseSeeder warehouseSeeder;
+    private final CategorySeeder categorySeeder;
+    private final ProductSeeder productSeeder;
+    private final PriceSeeder priceSeeder;
+
+    // ====== USER ======
+    private final AppUserSeeder appUserSeeder;
+
+    // ====== INVENTORY / GR / LOT / STOCK ======
+    private final InventorySeeder inventorySeeder;
+    private final GoodsReceiptSeeder goodsReceiptSeeder;
+    private final LotSeeder lotSeeder;
+    private final StockSeeder stockSeeder;
 
     @Override
     @Transactional
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
+        log.info("🚀 [DevDataInitializer] Starting full mock data initialization...");
 
-        // =========================================================
-        // 1️⃣ 점포 생성 (기본 S001)
-        // =========================================================
-        Store store = storeRepository.findById("S001").orElseGet(() -> {
-            Store s = Store.builder()
-                    .storeId("S001")
-                    .storeName("서울 강남점")
-                    .brandCode("CU")
-                    .regionCode("SEOUL")
-                    .managerId("admin01")
-                    .storeType(StoreType.DIRECT)
-                    .address("서울특별시 강남구 테헤란로 123")
-                    .addressDetail("강남역 5번 출구 앞")
-                    .postCode("06234")
-                    .ownerName("홍길동")
-                    .bizHours("08:00~23:00")
-                    .contactNumber("02-3456-7890")
-                    .active(true)
-                    .longitude(new BigDecimal("127.028000"))
-                    .latitude(new BigDecimal("37.498000"))
-                    .build();
-            storeRepository.saveAndFlush(s);
-            System.out.println("✅ 점포 생성 완료: " + s.getStoreName());
-            return s;
-        });
+        try {
+            // 0️⃣ 초기화 전 데이터 정리 (선택)
+            log.info("🧹 Cleaning existing data before seeding...");
+            // DevDataCleaner가 별도로 Order(0)에서 실행되므로 중복 호출은 생략 가능
 
-        // =========================================================
-        // 2️⃣ Role 생성 (ADMIN / MANAGER / CLERK)
-        // =========================================================
-        Role adminRole = roleRepository.findByRoleId(RoleType.ADMIN.getRoleId())
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .roleId(RoleType.ADMIN.getRoleId())
-                        .description(RoleType.ADMIN.getDescription())
-                        .build()));
+            // 1️⃣ AUTH & ROLE
+            log.info("🔐 [1/6] Seeding authorities and roles...");
+            authoritySeeder.run();
+            roleSeeder.run();
+            roleAuthoritySeeder.run();
 
-        Role managerRole = roleRepository.findByRoleId(RoleType.MANAGER.getRoleId())
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .roleId(RoleType.MANAGER.getRoleId())
-                        .description(RoleType.MANAGER.getDescription())
-                        .build()));
+            // 2️⃣ MASTER (Store / Warehouse / Category / Product / Price)
+            log.info("🏪 [2/6] Seeding master data (Store, Warehouse, Product, Price)...");
+            storeSeeder.run();
+            warehouseSeeder.run();
+            categorySeeder.run();
+            productSeeder.run();
+            priceSeeder.run();
 
-        Role clerkRole = roleRepository.findByRoleId(RoleType.CLERK.getRoleId())
-                .orElseGet(() -> roleRepository.save(Role.builder()
-                        .roleId(RoleType.CLERK.getRoleId())
-                        .description(RoleType.CLERK.getDescription())
-                        .build()));
+            // 3️⃣ USER
+            log.info("👤 [3/6] Seeding user accounts...");
+            appUserSeeder.run();
 
-        // =========================================================
-        // 3️⃣ 관리자 계정 (admin01)
-        // =========================================================
-        if (!userRepository.existsByUserId("admin01")) {
-            User adminUser = User.builder()
-                    .userId("admin01")
-                    .name("관리자 계정")
-                    .email("admin01@orderflow.com")
-                    .password(passwordEncoder.encode("1234"))
-                    .enabled(true)
-                    .store(store)
-                    .role(adminRole) // ✅ 단일 Role 직접 지정
-                    .build();
+            // 4️⃣ INVENTORY
+            log.info("📦 [4/6] Seeding inventory data...");
+            inventorySeeder.run();
 
-            userRepository.save(adminUser);
-            System.out.println("✅ 관리자 계정(admin01/1234) 생성 완료");
+            // 5️⃣ 입고 → LOT → 재고
+            log.info("🚚 [5/6] Seeding GR (Goods Receipt)...");
+            goodsReceiptSeeder.run();
+
+            log.info("📋 [5/6-2] Seeding LOT records...");
+            lotSeeder.run();
+
+            log.info("🏗️ [5/6-3] Seeding MM_STOCK based on LOT...");
+            stockSeeder.run();
+
+            log.info("✅ [DevDataInitializer] All seeders executed successfully.");
+
+        } catch (Exception e) {
+            log.error("❌ [DevDataInitializer] Seeding failed: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
         }
-
-        // =========================================================
-        // 4️⃣ 점장 계정 (manager01~10)
-        // =========================================================
-        final int MANAGER_COUNT = 10;
-        for (int i = 1; i <= MANAGER_COUNT; i++) {
-            String userId = String.format("manager%02d", i);
-            if (!userRepository.existsByUserId(userId)) {
-                User manager = User.builder()
-                        .userId(userId)
-                        .name("지점장-" + i)
-                        .email(userId + "@orderflow.com")
-                        .password(passwordEncoder.encode("managerpass"))
-                        .enabled(true)
-                        .store(store)
-                        .role(managerRole)
-                        .build();
-                userRepository.save(manager);
-            }
-        }
-        System.out.println("✅ 점장 계정 " + MANAGER_COUNT + "개 생성 완료");
-
-        // =========================================================
-        // 5️⃣ 점원 계정 (clerk01~20)
-        // =========================================================
-        final int CLERK_COUNT = 20;
-        for (int i = 1; i <= CLERK_COUNT; i++) {
-            String userId = String.format("clerk%02d", i);
-            if (!userRepository.existsByUserId(userId)) {
-                User clerk = User.builder()
-                        .userId(userId)
-                        .name("점원-" + i)
-                        .email(userId + "@orderflow.com")
-                        .password(passwordEncoder.encode("clerkpass"))
-                        .enabled(true)
-                        .store(store)
-                        .role(clerkRole)
-                        .build();
-                userRepository.save(clerk);
-            }
-        }
-        System.out.println("✅ 점원 계정 " + CLERK_COUNT + "개 생성 완료");
-
-        System.out.println("✅ 초기 데이터 세팅 완료 (Store + Users + Roles)");
     }
 }

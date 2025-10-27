@@ -5,14 +5,12 @@ import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.master.warehouse.dto.WarehouseRequestDTO;
 import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
-import com.youthcase.orderflow.stk.repository.STKRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +30,7 @@ public class WarehouseService {
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다: " + dto.getStoreId()));
 
         Warehouse warehouse = dto.toEntity(store);
-        return warehouseRepository.save(warehouse);
+        return warehouseRepository.saveAndFlush(warehouse);
     }
 
     // ────────────────────────────────
@@ -65,7 +63,7 @@ public class WarehouseService {
         // ✅ DTO의 변경사항 적용
         dto.applyToEntity(warehouse, store);
 
-        return warehouseRepository.save(warehouse);
+        return warehouseRepository.saveAndFlush(warehouse);
     }
 
     // ────────────────────────────────
@@ -73,6 +71,9 @@ public class WarehouseService {
     // ────────────────────────────────
     @Transactional
     public void deleteWarehouse(String warehouseId) {
+        if (!warehouseRepository.existsById(warehouseId)) {
+            throw new NoSuchElementException("삭제할 창고를 찾을 수 없습니다: " + warehouseId);
+        }
         warehouseRepository.deleteById(warehouseId);
     }
 

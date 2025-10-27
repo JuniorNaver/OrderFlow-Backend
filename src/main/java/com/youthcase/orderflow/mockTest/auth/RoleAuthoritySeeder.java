@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.mockTest.init;
+package com.youthcase.orderflow.mockTest.auth;
 
 import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.domain.Role;
@@ -9,7 +9,6 @@ import com.youthcase.orderflow.auth.repository.RoleAuthMappingRepository;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,8 +18,7 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-@Order(3)
-public class RoleAuthorityInitializer implements CommandLineRunner {
+public class RoleAuthoritySeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final AuthorityRepository authorityRepository;
