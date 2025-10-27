@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 🧾 POController
@@ -274,6 +275,18 @@ public class POController {
     public ResponseEntity<List<POItemResponseDTO>> getSavedCart(@PathVariable Long poId) {
         return ResponseEntity.ok(poService.getSavedCartItems(poId));
     }
+
+
+    // '불러오기' 누르면 status=pr 인 헤더, 아이템 1행 복제
+    @PostMapping("/savedCart/{poId}/load")
+    public ResponseEntity<Map<String, Long>> loadCart(@PathVariable Long poId) {
+        Long newPoId = poService.loadCart(poId);
+        return ResponseEntity.ok(Map.of("poId", newPoId));
+    }
+
+
+
+
 
     // ======================================================================
     // ✅ [9] 저장된 장바구니 삭제
