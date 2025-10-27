@@ -9,9 +9,19 @@ public enum StorageMethod {
     private final int leadTimeDays;
     private final String displayName;
 
+
     StorageMethod(int leadTimeDays, String displayName) {
         this.leadTimeDays = leadTimeDays;
         this.displayName = displayName;
+    }
+
+    public String getPrefix() {
+        return switch (this) {
+            case ROOM_TEMP -> "ROOM";
+            case COLD      -> "CHILLED";
+            case FROZEN    -> "FROZEN";
+            case OTHER     -> "OTHER";
+        };
     }
 
     public int getLeadTimeDays() {
