@@ -5,7 +5,6 @@ import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.gr.domain.Lot;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.gr.domain.GoodsReceiptHeader;
-import com.youthcase.orderflow.stk.domain.enums.StockStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

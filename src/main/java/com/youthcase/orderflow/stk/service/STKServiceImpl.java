@@ -6,7 +6,7 @@ import com.youthcase.orderflow.gr.repository.GoodsReceiptHeaderRepository;
 import com.youthcase.orderflow.master.product.domain.Product;
 import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.domain.enums.StockStatus;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import com.youthcase.orderflow.stk.dto.*;
 import com.youthcase.orderflow.stk.repository.STKRepository;
 import com.youthcase.orderflow.master.product.repository.ProductRepository;

@@ -1,4 +1,4 @@
-package com.youthcase.orderflow.stk.domain.enums;
+package com.youthcase.orderflow.stk.domain;
 
 import lombok.Getter;
 

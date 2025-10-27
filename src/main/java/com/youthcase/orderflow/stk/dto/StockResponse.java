@@ -1,7 +1,7 @@
 package com.youthcase.orderflow.stk.dto;
 
 import com.youthcase.orderflow.stk.domain.STK;
-import com.youthcase.orderflow.stk.domain.enums.StockStatus;
+import com.youthcase.orderflow.stk.domain.StockStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
