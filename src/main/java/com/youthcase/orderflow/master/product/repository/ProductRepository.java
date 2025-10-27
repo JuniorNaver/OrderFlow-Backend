@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -130,6 +131,33 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             @Param("catsEmpty") boolean catsEmpty,
             @Param("zonesEmpty") boolean zonesEmpty
     );
+
+    public interface ProductCountPerKan {
+        String getKanCode();
+        Long getCnt();
+    }
+
+    @Query("""
+    select p.category.kanCode as kanCode, count(p) as cnt
+    from Product p
+    group by p.category.kanCode
+""")
+    List<ProductCountPerKan> countProductsGroupByKan();
+
+    // ✅ 특정 KAN의 상품 간단 목록 (행 펼침용)
+    public interface SimpleProductRow {
+        String getGtin();
+        String getProductName();
+        BigDecimal getPrice();         // 타입은 엔티티에 맞춰서
+    }
+
+    @Query("""
+    select p.gtin as gtin, p.productName as productName, p.price as price
+    from Product p
+    where p.category.kanCode = :kan
+    order by p.productName asc, p.gtin asc
+""")
+    List<SimpleProductRow> findSimpleByCategoryKan(@Param("kan") String kan);
 
     default List<Product> findRecommendable(List<String> cats, List<StorageMethod> zones) {
         boolean catsEmpty = (cats == null || cats.isEmpty());
