@@ -38,7 +38,6 @@ public class GoodsReceiptMapper {
                 .receiptDate(dto.getReceiptDate())
                 .note(dto.getNote())
                 .user(user)
-                .warehouse(warehouse)
                 .poHeader(poHeader)
                 .build();
 
@@ -108,7 +107,6 @@ public class GoodsReceiptMapper {
                 .status(entity.getStatus())
                 .receiptDate(entity.getReceiptDate())
                 .note(entity.getNote())
-                .warehouseId(entity.getWarehouse() != null ? entity.getWarehouse().getWarehouseId() : null)
                 .poId(entity.getPoHeader() != null ? entity.getPoHeader().getPoId() : null)
                 .userId(entity.getUser() != null ? entity.getUser().getUserId() : null)
                 .items(itemDTOs)

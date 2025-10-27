@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,11 +21,6 @@ public interface GoodsReceiptHeaderRepository extends JpaRepository<GoodsReceipt
     @EntityGraph(attributePaths = {"items", "warehouse", "poHeader", "user"})
     Optional<GoodsReceiptHeader> findWithItemsByGrHeaderId(Long grHeaderId);
 
-    /**
-     * 특정 창고 기준으로 입고내역 전체 조회
-     */
-    @EntityGraph(attributePaths = {"items"})
-    List<GoodsReceiptHeader> findByWarehouse_WarehouseId(String warehouseId);
 
     /**
      * 특정 사용자 기준으로 입고내역 조회
@@ -83,6 +79,28 @@ public interface GoodsReceiptHeaderRepository extends JpaRepository<GoodsReceipt
             @Param("pendingStatus") GoodsReceiptStatus pendingStatus
     );
 
+    // 단순 기간 조회
+    List<GoodsReceiptHeader> findByReceiptDateBetween(LocalDate start, LocalDate end);
+
+    // 키워드 + 기간 검색 (상품명, 코드, 비고)
+    @Query("""
+        SELECT DISTINCT h 
+        FROM GoodsReceiptHeader h 
+        JOIN h.items i 
+        JOIN i.product p
+        WHERE h.receiptDate BETWEEN :start AND :end
+          AND (
+            LOWER(p.productName) LIKE LOWER(CONCAT('%', :query, '%')) OR
+            LOWER(p.gtin) LIKE LOWER(CONCAT('%', :query, '%')) OR
+            LOWER(h.note) LIKE LOWER(CONCAT('%', :query, '%'))
+          )
+        ORDER BY h.receiptDate DESC
+        """)
+    List<GoodsReceiptHeader> searchByKeywordAndDate(
+            @Param("query") String query,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
+    );
 
 
 }

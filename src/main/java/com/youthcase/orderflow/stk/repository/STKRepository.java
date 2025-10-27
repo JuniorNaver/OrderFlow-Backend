@@ -150,7 +150,7 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     // --------------------------------------------------
     // 🧩 재고 중복 확인 (창고 + 입고 + LOT 조합)
     // --------------------------------------------------
-    boolean existsByWarehouse_WarehouseIdAndGoodsReceipt_IdAndLot_LotId(
+    boolean existsByWarehouse_WarehouseIdAndGoodsReceipt_GrHeaderIdAndLot_LotId(
             String warehouseId,
             Long goodsReceiptId,
             Long lotId
