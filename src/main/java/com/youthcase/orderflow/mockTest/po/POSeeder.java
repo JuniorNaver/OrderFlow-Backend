@@ -27,7 +27,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class POSeeder implements CommandLineRunner {
+public class POSeeder {
 
     private final POHeaderRepository poHeaderRepository;
     private final POItemRepository poItemRepository;
@@ -35,7 +35,6 @@ public class POSeeder implements CommandLineRunner {
     private final PriceRepository priceRepository;
     private final UserRepository userRepository;
 
-    @Override
     @Transactional
     public void run(String... args) {
         long t0 = System.currentTimeMillis();
@@ -51,7 +50,7 @@ public class POSeeder implements CommandLineRunner {
         log.debug("🔎 Product size={}, sample={}", products.size(),
                 products.size() > 0 ? products.get(0).getGtin() : "N/A");
 
-        final int fullyCount = 100;     // FULLY_RECEIVED 수
+        final int fullyCount = 70;     // FULLY_RECEIVED 수
         final int extraPerStatus = 5;   // 나머지 상태별 추가 수
         int headerSeq = 1;
 

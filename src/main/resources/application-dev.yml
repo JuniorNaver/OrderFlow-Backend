@@ -17,13 +17,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create          # 개발 환경에서는 테이블 자동 생성/업데이트 허용
-    show-sql: true              # SQL 로그 출력
+    show-sql: false              # SQL 로그 출력
     open-in-view: true          # Lazy 로딩 허용 (Controller → Service → View 구조일 때만)
     properties:
       hibernate:
         format_sql: true        # SQL 보기 좋게 포맷
         highlight_sql: true     # SQL 강조
-        use_sql_comments: true  # SQL 주석 사용
+        use_sql_comments: false  # SQL 주석 사용
 
   ## Mail 설정
   mail:
@@ -55,7 +55,12 @@ kakao:
 ## logging 설정
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql: trace
-    org.springframework.security.web: info
-
+    root: info                       # ✅ 기본은 info
+    org.hibernate.SQL: warn          # ✅ SQL 문 거의 안 찍힘
+    org.hibernate.orm.jdbc.bind: off # ✅ 바인딩 파라미터 숨김 (핵심)
+    org.springframework.security: info
+    com.youthcase.orderflow: info    # ✅ 우리 코드만 잘 보이게
+  pattern:
+    console: "%clr(%-5level) %msg%n" # ✅ 콘솔 최대 심플하게
+  file:
+    name: logs/orderflow-dev.log     # 📌 파일로 전체 로그 저장
