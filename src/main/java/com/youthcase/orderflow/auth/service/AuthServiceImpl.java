@@ -15,9 +15,11 @@ import com.youthcase.orderflow.auth.repository.RefreshTokenRepository;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
 import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.auth.service.security.CustomUserDetailsService;
+import com.youthcase.orderflow.auth.service.EmailService;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // ⭐️ 로그를 위한 import 추가
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,7 +28,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.UUID; // ⭐️ UUID를 위한 import 추가
 
+@Slf4j // ⭐️ 로그를 위한 어노테이션 추가
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -49,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponseDTO authenticateAndGenerateToken(String userId, String password) {
-
+        // ... (기존 코드 유지)
         // 1. 인증 객체 생성 및 인증 시도
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userId, password);
@@ -75,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
-
+        // ... (기존 코드 유지)
         // 1. 토큰 유효성 검사 및 사용자 ID 획득
         String userId = validatePasswordResetToken(token);
 
@@ -101,7 +105,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponseDTO reissueToken(String refreshToken) {
-
+        // ... (기존 코드 유지)
         // 1. Refresh Token의 유효성 검사 (JwtProvider에서 만료 여부, 형식 등을 검사)
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않거나 만료된 Refresh Token입니다. 재로그인이 필요합니다.");
@@ -154,6 +158,15 @@ public class AuthServiceImpl implements AuthService {
         // 3. 초기화 토큰 생성 (UUID 사용)
         String resetToken = generateUniqueResetToken();
 
+        // 3. 기존 토큰이 있다면 만료 처리
+        passwordResetTokenRepository.findByUserUserIdAndUsedFalse(user.getUserId()) // ⭐️ 반드시 이 이름으로 호출
+                .ifPresent(token -> {
+                    token.useToken();
+                    passwordResetTokenRepository.save(token);
+                });
+
+        // 4. 초기화 토큰 생성 (UUID 사용)
+        String resetToken = generateUniqueResetToken();
         LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
 
         // PasswordResetToken.builder()를 사용하여 User 객체를 참조
@@ -170,12 +183,22 @@ public class AuthServiceImpl implements AuthService {
         String resetLink = "https://yourdomain.com/reset-password?token=" + resetToken;
         String emailContent = buildResetEmailContent(user.getUserId(), resetLink);
 
-        emailService.sendEmail(user.getEmail(), "[OrderFlow] 비밀번호 초기화 요청", emailContent);
+        try {
+            emailService.sendEmail(user.getEmail(), "[OrderFlow] 비밀번호 초기화 요청", emailContent);
+            log.info("✅ 비밀번호 초기화 이메일 발송 성공: User ID {}", userId);
+        } catch (Exception e) {
+            // 🚨 500 오류가 여기서 발생했을 가능성이 가장 높습니다.
+            log.error("🚨 비밀번호 초기화 이메일 발송 중 오류 발생: {}", e.getMessage(), e);
+
+            // ⭐️ 이메일 전송 실패 시 500 오류를 유발하도록 RuntimeException을 던집니다.
+            // (AuthService의 역할은 메일 발송 성공까지 포함하므로, 실패는 비정상 상황입니다.)
+            throw new RuntimeException("이메일 전송에 실패했습니다. 서버 관리자에게 문의하세요.", e);
+        }
     }
 
     // 헬퍼 메서드: 초기화 토큰 생성
     private String generateUniqueResetToken() {
-        return java.util.UUID.randomUUID().toString();
+        return UUID.randomUUID().toString();
     }
 
     // 헬퍼 메서드: 이메일 본문 생성
@@ -187,7 +210,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String validatePasswordResetToken(String token) {
-
+        // ... (기존 코드 유지)
         // 1. 토큰 값으로 엔티티 조회
         PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenAndUsedFalse(token)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("유효한 토큰을 찾을 수 없습니다: %s", token)));
@@ -209,7 +232,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public String registerNewUser(UserRegisterRequestDTO request) {
-
+        // ... (기존 코드 유지)
         // 1️⃣ 중복 체크
         if (userRepository.existsByUserId(request.getUserId())) {
             throw new DuplicateUserException("이미 존재하는 사용자 ID입니다: " + request.getUserId());
