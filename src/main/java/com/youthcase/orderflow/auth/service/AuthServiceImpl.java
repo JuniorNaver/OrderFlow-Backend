@@ -7,6 +7,8 @@ import com.youthcase.orderflow.auth.domain.User;
 import com.youthcase.orderflow.auth.dto.TokenResponseDTO;
 import com.youthcase.orderflow.auth.dto.UserRegisterRequestDTO;
 import com.youthcase.orderflow.auth.exception.DuplicateUserException;
+import com.youthcase.orderflow.auth.exception.InvalidEmailException; // 💡 InvalidEmailException 임포트 가정
+import com.youthcase.orderflow.auth.exception.UserNotFoundException;
 import com.youthcase.orderflow.auth.provider.JwtProvider;
 import com.youthcase.orderflow.auth.repository.PasswordResetTokenRepository;
 import com.youthcase.orderflow.auth.repository.RefreshTokenRepository;
@@ -89,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. 사용자 엔티티 조회 및 비밀번호 업데이트
         User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("사용자 정보를 찾을 수 없습니다.")); // 예외 변경
 
         // 새 비밀번호 암호화 및 업데이트
         String encodedPassword = passwordEncoder.encode(newPassword);
@@ -135,25 +137,26 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 비밀번호 초기화 요청을 처리하고, 초기화 토큰을 생성하여 사용자 이메일로 발송합니다.
-     * 💡 기존 메서드를 수정하여 userId와 email을 모두 받아 보안을 강화하고,
-     * 사용자에게 오류 노출 없이 이메일 전송 실패를 처리합니다.
+     * ⭐️ 변경: email 매개변수를 추가하고, 이메일 일치 여부를 검증합니다.
      */
     @Override
     @Transactional
-    public void requestPasswordReset(String userId, String email) { // ⭐️ email 인자 추가
+    public void requestPasswordReset(String userId, String email) { // ⭐️ 시그니처 변경
 
+        // 1. 사용자 ID로 사용자 조회
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다.")); // 예외 처리 필요
 
-        // 1. 사용자 ID와 이메일이 일치하는 사용자 조회
-        //    (findByUserIdAndEmail 메서드가 UserRepository에 정의되어 있다고 가정)
-        User user = userRepository.findByUserIdAndEmail(userId, email)
-                .orElse(null);
-
-        // 2. 사용자가 존재하지 않거나 정보가 일치하지 않아도, 보안을 위해 성공 응답을 반환하고 로그만 남깁니다.
-        if (user == null) {
-            log.warn("비밀번호 초기화 요청 실패: ID({}) 또는 이메일({}) 불일치.", userId, email);
-            // ⭐️ 500 오류 방지: 사용자가 없다는 사실을 클라이언트에게 숨기고 정상 처리된 것처럼 반환합니다.
-            return;
+        // 2. ⭐️ 이메일 일치 여부 확인
+        if (!user.getEmail().equalsIgnoreCase(email)) {
+            // 보안을 위해 실제 이메일과 등록된 이메일이 다를 경우
+            // InvalidEmailException (커스텀 예외 가정)을 던지거나
+            // UserNotFoundException과 동일한 메시지를 반환하여 사용자 정보 유출 방지
+            throw new InvalidEmailException("아이디와 등록된 이메일이 일치하지 않습니다.");
         }
+
+        // 3. 초기화 토큰 생성 (UUID 사용)
+        String resetToken = generateUniqueResetToken();
 
         // 3. 기존 토큰이 있다면 만료 처리
         passwordResetTokenRepository.findByUserUserIdAndUsedFalse(user.getUserId()) // ⭐️ 반드시 이 이름으로 호출
@@ -166,6 +169,7 @@ public class AuthServiceImpl implements AuthService {
         String resetToken = generateUniqueResetToken();
         LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
 
+        // PasswordResetToken.builder()를 사용하여 User 객체를 참조
         PasswordResetToken tokenEntity = PasswordResetToken.builder()
                 .user(user) // User 객체 직접 참조
                 .token(resetToken)
@@ -175,7 +179,7 @@ public class AuthServiceImpl implements AuthService {
 
         passwordResetTokenRepository.save(tokenEntity);
 
-        // 5. 이메일 본문 생성 및 발송
+        // 4. 이메일 본문 생성 및 발송
         String resetLink = "https://yourdomain.com/reset-password?token=" + resetToken;
         String emailContent = buildResetEmailContent(user.getUserId(), resetLink);
 
@@ -218,6 +222,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 3. 검증 성공 시 사용자 ID 반환
+        // User 엔티티에서 ID를 추출
         return resetToken.getUser().getUserId();
     }
 
@@ -235,9 +240,9 @@ public class AuthServiceImpl implements AuthService {
 
         // 2️⃣ 기본 역할(Role) 부여
         Role defaultRole = roleRepository.findByRoleId("CLERK")
-                .orElseThrow(() -> new IllegalStateException("기본 역할(CLEREK)을 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalStateException("기본 역할(CLERK)을 찾을 수 없습니다."));
 
-        // (선택) Store 연계가 필요하다면 추가
+        // (선택) Store 연계
         Store store = null;
         if (request.getStoreId() != null) {
             store = storeRepository.findById(request.getStoreId())
