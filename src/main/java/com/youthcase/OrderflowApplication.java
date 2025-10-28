@@ -9,7 +9,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class OrderflowApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(OrderflowApplication.class, args);
+		SpringApplication.
+                run(OrderflowApplication.class, args);
 	}
 
 }
