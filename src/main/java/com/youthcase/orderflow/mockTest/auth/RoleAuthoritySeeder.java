@@ -8,7 +8,6 @@ import com.youthcase.orderflow.auth.repository.AuthorityRepository;
 import com.youthcase.orderflow.auth.repository.RoleAuthMappingRepository;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

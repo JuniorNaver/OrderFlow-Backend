@@ -16,7 +16,6 @@ import com.youthcase.orderflow.po.domain.POStatus;
 import com.youthcase.orderflow.po.repository.POHeaderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +37,9 @@ public class GoodsReceiptSeeder {
     private final POHeaderRepository poHeaderRepository;
     private final UserRepository userRepository;
 
-    /** GR 생성 대상 PO 상태 */
+    /**
+     * GR 생성 대상 PO 상태
+     */
     private static final EnumSet<POStatus> TARGET_STATUSES = EnumSet.of(
             POStatus.GI,
             POStatus.PARTIAL_RECEIVED,
@@ -52,11 +53,14 @@ public class GoodsReceiptSeeder {
 
         User user = userRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("APP_USER 데이터가 필요합니다."));
-        Warehouse warehouse = warehouseRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("WAREHOUSE 데이터가 필요합니다."));
+        List<Warehouse> allWarehouses = warehouseRepository.findAll();
+        if (allWarehouses.isEmpty()) {
+            throw new IllegalStateException("WAREHOUSE 데이터가 필요합니다.");
+        }
+
         List<Product> products = productRepository.findAll().stream().limit(5).toList();
 
-        // ✅ 1. 여러 상태의 POHeader 조회 (in 절 활용)
+        // ✅ GR 생성 대상 POHeader
         List<POHeader> targetPOs = poHeaderRepository.findByStatusIn(TARGET_STATUSES);
 
         if (targetPOs.isEmpty()) {
@@ -64,7 +68,6 @@ public class GoodsReceiptSeeder {
             return;
         }
 
-        // ✅ 2. PO별로 GR_HEADER + GR_ITEM 생성
         for (POHeader po : targetPOs) {
             if (grHeaderRepository.existsByPoHeader(po)) {
                 log.warn("⚠️ PO_ID={} 이미 GR_HEADER 존재 → 스킵", po.getPoId());
@@ -82,13 +85,26 @@ public class GoodsReceiptSeeder {
             grHeaderRepository.save(header);
 
             for (Product product : products) {
+                // ✅ 상품의 보관방법과 일치하는 창고 찾기
+                Warehouse matchedWarehouse = allWarehouses.stream()
+                        .filter(w -> w.getStorageMethod() == product.getStorageMethod())
+                        .findFirst()
+                        .orElse(null);
+
+                if (matchedWarehouse == null) {
+                    log.warn("🚫 No matching warehouse found for product={} (storageMethod={})",
+                            product.getProductName(), product.getStorageMethod());
+                    continue;
+                }
+
                 GoodsReceiptItem item = GoodsReceiptItem.builder()
                         .header(header)
-                        .warehouse(warehouse)
+                        .warehouse(matchedWarehouse)
                         .product(product)
                         .qty(10L)
-                        .note("테스트 입고 아이템")
+                        .note("자동 입고 (보관방법 매칭 완료)")
                         .build();
+
                 grItemRepository.save(item);
             }
 

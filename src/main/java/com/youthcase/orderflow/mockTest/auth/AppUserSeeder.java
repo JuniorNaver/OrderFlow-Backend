@@ -9,7 +9,6 @@ import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -27,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class AppUserSeeder{
+public class AppUserSeeder {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -51,39 +50,42 @@ public class AppUserSeeder{
                 .orElseThrow(() -> new IllegalStateException("⚠️ CLERK 역할이 존재하지 않습니다."));
 
         // 3️⃣ 관리자 계정
-        createIfNotExists("admin01", "관리자 계정", "1234", adminRole, store);
+        createIfNotExists("admin01", "관리자 계정", "admin01@orderflow.com", "1234", adminRole, store);
 
         // 4️⃣ 점장 계정 (manager01~10)
+        // ⭐️ 요청하신 user01 계정 추가
+        createIfNotExists("user01", "추가 점장 계정", "pnix85@naver.com", "1234", managerRole, store);
+
         for (int i = 1; i <= 10; i++) {
             String id = String.format("manager%02d", i);
-            createIfNotExists(id, "지점장-" + i, "managerpass", managerRole, store);
+            createIfNotExists(id, "지점장-" + i, id + "@orderflow.com", "managerpass", managerRole, store);
         }
 
         // 5️⃣ 점원 계정 (clerk01~20)
         for (int i = 1; i <= 20; i++) {
             String id = String.format("clerk%02d", i);
-            createIfNotExists(id, "점원-" + i, "clerkpass", clerkRole, store);
+            createIfNotExists(id, "점원-" + i, id + "@orderflow.com", "clerkpass", clerkRole, store);
         }
 
         log.info("✅ [AppUserSeeder] All default accounts created successfully.");
     }
 
     /**
-     * 개별 사용자 생성 (중복 시 무시)
+     * 개별 사용자 생성 (중복 시 무시) - 이메일 인자 포함
      */
-    private void createIfNotExists(String userId, String name, String rawPassword, Role role, Store store) {
+    private void createIfNotExists(String userId, String name, String email, String rawPassword, Role role, Store store) {
         if (!userRepository.existsByUserId(userId)) {
             User user = User.builder()
                     .userId(userId)
                     .name(name)
-                    .email(userId + "@orderflow.com")
+                    .email(email) // ⭐️ 전달받은 이메일 사용
                     .password(passwordEncoder.encode(rawPassword))
                     .enabled(true)
                     .store(store)
                     .role(role)
                     .build();
             userRepository.save(user);
-            log.info("🧩 User created: {} ({})", userId, role.getRoleId());
+            log.info("🧩 User created: {} ({}, {})", userId, role.getRoleId(), email);
         }
     }
 }

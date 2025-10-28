@@ -3,7 +3,6 @@ package com.youthcase.orderflow.mockTest.master;
 import com.youthcase.orderflow.pr.domain.Category;
 import com.youthcase.orderflow.pr.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

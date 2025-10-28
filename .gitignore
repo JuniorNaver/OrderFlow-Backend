@@ -45,3 +45,8 @@ wallet/
 src/main/resources/Wallet_ORDERFLOW/
 Wallet_ORDERFLOW/
 **/Wallet_ORDERFLOW/**
+
+# Log files
+*.log
+logs/
+orderflow-dev.log

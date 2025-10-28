@@ -30,7 +30,7 @@ public class WarehouseService {
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 지점 ID입니다: " + dto.getStoreId()));
 
         Warehouse warehouse = dto.toEntity(store);
-        return warehouseRepository.saveAndFlush(warehouse);
+        return warehouseRepository.save(warehouse);
     }
 
     // ────────────────────────────────

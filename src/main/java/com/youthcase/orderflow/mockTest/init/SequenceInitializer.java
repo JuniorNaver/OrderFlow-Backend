@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"dev", "local"})
 @Order(1)
+@Transactional
 public class SequenceInitializer implements CommandLineRunner {
 
     @PersistenceContext
