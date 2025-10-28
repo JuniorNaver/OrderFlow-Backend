@@ -83,7 +83,9 @@ public class SecurityConfig {
                                 "/api/payments/**",
                                 "/api/receipts/**",
                                 "/api/refunds/**",
-                                "/api/stk/**"
+                                "/api/stk/**",
+                                "/api/auth/reissue", // ⭐️ 추가
+                                "/api/auth/password/**" // ⭐️ 추가: 비밀번호 초기화 관련 전체 경로 허용
                         ).permitAll()
 
                         // ✅ 나머지 /api/** 경로는 인증 필요
