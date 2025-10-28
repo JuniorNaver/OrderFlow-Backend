@@ -46,77 +46,77 @@ public class POSeeder {
     public void run(String... args) {
         log.info("🧾 [POSeeder] Creating multiple PO_HEADERs (PR / S / PO)...");
 
-        // 1️⃣ 사용자 조회
-        User user = userRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("기본 User 데이터가 필요합니다. (AppUserSeeder 확인)"));
-
-        // 2️⃣ 상품 조회
-        List<Product> products = productRepository.findAll();
-        if (products.isEmpty()) {
-            throw new IllegalStateException("Product 데이터가 필요합니다. (ProductSeeder 확인)");
-        }
-
-        // 3️⃣ 생성할 상태 목록
-        POStatus[] statuses = {POStatus.PR, POStatus.S,
-                POStatus.PO, POStatus.PO,
-                POStatus.GI, POStatus.PARTIAL_RECEIVED, POStatus.FULLY_RECEIVED, POStatus.FULLY_RECEIVED,
-                POStatus.CANCELED
-        };
-
-        int headerSeq = 1;
-
-        for (POStatus status : statuses) {
-            String branchCode = user.getStore().getStoreId();
-            String seq = String.format("%02d", headerSeq++);
-            String externalId = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
-                    + branchCode
-                    + seq
-                    + String.format("%03d", (int)(Math.random() * 1000));
-
-
-            POHeader header = POHeader.builder()
-                    .status(status)
-                    .actionDate(LocalDate.now())
-                    .user(user)
-                    .remarks("Auto-generated " + status + " order for test")
-                    .externalId(externalId)
-                    .totalAmount(BigDecimal.ZERO)
-                    .build();
-            poHeaderRepository.save(header);
-
-            // 4️⃣ 아이템 2~3개 생성
-            BigDecimal totalAmount = BigDecimal.ZERO;
-            int itemCount = Math.min(3, products.size());
-            for (int i = 0; i < itemCount; i++) {
-                Product product = products.get(i);
-                BigDecimal price = priceRepository.findPurchasePriceByGtin(product.getGtin())
-                        .orElse(BigDecimal.valueOf(2500));
-
-                long qty = (status == POStatus.PO) ? 20L : 10L; // PO는 좀 더 많게
-                BigDecimal lineTotal = price.multiply(BigDecimal.valueOf(qty));
-
-                POItem item = POItem.builder()
-                        .poHeader(header)
-                        .product(product)
-                        .orderQty(qty)
-                        .pendingQty(qty)
-                        .shippedQty(0L)
-                        .purchasePrice(price)
-                        .expectedArrival(LocalDate.now().plusDays(1))
-                        .status(status)
-                        .build();
-
-                item.calculateTotal();
-                poItemRepository.save(item);
-                totalAmount = totalAmount.add(lineTotal);
-            }
-
-            header.setTotalAmount(totalAmount);
-            poHeaderRepository.save(header);
-
-            log.info("✅ [POSeeder] Created {} header (externalId={}, items={}, total={})",
-                    status, externalId, itemCount, totalAmount);
-        }
+////        // 1️⃣ 사용자 조회
+////        User user = userRepository.findAll().stream().findFirst()
+////                .orElseThrow(() -> new IllegalStateException("기본 User 데이터가 필요합니다. (AppUserSeeder 확인)"));
+////
+////        // 2️⃣ 상품 조회
+////        List<Product> products = productRepository.findAll();
+////        if (products.isEmpty()) {
+////            throw new IllegalStateException("Product 데이터가 필요합니다. (ProductSeeder 확인)");
+////        }
+////
+////        // 3️⃣ 생성할 상태 목록
+////        POStatus[] statuses = {POStatus.PR, POStatus.S,
+////                POStatus.PO, POStatus.PO,
+////                POStatus.GI, POStatus.PARTIAL_RECEIVED, POStatus.FULLY_RECEIVED, POStatus.FULLY_RECEIVED,
+////                POStatus.CANCELED
+////        };
+////
+////        int headerSeq = 1;
+////
+////        for (POStatus status : statuses) {
+////            String branchCode = user.getStore().getStoreId();
+////            String seq = String.format("%02d", headerSeq++);
+////            String externalId = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
+////                    + branchCode
+////                    + seq
+////                    + String.format("%03d", (int)(Math.random() * 1000));
+////
+////
+////            POHeader header = POHeader.builder()
+////                    .status(status)
+////                    .actionDate(LocalDate.now())
+////                    .user(user)
+////                    .remarks("Auto-generated " + status + " order for test")
+////                    .externalId(externalId)
+////                    .totalAmount(BigDecimal.ZERO)
+////                    .build();
+////            poHeaderRepository.save(header);
+////
+////            // 4️⃣ 아이템 2~3개 생성
+////            BigDecimal totalAmount = BigDecimal.ZERO;
+////            int itemCount = Math.min(3, products.size());
+////            for (int i = 0; i < itemCount; i++) {
+////                Product product = products.get(i);
+////                BigDecimal price = priceRepository.findPurchasePriceByGtin(product.getGtin())
+////                        .orElse(BigDecimal.valueOf(2500));
+////
+////                long qty = (status == POStatus.PO) ? 20L : 10L; // PO는 좀 더 많게
+////                BigDecimal lineTotal = price.multiply(BigDecimal.valueOf(qty));
+////
+////                POItem item = POItem.builder()
+////                        .poHeader(header)
+////                        .product(product)
+////                        .orderQty(qty)
+////                        .pendingQty(qty)
+////                        .shippedQty(0L)
+////                        .purchasePrice(price)
+////                        .expectedArrival(LocalDate.now().plusDays(1))
+////                        .status(status)
+////                        .build();
+////
+////                item.calculateTotal();
+////                poItemRepository.save(item);
+////                totalAmount = totalAmount.add(lineTotal);
+////            }
+////
+////            header.setTotalAmount(totalAmount);
+////            poHeaderRepository.save(header);
+////
+////            log.info("✅ [POSeeder] Created {} header (externalId={}, items={}, total={})",
+////                    status, externalId, itemCount, totalAmount);
+//        }
 
         log.info("🎉 [POSeeder] Completed: 3 headers (PR / S / PO) created successfully.");
     }
