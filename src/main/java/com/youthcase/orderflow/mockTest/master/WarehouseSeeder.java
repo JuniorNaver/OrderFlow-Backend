@@ -7,7 +7,6 @@ import com.youthcase.orderflow.master.warehouse.domain.Warehouse;
 import com.youthcase.orderflow.master.warehouse.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,9 +58,18 @@ public class WarehouseSeeder {
                 .store(store)
                 .build();
 
+        Warehouse wh4 = Warehouse.builder()
+                .warehouseName("기타 창고")
+                .storageMethod(StorageMethod.OTHER)
+                .maxCapacity(200.0)
+                .currentCapacity(0.0)
+                .store(store)
+                .build();
+
         warehouseRepository.saveAndFlush(wh1);
         warehouseRepository.saveAndFlush(wh2);
         warehouseRepository.saveAndFlush(wh3);
+        warehouseRepository.saveAndFlush(wh4);
 
         log.info("✅ [WarehouseSeeder] Warehouses created successfully for store {}", store.getStoreId());
     }
