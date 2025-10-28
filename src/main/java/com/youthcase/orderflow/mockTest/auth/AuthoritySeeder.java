@@ -4,7 +4,6 @@ import com.youthcase.orderflow.auth.domain.Authority;
 import com.youthcase.orderflow.auth.domain.enums.AuthorityType;
 import com.youthcase.orderflow.auth.repository.AuthorityRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
