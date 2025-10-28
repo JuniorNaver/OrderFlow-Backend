@@ -80,9 +80,9 @@ public class SecurityConfig {
                                 "/api/po/**",
                                 "/api/gr/**",
                                 "/api/sd/**",
-                                "/api/payments",
-                                "/api/receipts",
-                                "/api/refunds",
+                                "/api/payments/**",
+                                "/api/receipts/**",
+                                "/api/refunds/**",
                                 "/api/stk/**"
                         ).permitAll()
 
