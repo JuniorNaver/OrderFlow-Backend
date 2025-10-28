@@ -165,9 +165,10 @@ public class STKController {
     // --------------------------------------------------
 
     /**
-     * POST /api/stk/disposal/execute : 선택된 재고 항목을 폐기 처리합니다.
+     * POST /api/stk/disposal : 선택된 재고 항목을 폐기 처리합니다.
+     * ⭐️ 수정: /execute를 제거하고 /disposal 만 사용합니다.
      */
-    @PostMapping("/disposal/execute")
+    @PostMapping("/disposal")
     public ResponseEntity<List<StockResponse>> executeDisposal(@RequestBody DisposalRequest request) {
         try {
             List<STK> updatedStocks = stkService.executeDisposal(request);
@@ -181,7 +182,6 @@ public class STKController {
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (IllegalArgumentException e) {
-            // 유효하지 않은 수량 등에 대한 400 Bad Request 반환
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

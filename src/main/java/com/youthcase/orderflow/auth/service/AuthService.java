@@ -41,10 +41,5 @@ public interface AuthService {
      */
     String registerNewUser(UserRegisterRequestDTO request);
 
-    /**
-     * 비밀번호 초기화 요청을 처리하고, 초기화 토큰을 생성하여 사용자 ID 및 이메일로 발송합니다.
-     * @param userId 사용자 ID
-     * @param email 사용자 이메일
-     */
-    void requestPasswordReset(String userId, String email); // ⭐️ 반드시 이렇게 수정되어야 합니다.
+
 }
