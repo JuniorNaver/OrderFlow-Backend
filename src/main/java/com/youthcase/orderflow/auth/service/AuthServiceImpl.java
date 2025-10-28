@@ -166,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
                 });
 
         // 4. 초기화 토큰 생성 (UUID 사용)
-        String resetToken = generateUniqueResetToken();
+        //String resetToken = generateUniqueResetToken();
         LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
 
         // PasswordResetToken.builder()를 사용하여 User 객체를 참조
