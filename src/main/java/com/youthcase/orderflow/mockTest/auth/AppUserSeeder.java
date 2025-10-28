@@ -27,14 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @Profile({"dev", "local"})
 @RequiredArgsConstructor
-public class AppUserSeeder implements CommandLineRunner { // ⭐️ run 메서드 사용을 위해 CommandLineRunner 인터페이스 추가
+public class AppUserSeeder {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final StoreRepository storeRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Override // ⭐️ CommandLineRunner의 run 메서드를 오버라이드
     @Transactional
     public void run(String... args) {
         log.info("👥 [AppUserSeeder] Creating default user accounts...");

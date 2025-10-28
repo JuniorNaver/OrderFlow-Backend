@@ -13,9 +13,11 @@ import com.youthcase.orderflow.auth.repository.RefreshTokenRepository;
 import com.youthcase.orderflow.auth.repository.RoleRepository;
 import com.youthcase.orderflow.auth.repository.UserRepository;
 import com.youthcase.orderflow.auth.service.security.CustomUserDetailsService;
+import com.youthcase.orderflow.auth.service.EmailService;
 import com.youthcase.orderflow.master.store.domain.Store;
 import com.youthcase.orderflow.master.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // ⭐️ 로그를 위한 import 추가
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,7 +26,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.UUID; // ⭐️ UUID를 위한 import 추가
 
+@Slf4j // ⭐️ 로그를 위한 어노테이션 추가
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponseDTO authenticateAndGenerateToken(String userId, String password) {
-
+        // ... (기존 코드 유지)
         // 1. 인증 객체 생성 및 인증 시도
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(userId, password);
@@ -73,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
-
+        // ... (기존 코드 유지)
         // 1. 토큰 유효성 검사 및 사용자 ID 획득
         String userId = validatePasswordResetToken(token);
 
@@ -99,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TokenResponseDTO reissueToken(String refreshToken) {
-
+        // ... (기존 코드 유지)
         // 1. Refresh Token의 유효성 검사 (JwtProvider에서 만료 여부, 형식 등을 검사)
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않거나 만료된 Refresh Token입니다. 재로그인이 필요합니다.");
@@ -131,21 +135,37 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 비밀번호 초기화 요청을 처리하고, 초기화 토큰을 생성하여 사용자 이메일로 발송합니다.
+     * 💡 기존 메서드를 수정하여 userId와 email을 모두 받아 보안을 강화하고,
+     * 사용자에게 오류 노출 없이 이메일 전송 실패를 처리합니다.
      */
     @Override
     @Transactional
-    public void requestPasswordReset(String userId) {
+    public void requestPasswordReset(String userId, String email) { // ⭐️ email 인자 추가
 
-        // 1. 사용자 ID로 사용자 조회
-        User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 ID를 찾을 수 없습니다."));
 
-        // 2. 초기화 토큰 생성 (UUID 사용)
+        // 1. 사용자 ID와 이메일이 일치하는 사용자 조회
+        //    (findByUserIdAndEmail 메서드가 UserRepository에 정의되어 있다고 가정)
+        User user = userRepository.findByUserIdAndEmail(userId, email)
+                .orElse(null);
+
+        // 2. 사용자가 존재하지 않거나 정보가 일치하지 않아도, 보안을 위해 성공 응답을 반환하고 로그만 남깁니다.
+        if (user == null) {
+            log.warn("비밀번호 초기화 요청 실패: ID({}) 또는 이메일({}) 불일치.", userId, email);
+            // ⭐️ 500 오류 방지: 사용자가 없다는 사실을 클라이언트에게 숨기고 정상 처리된 것처럼 반환합니다.
+            return;
+        }
+
+        // 3. 기존 토큰이 있다면 만료 처리
+        passwordResetTokenRepository.findByUserUserIdAndUsedFalse(user.getUserId()) // ⭐️ 반드시 이 이름으로 호출
+                .ifPresent(token -> {
+                    token.useToken();
+                    passwordResetTokenRepository.save(token);
+                });
+
+        // 4. 초기화 토큰 생성 (UUID 사용)
         String resetToken = generateUniqueResetToken();
-
         LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
 
-        // 💡 수정: PasswordResetToken.builder()를 사용하여 User 객체를 참조하도록 변경
         PasswordResetToken tokenEntity = PasswordResetToken.builder()
                 .user(user) // User 객체 직접 참조
                 .token(resetToken)
@@ -155,16 +175,26 @@ public class AuthServiceImpl implements AuthService {
 
         passwordResetTokenRepository.save(tokenEntity);
 
-        // 3. 이메일 본문 생성 및 발송
+        // 5. 이메일 본문 생성 및 발송
         String resetLink = "https://yourdomain.com/reset-password?token=" + resetToken;
         String emailContent = buildResetEmailContent(user.getUserId(), resetLink);
 
-        emailService.sendEmail(user.getEmail(), "[OrderFlow] 비밀번호 초기화 요청", emailContent);
+        try {
+            emailService.sendEmail(user.getEmail(), "[OrderFlow] 비밀번호 초기화 요청", emailContent);
+            log.info("✅ 비밀번호 초기화 이메일 발송 성공: User ID {}", userId);
+        } catch (Exception e) {
+            // 🚨 500 오류가 여기서 발생했을 가능성이 가장 높습니다.
+            log.error("🚨 비밀번호 초기화 이메일 발송 중 오류 발생: {}", e.getMessage(), e);
+
+            // ⭐️ 이메일 전송 실패 시 500 오류를 유발하도록 RuntimeException을 던집니다.
+            // (AuthService의 역할은 메일 발송 성공까지 포함하므로, 실패는 비정상 상황입니다.)
+            throw new RuntimeException("이메일 전송에 실패했습니다. 서버 관리자에게 문의하세요.", e);
+        }
     }
 
     // 헬퍼 메서드: 초기화 토큰 생성
     private String generateUniqueResetToken() {
-        return java.util.UUID.randomUUID().toString();
+        return UUID.randomUUID().toString();
     }
 
     // 헬퍼 메서드: 이메일 본문 생성
@@ -176,7 +206,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String validatePasswordResetToken(String token) {
-
+        // ... (기존 코드 유지)
         // 1. 토큰 값으로 엔티티 조회
         PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenAndUsedFalse(token)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("유효한 토큰을 찾을 수 없습니다: %s", token)));
@@ -188,7 +218,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 3. 검증 성공 시 사용자 ID 반환
-        // 💡 수정: User 엔티티에서 ID를 추출하도록 변경
         return resetToken.getUser().getUserId();
     }
 
@@ -198,14 +227,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public String registerNewUser(UserRegisterRequestDTO request) {
-
+        // ... (기존 코드 유지)
         // 1️⃣ 중복 체크
         if (userRepository.existsByUserId(request.getUserId())) {
             throw new DuplicateUserException("이미 존재하는 사용자 ID입니다: " + request.getUserId());
         }
 
         // 2️⃣ 기본 역할(Role) 부여
-        //    → 예: 회원가입 시 ROLE_CLERK 자동 할당
         Role defaultRole = roleRepository.findByRoleId("CLERK")
                 .orElseThrow(() -> new IllegalStateException("기본 역할(CLEREK)을 찾을 수 없습니다."));
 

@@ -10,4 +10,7 @@ import lombok.Getter;
 public class PasswordResetRequestDTO {
     @NotBlank(message = "사용자 ID는 필수 입력값입니다.")
     private String userId;
+
+    // ⭐️ 오류 해결: email 필드를 추가합니다.
+    private String email;
 }
