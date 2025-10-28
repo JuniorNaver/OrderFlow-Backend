@@ -80,8 +80,8 @@ public class SDServiceImpl implements SDService {
         Product product = productRepository.findByGtin(request.getGtin())
                 .orElseThrow(() -> new RuntimeException("상품 없음"));
 
-        BigDecimal unitPrice = priceRepository.findSalePriceByGtin(request.getGtin())
-                .orElse(product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
+        // ✅ 현재 스키마(PRICE_MASTER) 기준 단가 산출
+        BigDecimal unitPrice = resolveUnitPrice(product);
 
         if (SalesStatus.COMPLETED.equals(header.getSalesStatus())) {
             throw new RuntimeException("COMPLETE 상태에서는 상품을 추가할 수 없습니다.");
@@ -91,21 +91,29 @@ public class SDServiceImpl implements SDService {
                 StockStatus.ACTIVE, StockStatus.NEAR_EXPIRY, StockStatus.RETURNED
         );
 
-        Long totalActiveStock = stkRepository.sumStockedQuantityByGtin(product.getGtin(), vendibleStatuses);
-        Long reservedInThisOrder = salesItemRepository.sumQuantityByOrderAndGtin(request.getOrderId(), request.getGtin());
+        Long totalActiveStock = stkRepository
+                .sumStockedQuantityByGtin(product.getGtin(), vendibleStatuses);
 
-        SalesItem item = salesItemRepository.findByOrderIdAndGtin(request.getOrderId(), request.getGtin());
+        // 기존 주문 내 동일 GTIN 예약 수량(필요 시 사용)
+        // Long reservedInThisOrder = salesItemRepository
+        //        .sumQuantityByOrderAndGtin(request.getOrderId(), request.getGtin());
+
+        SalesItem item = salesItemRepository
+                .findByOrderIdAndGtin(request.getOrderId(), request.getGtin());
+
         if (item != null) {
             Long newQty = item.getSalesQuantity() + request.getQuantity();
             item.setSalesQuantity(newQty);
-            item.setSubtotal(unitPrice.multiply(BigDecimal.valueOf(newQty)));
+            // ✅ sdPrice는 최초 설정값 유지. 필요시 아래 라인 주석 해제해서 최신 단가로 업데이트
+            item.setSdPrice(unitPrice);
+            item.setSubtotal(item.getSdPrice().multiply(BigDecimal.valueOf(newQty)));
         } else {
             item = new SalesItem();
             item.setProduct(product);
             item.setSalesQuantity(request.getQuantity());
             item.setSdPrice(unitPrice);
             item.setSubtotal(unitPrice.multiply(BigDecimal.valueOf(request.getQuantity())));
-            item.setStk(null); // ✅ HOLD/PENDING 상태에서는 STK 연결 금지
+            item.setStk(null); // HOLD/PENDING 단계에서는 STK 연결 금지
             header.addSalesItem(item);
         }
 
@@ -119,12 +127,13 @@ public class SDServiceImpl implements SDService {
         SalesItemDTO dto = SalesItemDTO.from(item);
         dto.setStockQuantity(totalActiveStock);
 
-        log.info("🧾 addItemToOrder: orderId={}, gtin={}, 단가={}, 재고={}",
+        log.info("🧾 addItemToOrder: orderId={}, gtin={}, unitPrice={}, stock={}",
                 header.getOrderId(), product.getGtin(), unitPrice, totalActiveStock);
-
 
         return dto;
     }
+
+
 
     @Override
     public List<SalesItemDTO> getItemsByOrderId(Long orderId) {
@@ -347,6 +356,16 @@ public class SDServiceImpl implements SDService {
 
         log.info("✏️ 수량 수정 완료 — itemId={}, 변경 수량={}, 변경 후 금액={}",
                 itemId, quantity, item.getSubtotal());
+    }
+
+    // ==========================
+    // 🧩 Helper 메서드 추가 위치
+    // ==========================
+    /** ✅ 단가 계산 (PRICE_MASTER → PRODUCT fallback → 0) */
+    private BigDecimal resolveUnitPrice(Product product) {
+        return priceRepository.findSalePriceByGtin(product.getGtin())
+                .or(() -> Optional.ofNullable(product.getPrice()))
+                .orElse(BigDecimal.ZERO);
     }
 
 

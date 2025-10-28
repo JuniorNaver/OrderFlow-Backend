@@ -11,5 +11,4 @@ public class AddItemRequest {
     private Long orderId;
     private String gtin;       // 상품 바코드
     private Long quantity;
-    private BigDecimal unitPrice;
 }
