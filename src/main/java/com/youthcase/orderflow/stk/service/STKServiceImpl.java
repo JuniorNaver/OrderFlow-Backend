@@ -35,7 +35,8 @@ public class STKServiceImpl implements STKService {
     private final LotRepository lotRepository;
     private final GoodsReceiptHeaderRepository grHeaderRepository;
     private final WarehouseCapacityService capacityService;
-
+    // ⭐️ StockStatusService 주입 (대시보드 현황 및 복잡한 현황 로직 위임용)
+    // private final StockStatusService stockStatusService; // 현재 STKServiceImpl 내에 대시보드 로직이 남아있으므로 주석 처리
 
     // --------------------------------------------------
     // 📊 대시보드 현황 API 구현
@@ -139,8 +140,12 @@ public class STKServiceImpl implements STKService {
                 .orElseThrow(() -> new NoSuchElementException("GTIN에 해당하는 재고를 찾을 수 없습니다: " + gtin));
     }
 
+    /**
+     * ⭐️ 위치 변경 필요 재고 목록 조회
+     */
     @Override
     public List<STK> findRelocationRequiredStocks() {
+        // isRelocationNeeded 플래그가 true인 재고 목록을 반환합니다.
         return stkRepository.findByIsRelocationNeededTrue();
     }
 
@@ -197,7 +202,7 @@ public class STKServiceImpl implements STKService {
     @Override
     @Transactional
     public void deductStockForSalesOrder(StockDeductionRequestDTO requestDTO) {
-        // ... (출고 차감 로직 생략 없이 유지)
+        // ... (출고 차감 로직 유지)
         for (StockDeductionRequestDTO.DeductionItem item : requestDTO.getItems()) {
             String gtin = item.getGtin();
             Long requiredQuantity = item.getQuantity();
@@ -400,6 +405,7 @@ public class STKServiceImpl implements STKService {
 
     // ⭐️ STKRequest DTO를 받아 STK 엔티티를 생성하고 저장하는 메서드 구현
     @Override
+    @Transactional
     public STK createStockFromRequest(STKRequestDTO request) {
         Product product = productRepository.findById(request.getProductGtin())
                 .orElseThrow(() -> new NoSuchElementException("상품(GTIN)을 찾을 수 없습니다: " + request.getProductGtin()));
