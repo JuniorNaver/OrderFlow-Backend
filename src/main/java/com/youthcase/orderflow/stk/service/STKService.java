@@ -63,4 +63,7 @@ public interface STKService {
     void decreaseStock(String warehouseId, String gtin, Long qty, Long lotNo, LocalDate expDate);
 
     STK createStockFromRequest(STKRequestDTO request);
+
+    //SD
+    List<STK> searchAvailableProductsByName(String name);
 }

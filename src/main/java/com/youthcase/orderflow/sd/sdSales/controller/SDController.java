@@ -8,11 +8,15 @@ import com.youthcase.orderflow.sd.sdSales.dto.SalesHeaderDTO;
 import com.youthcase.orderflow.sd.sdSales.dto.SalesItemDTO;
 import com.youthcase.orderflow.sd.sdSales.repository.SalesHeaderRepository;
 import com.youthcase.orderflow.sd.sdSales.service.SDService;
+import com.youthcase.orderflow.stk.domain.STK;
+import com.youthcase.orderflow.stk.repository.STKRepository;
+import com.youthcase.orderflow.stk.service.STKService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +28,7 @@ public class SDController {
 
     private final SDService sdService;
     private final SalesHeaderRepository salesHeaderRepository;
+    private final STKService stkService;
 
     // ✅ 1. 주문 생성
     @PostMapping("/create")
@@ -121,13 +126,34 @@ public class SDController {
 
     // ✅ 12. 수량 변경
     @PatchMapping("/items/{itemId}/quantity")
-    public ResponseEntity<Void> updateItemQuantity(
+    public ResponseEntity<SalesItemDTO> updateItemQuantity(
             @PathVariable Long itemId,
             @RequestBody Map<String, Long> body
     ) {
         Long quantity = body.get("quantity");
-        sdService.updateItemQuantity(itemId, quantity);
-        return ResponseEntity.ok().build();
+        SalesItemDTO updated = sdService.updateItemQuantity(itemId, quantity);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Map<String, Object>>> searchProducts(@RequestParam String name) {
+        List<STK> results = stkService.searchAvailableProductsByName(name);
+
+        // 💡 필요한 필드만 내려주기 (DTO 대신 Map으로 간단히)
+        List<Map<String, Object>> response = results.stream()
+                .map(s -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("gtin", s.getProduct().getGtin());
+                    map.put("productName", s.getProduct().getProductName());
+                    map.put("price", s.getProduct().getPrice());
+                    map.put("stock", s.getQuantity());
+                    map.put("expDate", s.getLot().getExpDate());
+                    return map;
+                })
+                .toList();
+
+
+        return ResponseEntity.ok(response);
     }
 
     // ✅ 13. 에러 핸들링

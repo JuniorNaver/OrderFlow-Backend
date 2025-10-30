@@ -51,19 +51,24 @@ public class SalesItemDTO {
                 : "UNKNOWN";
 
         BigDecimal price = (s.getSdPrice() != null) ? s.getSdPrice() : BigDecimal.ZERO;
-
-        Long stock = (s.getStk() != null && s.getStk().getQuantity() != null)
-                ? s.getStk().getQuantity()
-                : 0;
-
         BigDecimal subtotal = price.multiply(BigDecimal.valueOf(s.getSalesQuantity()));
+
+        // ✅ 보류 상태인지 확인
+        boolean isHold = s.getSalesHeader() != null
+                && s.getSalesHeader().getSalesStatus() == com.youthcase.orderflow.sd.sdSales.domain.SalesStatus.HOLD;
+
+        Long stock = 0L;
+        if (s.getStk() != null && s.getStk().getQuantity() != null) {
+            // ✅ 재고 수량은 항상 표시 (보류 상태에서도)
+            stock = s.getStk().getQuantity();
+        }
 
         return new SalesItemDTO(
                 s.getNo(),
                 gtin,
                 name,
                 price,
-                s.getSalesQuantity(),
+                s.getSalesQuantity(),   // ← 판매 시점 수량 그대로 유지
                 stock,
                 subtotal
         );
