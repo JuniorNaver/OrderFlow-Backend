@@ -437,4 +437,10 @@ public class STKServiceImpl implements STKService {
         // 3. 저장 및 반환
         return stkRepository.save(newStock);
     }
+
+    @Override
+    public List<STK> searchAvailableProductsByName(String name) {
+        if (name == null || name.trim().isEmpty()) return List.of();
+        return stkRepository.searchAvailableProductsByName(name.trim());
+    }
 }

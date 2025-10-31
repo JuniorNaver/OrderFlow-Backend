@@ -63,8 +63,8 @@ public interface STKRepository extends JpaRepository<STK, Long> {
      */
     // STK 엔티티가 Lot 엔티티를 통해 유통기한(expDate)을 참조한다고 가정
     @Query("""
-        SELECT s FROM STK s JOIN s.lot l 
-        WHERE l.expDate < :date 
+        SELECT s FROM STK s JOIN s.lot l
+        WHERE l.expDate < :date
           AND s.quantity > 0 
           AND s.status = :targetStatus
     """)
@@ -75,9 +75,9 @@ public interface STKRepository extends JpaRepository<STK, Long> {
      * 특정 날짜까지 유통기한이 임박한 활성 재고 조회 (대시보드 현황)
      */
     @Query("""
-        SELECT s FROM STK s JOIN s.lot l 
-        WHERE l.expDate <= :limitDate 
-          AND s.quantity > 0 
+        SELECT s FROM STK s JOIN s.lot l
+        WHERE l.expDate <= :limitDate
+          AND s.quantity > 0
           AND s.status = :targetStatus
     """)
     List<STK> findNearExpiryActiveStock(@Param("limitDate") LocalDate limitDate,
@@ -114,9 +114,9 @@ public interface STKRepository extends JpaRepository<STK, Long> {
     List<STK> findByQuantityLessThanEqual(Long quantity);
 
     @Query("""
-        SELECT s FROM STK s JOIN s.lot l 
-        WHERE s.warehouse.warehouseId = :warehouseId 
-          AND s.quantity > 0 
+        SELECT s FROM STK s JOIN s.lot l
+        WHERE s.warehouse.warehouseId = :warehouseId
+          AND s.quantity > 0
           AND s.status = :targetStatus
         ORDER BY l.expDate ASC
     """)
@@ -163,4 +163,17 @@ public interface STKRepository extends JpaRepository<STK, Long> {
             String gtin,
             Long lotId
     );
+
+    //SD 상품 검색 조회
+    @Query("""
+            SELECT s
+            FROM STK s
+            JOIN FETCH s.product p
+            JOIN FETCH s.lot l
+            WHERE s.quantity > 0
+              AND LOWER(p.productName) LIKE LOWER(CONCAT('%', :name, '%'))
+            ORDER BY p.productName ASC
+            """)
+    List<STK> searchAvailableProductsByName(@Param("name") String name);
+
 }

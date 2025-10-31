@@ -134,53 +134,59 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     public interface ProductCountPerKan {
         String getKanCode();
+
         Long getCnt();
     }
 
     @Query("""
-    select p.category.kanCode as kanCode, count(p) as cnt
-    from Product p
-    group by p.category.kanCode
-""")
+                select p.category.kanCode as kanCode, count(p) as cnt
+                from Product p
+                group by p.category.kanCode
+            """)
     List<ProductCountPerKan> countProductsGroupByKan();
 
     // ✅ 특정 KAN의 상품 간단 목록 (행 펼침용)
     public interface SimpleProductRow {
         String getGtin();
+
         String getProductName();
+
         BigDecimal getPrice();         // 타입은 엔티티에 맞춰서
     }
 
     @Query("""
-    select p.gtin as gtin, p.productName as productName, p.price as price
-    from Product p
-    where p.category.kanCode = :kan
-    order by p.productName asc, p.gtin asc
-""")
+                select p.gtin as gtin, p.productName as productName, p.price as price
+                from Product p
+                where p.category.kanCode = :kan
+                order by p.productName asc, p.gtin asc
+            """)
     List<SimpleProductRow> findSimpleByCategoryKan(@Param("kan") String kan);
 
     // 카테고리별 대표상품
     public interface CategoryProductSampleProjection {
         String getKanCode();
-        String getProductName();;
+
+        String getProductName();
+
+        ;
     }
 
     @Query(value = """
-        SELECT T.KAN_CODE      AS kanCode,
-               T.PRODUCT_NAME  AS productName
-        FROM (
-          SELECT p.KAN_CODE,
-                 p.PRODUCT_NAME,
-                 ROW_NUMBER() OVER (
-                   PARTITION BY p.KAN_CODE
-                   ORDER BY p.PRODUCT_NAME ASC
-                 ) AS RN
-          FROM PRODUCT p
-          WHERE p.KAN_CODE IN (:kanCodes)
-        ) T
-        WHERE T.RN <= :limit
-        ORDER BY T.KAN_CODE, T.PRODUCT_NAME
-        """, nativeQuery = true)
+            SELECT T.KAN_CODE      AS kanCode,
+                   T.PRODUCT_NAME  AS productName
+            FROM (
+              SELECT p.KAN_CODE,
+                     p.PRODUCT_NAME,
+                     ROW_NUMBER() OVER (
+                       PARTITION BY p.KAN_CODE
+                       ORDER BY p.PRODUCT_NAME ASC
+                     ) AS RN
+              FROM PRODUCT p
+              WHERE p.KAN_CODE IN (:kanCodes)
+            ) T
+            WHERE T.RN <= :limit
+            ORDER BY T.KAN_CODE, T.PRODUCT_NAME
+            """, nativeQuery = true)
     List<CategoryProductSampleProjection> findCategoryProductSamples(
             @Param("kanCodes") List<String> kanCodes,
             @Param("limit") int limit
@@ -192,7 +198,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
         boolean zonesEmpty = (zones == null || zones.isEmpty());
 
         // ✅ 제네릭 힌트로 List<Object> 추론 방지
-        List<String> catsArg = catsEmpty  ? java.util.Collections.<String>emptyList()         : cats;
+        List<String> catsArg = catsEmpty ? java.util.Collections.<String>emptyList() : cats;
         List<StorageMethod> zonesArg = zonesEmpty ? java.util.Collections.<StorageMethod>emptyList() : zones;
 
         return findRecommendableInternalMulti(
@@ -202,4 +208,4 @@ public interface ProductRepository extends JpaRepository<Product, String> {
                 zonesEmpty
         );
     }
- };
+}

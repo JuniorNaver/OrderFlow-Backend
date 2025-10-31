@@ -248,19 +248,27 @@ public class SDServiceImpl implements SDService {
             throw new RuntimeException("보류 상태가 아닌 주문은 다시 열 수 없습니다.");
         }
 
+        // ✅ 상품 null 방지 + 재고 채우기
+        for (SalesItem item : header.getSalesItems()) {
+            if (item.getProduct() != null && item.getStk() == null) {
+                stkRepository
+                        .findByProduct_GtinAndQuantityGreaterThanOrderByLot_ExpDateAsc(
+                                item.getProduct().getGtin(), 0L
+                        )
+                        .stream()
+                        .findFirst()
+                        .ifPresent(item::setStk);
+            }
+        }
+
         header.setSalesStatus(SalesStatus.PENDING);
+        SalesHeaderDTO dto = SalesHeaderDTO.from(header);
 
-        SalesHeaderDTO dto = new SalesHeaderDTO(
-                header.getOrderId(),
-                header.getOrderNo(),
-                header.getSalesDate(),
-                header.getTotalAmount(),
-                header.getSalesStatus()
-        );
-
-        dto.setSalesItems(salesItemRepository.findItemsByHeaderId(orderId));
+        log.info("🔁 [resumeOrder] {} 재개 완료 (아이템 {}개)",
+                header.getOrderNo(), dto.getSalesItems().size());
         return dto;
     }
+
 
     // ✅ 보류 주문 저장 (재고 차감 금지)
     @Override
@@ -333,7 +341,7 @@ public class SDServiceImpl implements SDService {
 
     @Override
     @Transactional
-    public void updateItemQuantity(Long itemId, Long quantity) {
+    public SalesItemDTO updateItemQuantity(Long itemId, Long quantity) {
         SalesItem item = salesItemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("판매 항목을 찾을 수 없습니다. ID=" + itemId));
 
@@ -354,8 +362,13 @@ public class SDServiceImpl implements SDService {
         item.setSalesQuantity(quantity);
         item.setSubtotal(price.multiply(BigDecimal.valueOf(quantity)));
 
+        salesItemRepository.save(item); // ✅ DB 반영
+
         log.info("✏️ 수량 수정 완료 — itemId={}, 변경 수량={}, 변경 후 금액={}",
                 itemId, quantity, item.getSubtotal());
+
+        // ✅ 프론트에서 즉시 UI 업데이트 가능하도록 DTO 반환
+        return SalesItemDTO.from(item);
     }
 
     // ==========================

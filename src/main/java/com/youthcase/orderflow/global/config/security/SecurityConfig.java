@@ -69,6 +69,8 @@ public class SecurityConfig {
 
                 // 요청별 인가 설정
                 .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // ✅ 인증 불필요 (화이트리스트)
                         .requestMatchers(
                                 "/api/auth/login",
