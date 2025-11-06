@@ -1,7 +1,10 @@
 package com.youthcase.orderflow.pr.controller;
 
+import com.youthcase.orderflow.pr.service.InventoryService;
 import com.youthcase.orderflow.pr.service.browse.PRBrowseService;
 import com.youthcase.orderflow.pr.service.browse.dto.ProductItemDto;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,12 +14,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/pr/browse")
+@RequestMapping("/api/v1/pr")
 @RequiredArgsConstructor
 @Validated
 public class PRBrowseController {
 
     private final PRBrowseService svc;
+    private final InventoryService inv;
 
     /**
      * 존별 코너 목록 (실온/냉장/냉동/기타)
@@ -58,6 +62,29 @@ public class PRBrowseController {
         return ResponseEntity.ok(body);
     }
 
+    // 인벤토리 쪽
+    //조회
+
+    record AvailDto(String gtin, Long available) {}
+    @GetMapping("/inventory")
+    public AvailDto available(@RequestParam String gtin){
+        return new AvailDto(gtin, inv.getAvailable(gtin));
+    }
+
+    record QtyReq(String gtin, @Min(1) Long qty) {}
+
+    @PostMapping("/inventory/reserve")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reserve(@RequestBody @Valid QtyReq req){ inv.reserve(req.gtin(), req.qty()); }
+
+    @PostMapping("/inventory/release")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void release(@RequestBody @Valid QtyReq req){ inv.release(req.gtin(), req.qty()); }
+
+    @PostMapping("/inventory/commit")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void commit(@RequestBody @Valid QtyReq req){ inv.commit(req.gtin(), req.qty()); }
+
     /* ───────── 에러 핸들링(간단) ───────── */
 
     // 서비스의 validateZone() 등에서 IllegalArgumentException 던지면 400으로 변환
@@ -66,4 +93,9 @@ public class PRBrowseController {
     public String handleIllegalArgument(IllegalArgumentException e) {
         return e.getMessage();
     }
+
+    // 예외
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleConflict(RuntimeException e){ return e.getMessage(); }
 }
